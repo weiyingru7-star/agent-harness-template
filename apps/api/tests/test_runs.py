@@ -14,8 +14,13 @@ def test_create_and_get_run() -> None:
     assert run["id"].startswith("run_")
     assert run["status"] == "completed"
     assert run["task"]["input"] == "hello stage two"
-    assert run["steps"][0]["name"] == "demo_agent"
-    assert run["steps"][0]["status"] == "completed"
+    assert [step["name"] for step in run["steps"]] == [
+        "input_node",
+        "skill_node",
+        "tool_node",
+        "final_node",
+    ]
+    assert all(step["status"] == "completed" for step in run["steps"])
     assert run["output"] == (
         "demo_agent mock response | "
         "skill=Mock skill summary: hello stage two | "
@@ -36,12 +41,16 @@ def test_get_run_events() -> None:
 
     assert response.status_code == 200
     events = response.json()
-    assert [event["type"] for event in events] == [
-        "run.created",
-        "run.started",
-        "step.started",
-        "step.completed",
-        "run.completed",
+    event_types = [event["type"] for event in events]
+    assert event_types[:2] == ["run.created", "run.started"]
+    assert event_types[-1] == "run.completed"
+    assert event_types.count("node.started") == 4
+    assert event_types.count("node.completed") == 4
+    assert [event["message"] for event in events if event["type"] == "node.completed"] == [
+        "input_node completed",
+        "skill_node completed",
+        "tool_node completed",
+        "final_node completed",
     ]
 
 

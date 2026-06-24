@@ -168,6 +168,31 @@ curl http://localhost:8005/api/runs/$RUN_ID/artifacts
 curl http://localhost:8005/api/artifacts/$ARTIFACT_ID
 ```
 
+## Stage 5A Demo Agent State Machine
+
+Stage 5A routes `demo_agent` through a minimal observable state machine.
+The existing run API stays compatible, and each node is recorded as a run step
+and event.
+
+Create a run and inspect the node trace:
+
+```bash
+RUN_ID=$(curl -s -X POST http://localhost:8005/api/runs \
+  -H 'Content-Type: application/json' \
+  -d '{"input":"hello"}' \
+  | python3 -c "import json, sys; print(json.load(sys.stdin)['id'])")
+
+curl http://localhost:8005/api/runs/$RUN_ID
+curl http://localhost:8005/api/runs/$RUN_ID/events
+```
+
+Expected node steps:
+
+- `input_node`
+- `skill_node`
+- `tool_node`
+- `final_node`
+
 ## Stop Infrastructure 停止基础设施
 
 ```bash

@@ -2,7 +2,7 @@ from datetime import datetime, timezone
 from uuid import uuid4
 
 from app.models.run import Run, RunEvent, Step, Task
-from modules.demo_agent import run_demo_agent
+from modules.demo_agent import run_demo_agent_state_machine
 
 
 class RunStore:
@@ -20,20 +20,20 @@ class RunStore:
         run.status = "running"
         self._add_event(run.id, "run.started", "Run started")
 
-        step = Step(id=self._new_id("step"), name="demo_agent", status="running")
-        run.steps.append(step)
-        self._add_event(run.id, "step.started", "demo_agent started")
+        state = run_demo_agent_state_machine(task_input)
+        for node_trace in state.node_traces:
+            step = Step(id=self._new_id("step"), name=node_trace.name, status="running")
+            run.steps.append(step)
+            self._add_event(run.id, "node.started", f"{node_trace.name} started")
 
-        output = run_demo_agent(task_input)
-        completed_at = self._utc_now()
-        step.status = "completed"
-        step.output = output
-        step.completed_at = completed_at
+            step.status = "completed"
+            step.output = node_trace.output
+            step.completed_at = self._utc_now()
+            self._add_event(run.id, "node.completed", f"{node_trace.name} completed")
 
         run.status = "completed"
-        run.output = output
-        run.completed_at = completed_at
-        self._add_event(run.id, "step.completed", "demo_agent completed")
+        run.output = state.final_output
+        run.completed_at = self._utc_now()
         self._add_event(run.id, "run.completed", "Run completed")
 
         return run

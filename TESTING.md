@@ -317,6 +317,58 @@ curl http://localhost:8005/api/artifacts/$ARTIFACT_ID
 - artifact 与 run 关联
 - artifact text 来自上传文件的最小文本提取
 
+## Stage 5A State Machine Acceptance Stage 5A 验收
+
+运行测试：
+
+```bash
+make test-api
+```
+
+预期结果：
+
+- `tests/test_state_machine.py` 通过
+- `tests/test_runs.py` 仍然通过
+
+启动后端：
+
+```bash
+make dev-api
+```
+
+创建 run：
+
+```bash
+RUN_ID=$(curl -s -X POST http://localhost:8005/api/runs \
+  -H 'Content-Type: application/json' \
+  -d '{"input":"hello"}' \
+  | python3 -c "import json, sys; print(json.load(sys.stdin)['id'])")
+```
+
+读取 run：
+
+```bash
+curl http://localhost:8005/api/runs/$RUN_ID
+```
+
+预期 steps 包含：
+
+- `input_node`
+- `skill_node`
+- `tool_node`
+- `final_node`
+
+读取 events：
+
+```bash
+curl http://localhost:8005/api/runs/$RUN_ID/events
+```
+
+预期 events 包含每个节点的：
+
+- `node.started`
+- `node.completed`
+
 ## Common Errors 常见错误排查
 
 ### `python: command not found`

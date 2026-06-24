@@ -1,12 +1,11 @@
-from app.registries.skills import get_skill
-from app.registries.tools import get_tool
+from harness.state_machine.demo_agent_graph import run_demo_agent_graph
+from harness.state_machine.types import DemoAgentState
 
 
 def run_demo_agent(task_input: str) -> str:
-    skill = get_skill("mock_summarize")
-    tool = get_tool("mock_echo")
+    state = run_demo_agent_state_machine(task_input)
+    return state.final_output or ""
 
-    skill_output = skill(task_input)
-    tool_output = tool(skill_output)
 
-    return f"demo_agent mock response | skill={skill_output} | tool={tool_output}"
+def run_demo_agent_state_machine(task_input: str) -> DemoAgentState:
+    return run_demo_agent_graph(task_input)

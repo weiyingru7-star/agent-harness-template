@@ -1,0 +1,23 @@
+.env
+.DS_Store
+
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.venv/
+venv/
+dist/
+build/
+*.egg-info/
+
+# Node
+node_modules/
+.next/
+.npm-cache/
+out/
+npm-debug.log*
+
+# Local data
+data/
+.docker/

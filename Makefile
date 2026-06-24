@@ -1,15 +1,13 @@
 PYTHON ?= python3
 API_VENV := apps/api/.venv
 API_PYTHON := $(API_VENV)/bin/python
-API_UVICORN := $(API_VENV)/bin/uvicorn
-API_PYTEST := $(API_VENV)/bin/pytest
 NPM_CACHE := ../../.npm-cache
 DOCKER_CONFIG_DIR := .docker
 
 .PHONY: install-api install-web install dev-api dev-web test-api prepare-docker-config up down
 
 install-api:
-	$(PYTHON) -m venv $(API_VENV)
+	$(PYTHON) -m venv --clear $(API_VENV)
 	$(API_PYTHON) -m pip install --upgrade pip
 	cd apps/api && ../../$(API_PYTHON) -m pip install -e ".[dev]"
 
@@ -19,13 +17,13 @@ install-web:
 install: install-api install-web
 
 dev-api:
-	cd apps/api && ../../$(API_UVICORN) app.main:app --reload --host $${API_HOST:-0.0.0.0} --port $${API_PORT:-8000}
+	cd apps/api && PYTHONPATH=../..:. ../../$(API_PYTHON) -m uvicorn app.main:app --host $${API_HOST:-127.0.0.1} --port $${API_PORT:-8005}
 
 dev-web:
-	cd apps/web && npm run dev -- --port $${WEB_PORT:-3000}
+	cd apps/web && npm run dev -- --port $${WEB_PORT:-3005}
 
 test-api:
-	cd apps/api && ../../$(API_PYTEST)
+	cd apps/api && PYTHONPATH=../..:. ../../$(API_PYTHON) -m pytest
 
 prepare-docker-config:
 	mkdir -p $(DOCKER_CONFIG_DIR)

@@ -54,7 +54,7 @@ make dev-api
 后端健康检查：
 
 ```bash
-curl http://localhost:8000/health
+curl http://localhost:8005/health
 ```
 
 预期返回：
@@ -75,13 +75,38 @@ make dev-web
 打开：
 
 ```text
-http://localhost:3000
+http://localhost:3005
 ```
 
 ## Test 测试
 
 ```bash
 make test-api
+```
+
+## Stage 2 Run Flow
+
+Stage 2 adds a minimal Agent Run path using `modules/demo_agent`.
+The demo agent returns a mock response and does not call a real LLM.
+
+Create a run:
+
+```bash
+curl -X POST http://localhost:8005/api/runs \
+  -H 'Content-Type: application/json' \
+  -d '{"input":"hello"}'
+```
+
+Read a run:
+
+```bash
+curl http://localhost:8005/api/runs/<run_id>
+```
+
+Read run events:
+
+```bash
+curl http://localhost:8005/api/runs/<run_id>/events
 ```
 
 ## Stop Infrastructure 停止基础设施

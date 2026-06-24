@@ -1,4 +1,5 @@
 import { getHealth } from "@/lib/api";
+import { RunForm } from "@/app/run-form";
 
 export default async function Home() {
   const health = await getHealth();
@@ -12,8 +13,8 @@ export default async function Home() {
             <h1 className="title">Agent Harness Template</h1>
             <p className="subtitle">
               A business-agnostic foundation for building reusable agent
-              applications. Stage 1 only verifies the app skeleton and service
-              health.
+              applications. Stage 2 adds a minimal mock run path for the
+              demo_agent module.
             </p>
           </div>
           <div className="status">
@@ -25,16 +26,24 @@ export default async function Home() {
         <section className="grid">
           <article className="panel">
             <h2>Frontend</h2>
-            <p>Next.js app shell with a minimal homepage.</p>
+            <p>Submit a task and inspect the resulting run.</p>
           </article>
           <article className="panel">
             <h2>Backend</h2>
-            <p>FastAPI service with a single health endpoint.</p>
+            <p>FastAPI exposes health and minimal run endpoints.</p>
           </article>
           <article className="panel">
             <h2>Infrastructure</h2>
             <p>PostgreSQL and Redis are available through Docker Compose.</p>
           </article>
+        </section>
+
+        <section className="section">
+          <div className="section-heading">
+            <h2>Start A Run</h2>
+            <p>demo_agent returns a mock response without calling an external model.</p>
+          </div>
+          <RunForm />
         </section>
       </div>
     </main>

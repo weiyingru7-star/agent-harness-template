@@ -57,7 +57,7 @@ make down
 后端运行后，请执行：
 
 ```bash
-curl http://localhost:8000/health
+curl http://localhost:8005/health
 ```
 
 预期返回：
@@ -80,7 +80,7 @@ make dev-web
 打开：
 
 ```text
-http://localhost:3000
+http://localhost:3005
 ```
 
 预期结果：
@@ -125,6 +125,50 @@ make test-api
 预期结果：
 
 - `tests/test_health.py` 通过
+- `tests/test_runs.py` 通过
+
+## Stage 2 Run Acceptance Stage 2 Run 验收
+
+启动后端：
+
+```bash
+make dev-api
+```
+
+创建 run：
+
+```bash
+curl -X POST http://localhost:8005/api/runs \
+  -H 'Content-Type: application/json' \
+  -d '{"input":"hello"}'
+```
+
+预期结果：
+
+- 返回 `201`
+- `status` 为 `completed`
+- `steps[0].name` 为 `demo_agent`
+- `output` 包含 mock response
+
+读取 run：
+
+```bash
+curl http://localhost:8005/api/runs/<run_id>
+```
+
+读取 events：
+
+```bash
+curl http://localhost:8005/api/runs/<run_id>/events
+```
+
+预期 events 至少包含：
+
+- `run.created`
+- `run.started`
+- `step.started`
+- `step.completed`
+- `run.completed`
 
 ## Common Errors 常见错误排查
 
@@ -215,5 +259,5 @@ make dev-api
 然后刷新：
 
 ```text
-http://localhost:3000
+http://localhost:3005
 ```

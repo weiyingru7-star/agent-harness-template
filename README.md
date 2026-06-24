@@ -193,6 +193,27 @@ Expected node steps:
 - `tool_node`
 - `final_node`
 
+## Stage 5C Module Scaffold
+
+Stage 5C adds a minimal module scaffold command for creating a new module from
+the generic template.
+
+Create a module:
+
+```bash
+python3 cli/scaffold_module.py sample_agent
+```
+
+Expected files:
+
+- `modules/sample_agent/module.yaml`
+- `modules/sample_agent/agent.yaml`
+- `modules/sample_agent/services/sample_agent_service.py`
+- `modules/sample_agent/prompts/system.md`
+- `modules/sample_agent/skills/`
+- `modules/sample_agent/evals/`
+- `modules/sample_agent/README.md`
+
 ## Stop Infrastructure 停止基础设施
 
 ```bash

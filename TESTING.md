@@ -369,6 +369,35 @@ curl http://localhost:8005/api/runs/$RUN_ID/events
 - `node.started`
 - `node.completed`
 
+## Stage 5C Module Scaffold Acceptance Stage 5C 验收
+
+创建模块：
+
+```bash
+python3 cli/scaffold_module.py sample_agent
+```
+
+预期生成：
+
+- `modules/sample_agent/module.yaml`
+- `modules/sample_agent/agent.yaml`
+- `modules/sample_agent/services/sample_agent_service.py`
+- `modules/sample_agent/prompts/system.md`
+- `modules/sample_agent/skills/`
+- `modules/sample_agent/evals/`
+- `modules/sample_agent/README.md`
+
+重复创建同名模块：
+
+```bash
+python3 cli/scaffold_module.py sample_agent
+```
+
+预期结果：
+
+- 命令失败
+- 不覆盖已有 `modules/sample_agent`
+
 ## Common Errors 常见错误排查
 
 ### `python: command not found`

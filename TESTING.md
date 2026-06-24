@@ -138,9 +138,10 @@ make dev-api
 创建 run：
 
 ```bash
-curl -X POST http://localhost:8005/api/runs \
+RUN_ID=$(curl -s -X POST http://localhost:8005/api/runs \
   -H 'Content-Type: application/json' \
-  -d '{"input":"hello"}'
+  -d '{"input":"hello"}' \
+  | python3 -c "import json, sys; print(json.load(sys.stdin)['id'])")
 ```
 
 预期结果：
@@ -153,13 +154,13 @@ curl -X POST http://localhost:8005/api/runs \
 读取 run：
 
 ```bash
-curl http://localhost:8005/api/runs/<run_id>
+curl http://localhost:8005/api/runs/$RUN_ID
 ```
 
 读取 events：
 
 ```bash
-curl http://localhost:8005/api/runs/<run_id>/events
+curl http://localhost:8005/api/runs/$RUN_ID/events
 ```
 
 预期 events 至少包含：
@@ -169,6 +170,83 @@ curl http://localhost:8005/api/runs/<run_id>/events
 - `step.started`
 - `step.completed`
 - `run.completed`
+
+## Stage 3 AI Runtime And Registry Acceptance Stage 3 验收
+
+运行测试：
+
+```bash
+make test-api
+```
+
+预期结果：
+
+- `tests/test_llm.py` 通过
+- `tests/test_registries.py` 通过
+- `tests/test_runs.py` 仍然通过
+
+启动后端：
+
+```bash
+make dev-api
+```
+
+检查 modules：
+
+```bash
+curl http://localhost:8005/api/modules
+```
+
+检查 skills：
+
+```bash
+curl http://localhost:8005/api/skills
+```
+
+检查 tools：
+
+```bash
+curl http://localhost:8005/api/tools
+```
+
+检查 mock LLM smoke：
+
+```bash
+curl -X POST http://localhost:8005/api/llm/smoke \
+  -H 'Content-Type: application/json' \
+  -d '{"prompt":"hello","provider":"mock"}'
+```
+
+预期结果：
+
+- `provider` 为 `mock`
+- `output` 包含 mock response
+- 不需要真实外部模型配置
+
+检查 structured output：
+
+```bash
+curl -X POST http://localhost:8005/api/llm/smoke \
+  -H 'Content-Type: application/json' \
+  -d '{"prompt":"hello","provider":"mock","structured":true}'
+```
+
+预期结果：
+
+- `structured_output.ok` 为 `true`
+
+再次创建 run：
+
+```bash
+curl -X POST http://localhost:8005/api/runs \
+  -H 'Content-Type: application/json' \
+  -d '{"input":"hello"}'
+```
+
+预期结果：
+
+- run 正常完成
+- output 显示 demo_agent 通过 mock skill 和 mock tool 生成结果
 
 ## Common Errors 常见错误排查
 

@@ -87,26 +87,57 @@ make test-api
 ## Stage 2 Run Flow
 
 Stage 2 adds a minimal Agent Run path using `modules/demo_agent`.
-The demo agent returns a mock response and does not call a real LLM.
+The demo agent returns a mock response and does not call a real external model.
 
 Create a run:
 
 ```bash
-curl -X POST http://localhost:8005/api/runs \
+RUN_ID=$(curl -s -X POST http://localhost:8005/api/runs \
   -H 'Content-Type: application/json' \
-  -d '{"input":"hello"}'
+  -d '{"input":"hello"}' \
+  | python3 -c "import json, sys; print(json.load(sys.stdin)['id'])")
 ```
 
 Read a run:
 
 ```bash
-curl http://localhost:8005/api/runs/<run_id>
+curl http://localhost:8005/api/runs/$RUN_ID
 ```
 
 Read run events:
 
 ```bash
-curl http://localhost:8005/api/runs/<run_id>/events
+curl http://localhost:8005/api/runs/$RUN_ID/events
+```
+
+## Stage 3 AI Runtime And Registries
+
+Stage 3 adds a minimal AI runtime and static local registries.
+The default LLM provider is `mock`. The OpenAI-compatible provider is present as
+a basic adapter, but the run flow does not depend on a real API.
+
+List local registries:
+
+```bash
+curl http://localhost:8005/api/modules
+curl http://localhost:8005/api/skills
+curl http://localhost:8005/api/tools
+```
+
+Run the mock LLM smoke test:
+
+```bash
+curl -X POST http://localhost:8005/api/llm/smoke \
+  -H 'Content-Type: application/json' \
+  -d '{"prompt":"hello","provider":"mock"}'
+```
+
+Run the structured mock smoke test:
+
+```bash
+curl -X POST http://localhost:8005/api/llm/smoke \
+  -H 'Content-Type: application/json' \
+  -d '{"prompt":"hello","provider":"mock","structured":true}'
 ```
 
 ## Stop Infrastructure 停止基础设施

@@ -3,6 +3,8 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.core.config import settings
 from app.routes.health import router as health_router
+from app.routes.llm import router as llm_router
+from app.routes.registries import router as registries_router
 from app.routes.runs import router as runs_router
 
 
@@ -18,6 +20,8 @@ app.add_middleware(
 
 app.include_router(health_router)
 app.include_router(runs_router)
+app.include_router(registries_router)
+app.include_router(llm_router)
 
 
 @app.get("/")

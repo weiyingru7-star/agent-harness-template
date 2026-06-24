@@ -16,7 +16,11 @@ def test_create_and_get_run() -> None:
     assert run["task"]["input"] == "hello stage two"
     assert run["steps"][0]["name"] == "demo_agent"
     assert run["steps"][0]["status"] == "completed"
-    assert run["output"] == "Mock response from demo_agent for: hello stage two"
+    assert run["output"] == (
+        "demo_agent mock response | "
+        "skill=Mock skill summary: hello stage two | "
+        "tool=Mock tool echo: Mock skill summary: hello stage two"
+    )
 
     get_response = client.get(f"/api/runs/{run['id']}")
 

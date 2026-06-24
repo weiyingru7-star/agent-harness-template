@@ -1,7 +1,12 @@
 import os
+from pathlib import Path
+from tempfile import gettempdir
 
-os.environ.setdefault("DATABASE_URL", "sqlite+pysqlite:///./data/test_agent_harness.db")
-os.environ.setdefault("LOCAL_STORAGE_DIR", "data/test_uploads")
+TEST_ROOT = Path(gettempdir()) / "agent_harness_template_tests"
+TEST_ROOT.mkdir(parents=True, exist_ok=True)
+
+os.environ.setdefault("DATABASE_URL", f"sqlite+pysqlite:///{TEST_ROOT / 'test_agent_harness.db'}")
+os.environ.setdefault("LOCAL_STORAGE_DIR", str(TEST_ROOT / "uploads"))
 
 import pytest
 

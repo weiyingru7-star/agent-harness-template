@@ -454,6 +454,48 @@ DOCKER_CONFIG=$(pwd)/.docker docker compose exec postgres \
 - `runs` 表中存在对应 `RUN_ID`
 - `steps` 和 `run_events` 表中存在该 run 的执行记录
 
+## V0.1.5 Acceptance Guard V0.1.5 测试增强
+
+运行完整后端测试：
+
+```bash
+make test-api
+```
+
+预期结果：
+
+- Run persistence 测试通过
+- File / Artifact persistence 测试通过
+- Knowledge persistence 测试通过
+- Schema validation 测试通过
+- Scaffold 测试通过
+
+运行业务词污染检查：
+
+```bash
+python3 scripts/check_business_terms.py
+```
+
+预期结果：
+
+- 底座核心目录无业务词污染
+- 禁止词清单和规则说明中的业务词允许出现
+
+校验 schema JSON：
+
+```bash
+for f in schemas/*.schema.json; do python3 -m json.tool "$f" >/dev/null || exit 1; done
+```
+
+完整验收：
+
+```bash
+make test-api
+python3 scripts/check_business_terms.py
+for f in schemas/*.schema.json; do python3 -m json.tool "$f" >/dev/null || exit 1; done
+cd apps/web && npm run build
+```
+
 ## Common Errors 常见错误排查
 
 ### `python: command not found`

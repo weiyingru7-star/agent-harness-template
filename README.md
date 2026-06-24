@@ -99,6 +99,22 @@ DOCKER_CONFIG=$(pwd)/.docker docker compose exec postgres \
   -c "select id, status from runs where id = '$RUN_ID';"
 ```
 
+## V0.1.5 Acceptance Guard 测试与验收增强
+
+V0.1.5 增强底座测试覆盖和业务词污染检查，不增加新业务功能。
+
+完整验收命令：
+
+```bash
+make test-api
+python3 scripts/check_business_terms.py
+for f in schemas/*.schema.json; do python3 -m json.tool "$f" >/dev/null || exit 1; done
+```
+
+更多说明：
+
+- [V0.1.5 测试与验收增强](docs/v0.1.5-acceptance.md)
+
 更多说明：
 
 - [Architecture 架构说明](docs/architecture.md)

@@ -32,6 +32,83 @@ cp .env.example .env
 make install
 ```
 
+## V0 Quick Start V0 快速开始
+
+启动基础设施：
+
+```bash
+make up
+```
+
+启动后端：
+
+```bash
+make dev-api
+```
+
+后端地址：
+
+```text
+http://localhost:8005
+```
+
+启动前端：
+
+```bash
+make dev-web
+```
+
+前端地址：
+
+```text
+http://localhost:3005
+```
+
+创建 Run：
+
+```bash
+RUN_ID=$(curl -s -X POST http://localhost:8005/api/runs \
+  -H 'Content-Type: application/json' \
+  -d '{"input":"hello"}' \
+  | python3 -c "import json, sys; print(json.load(sys.stdin)['id'])")
+
+curl http://localhost:8005/api/runs/$RUN_ID
+curl http://localhost:8005/api/runs/$RUN_ID/events
+```
+
+上传文件并查看 File：
+
+```bash
+FILE_ID=$(curl -s -X POST http://localhost:8005/api/files/upload \
+  -F "file=@README.md" \
+  | python3 -c "import json, sys; print(json.load(sys.stdin)['id'])")
+
+curl http://localhost:8005/api/files/$FILE_ID
+```
+
+RAG ingest / retrieve：
+
+```bash
+curl -X POST http://localhost:8005/api/knowledge/ingest \
+  -H 'Content-Type: application/json' \
+  -d "{\"file_id\":\"$FILE_ID\"}"
+
+curl -X POST http://localhost:8005/api/knowledge/retrieve \
+  -H 'Content-Type: application/json' \
+  -d '{"query":"Agent Harness","limit":3}'
+```
+
+scaffold 新模块：
+
+```bash
+python3 cli/scaffold_module.py sample_agent
+```
+
+更多文档：
+
+- [V0 总体验收](docs/v0-acceptance.md)
+- [创建新 Agent](docs/how-to-create-new-agent.md)
+
 ## Start Infrastructure 启动基础设施
 
 ```bash

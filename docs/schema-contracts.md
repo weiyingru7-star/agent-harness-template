@@ -22,6 +22,8 @@ V0.1.3 为 Agent Harness Template 的核心对象补齐最小 JSON Schema 草案
 - `schemas/step.schema.json`：Run 内部 step 的最小契约。
 - `schemas/artifact.schema.json`：Run 关联产物的最小契约。
 - `schemas/file.schema.json`：上传文件资源的最小契约。
+- `schemas/document.schema.json`：已 ingest 文档的最小契约。
+- `schemas/chunk.schema.json`：文档切分片段的最小契约。
 - `schemas/module.schema.json`：模块定义的最小契约。
 - `schemas/agent.schema.json`：Agent 定义的最小契约。
 - `schemas/skill.schema.json`：Skill 定义的最小契约。

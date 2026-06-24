@@ -3,6 +3,8 @@ from uuid import uuid4
 
 from app.core.config import settings
 from app.models.file import UploadedFile
+from core.db import session_scope
+from core.db.repositories.file_repository import FileRepository
 from core.storage.local import LocalStorage
 
 
@@ -11,7 +13,6 @@ ALLOWED_EXTENSIONS = {".txt", ".md"}
 
 class FileStore:
     def __init__(self) -> None:
-        self._files: dict[str, UploadedFile] = {}
         self._storage = LocalStorage(settings.local_storage_dir)
 
     def save_file(self, filename: str, content_type: str, content: bytes) -> UploadedFile:
@@ -33,11 +34,13 @@ class FileStore:
             storage_path=str(storage_path),
             text=text,
         )
-        self._files[file_id] = uploaded_file
+        with session_scope() as session:
+            FileRepository(session).create(uploaded_file)
         return uploaded_file
 
     def get_file(self, file_id: str) -> UploadedFile | None:
-        return self._files.get(file_id)
+        with session_scope() as session:
+            return FileRepository(session).get(file_id)
 
     @staticmethod
     def _new_id(prefix: str) -> str:

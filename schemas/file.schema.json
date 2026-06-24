@@ -3,7 +3,7 @@
   "title": "File",
   "description": "Minimal contract for an uploaded file resource.",
   "type": "object",
-  "required": ["id", "filename", "content_type", "storage_path", "created_at"],
+  "required": ["id", "filename", "content_type", "extension", "storage_path", "created_at"],
   "properties": {
     "id": {
       "type": "string",
@@ -22,9 +22,17 @@
       "minimum": 0,
       "description": "File size in bytes."
     },
+    "extension": {
+      "type": "string",
+      "description": "Normalized file extension."
+    },
     "storage_path": {
       "type": "string",
       "description": "Internal storage path or key."
+    },
+    "metadata": {
+      "type": "object",
+      "description": "Optional generic file metadata."
     },
     "created_at": {
       "type": "string",

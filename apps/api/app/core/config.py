@@ -9,6 +9,7 @@ class Settings(BaseSettings):
     openai_compatible_api_key: str = ""
     openai_compatible_model: str = "gpt-4o-mini"
     local_storage_dir: str = "data/uploads"
+    database_url: str = "postgresql://agent_harness:agent_harness@localhost:15432/agent_harness"
 
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 

@@ -398,6 +398,62 @@ python3 cli/scaffold_module.py sample_agent
 - 命令失败
 - 不覆盖已有 `modules/sample_agent`
 
+## V0.1.4 PostgreSQL Persistence Acceptance V0.1.4 验收
+
+运行后端测试：
+
+```bash
+make test-api
+```
+
+预期结果：
+
+- 现有 API 测试通过
+- `tests/test_persistence.py` 通过
+- Run、Step、Event、File、Artifact、Document、Chunk 可以写入并读取
+
+启动 PostgreSQL 和 Redis：
+
+```bash
+make up
+```
+
+启动后端：
+
+```bash
+make dev-api
+```
+
+创建 run：
+
+```bash
+RUN_ID=$(curl -s -X POST http://localhost:8005/api/runs \
+  -H 'Content-Type: application/json' \
+  -d '{"input":"hello"}' \
+  | python3 -c "import json, sys; print(json.load(sys.stdin)['id'])")
+```
+
+查询 API：
+
+```bash
+curl http://localhost:8005/api/runs/$RUN_ID
+curl http://localhost:8005/api/runs/$RUN_ID/events
+```
+
+查询 PostgreSQL：
+
+```bash
+DOCKER_CONFIG=$(pwd)/.docker docker compose exec postgres \
+  psql -U agent_harness -d agent_harness \
+  -c "select id, status from runs where id = '$RUN_ID';"
+```
+
+预期结果：
+
+- API 返回格式保持兼容
+- `runs` 表中存在对应 `RUN_ID`
+- `steps` 和 `run_events` 表中存在该 run 的执行记录
+
 ## Common Errors 常见错误排查
 
 ### `python: command not found`

@@ -1,15 +1,13 @@
 from uuid import uuid4
 
 from app.models.file import UploadedFile
+from core.db import session_scope
+from core.db.repositories.knowledge_repository import KnowledgeRepository
 from harness.rag.chunking import chunk_text
 from harness.rag.models import Chunk, Citation, Document, IngestResponse, RetrieveResult
 
 
 class KnowledgeStore:
-    def __init__(self) -> None:
-        self._documents: dict[str, Document] = {}
-        self._chunks: list[Chunk] = []
-
     def ingest_file(self, uploaded_file: UploadedFile) -> IngestResponse:
         document = Document(
             id=self._new_id("doc"),
@@ -27,18 +25,32 @@ class KnowledgeStore:
             for index, text in enumerate(chunk_text(uploaded_file.text))
         ]
 
-        self._documents[document.id] = document
-        self._chunks.extend(chunks)
+        with session_scope() as session:
+            repository = KnowledgeRepository(session)
+            repository.create_document(
+                document=document,
+                collection="default",
+                title=uploaded_file.filename,
+                source="file",
+                metadata={},
+            )
+            repository.create_chunks(chunks)
         return IngestResponse(document=document, chunks=chunks)
 
     def list_documents(self) -> list[Document]:
-        return list(self._documents.values())
+        with session_scope() as session:
+            return KnowledgeRepository(session).list_documents()
 
     def retrieve(self, query: str, limit: int = 3) -> list[RetrieveResult]:
         terms = [term for term in query.lower().split() if term]
         scored: list[tuple[int, Chunk]] = []
 
-        for chunk in self._chunks:
+        with session_scope() as session:
+            repository = KnowledgeRepository(session)
+            chunks = repository.list_chunks()
+            documents = {document.id: document for document in repository.list_documents()}
+
+        for chunk in chunks:
             haystack = chunk.text.lower()
             score = sum(haystack.count(term) for term in terms)
             if score > 0:
@@ -49,13 +61,13 @@ class KnowledgeStore:
             RetrieveResult(
                 chunk=chunk,
                 score=score,
-                citation=self._citation_for(chunk),
+                citation=self._citation_for(chunk, documents),
             )
             for score, chunk in scored[:limit]
         ]
 
-    def _citation_for(self, chunk: Chunk) -> Citation:
-        document = self._documents[chunk.document_id]
+    def _citation_for(self, chunk: Chunk, documents: dict[str, Document]) -> Citation:
+        document = documents[chunk.document_id]
         return Citation(
             document_id=document.id,
             chunk_id=chunk.id,

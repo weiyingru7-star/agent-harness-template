@@ -59,6 +59,46 @@ Schema 说明：
 
 - [Schema Contracts 核心契约](docs/schema-contracts.md)
 
+## V0.1.4 PostgreSQL Persistence 数据库持久化
+
+V0.1.4 为核心运行数据补齐 PostgreSQL 最小持久化。现有 API 路径保持不变，开发期通过 SQLAlchemy `create_all` 初始化表。
+
+已持久化的核心表：
+
+- `tasks`
+- `runs`
+- `steps`
+- `run_events`
+- `files`
+- `artifacts`
+- `documents`
+- `chunks`
+
+启动 PostgreSQL：
+
+```bash
+make up
+```
+
+启动 API：
+
+```bash
+make dev-api
+```
+
+创建 Run 后验证数据库写入：
+
+```bash
+RUN_ID=$(curl -s -X POST http://localhost:8005/api/runs \
+  -H 'Content-Type: application/json' \
+  -d '{"input":"hello"}' \
+  | python3 -c "import json, sys; print(json.load(sys.stdin)['id'])")
+
+DOCKER_CONFIG=$(pwd)/.docker docker compose exec postgres \
+  psql -U agent_harness -d agent_harness \
+  -c "select id, status from runs where id = '$RUN_ID';"
+```
+
 更多说明：
 
 - [Architecture 架构说明](docs/architecture.md)

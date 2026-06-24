@@ -1,3 +1,6 @@
+from collections.abc import AsyncIterator
+from contextlib import asynccontextmanager
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -9,9 +12,16 @@ from app.routes.knowledge import router as knowledge_router
 from app.routes.llm import router as llm_router
 from app.routes.registries import router as registries_router
 from app.routes.runs import router as runs_router
+from core.db import init_db
 
 
-app = FastAPI(title="Agent Harness API")
+@asynccontextmanager
+async def lifespan(app: FastAPI) -> AsyncIterator[None]:
+    init_db()
+    yield
+
+
+app = FastAPI(title="Agent Harness API", lifespan=lifespan)
 
 app.add_middleware(
     CORSMiddleware,

@@ -3,7 +3,7 @@
   "title": "Artifact",
   "description": "Minimal contract for a run-associated artifact.",
   "type": "object",
-  "required": ["id", "run_id", "name", "type", "created_at"],
+  "required": ["id", "run_id", "title", "type", "content", "created_at"],
   "properties": {
     "id": {
       "type": "string",
@@ -17,13 +17,21 @@
       "type": "string",
       "description": "Optional file identifier backing this artifact."
     },
-    "name": {
+    "title": {
       "type": "string",
-      "description": "Artifact display name."
+      "description": "Artifact display title."
     },
     "type": {
       "type": "string",
       "description": "Generic artifact type."
+    },
+    "content": {
+      "type": "string",
+      "description": "Artifact content."
+    },
+    "metadata": {
+      "type": "object",
+      "description": "Optional generic artifact metadata."
     },
     "created_at": {
       "type": "string",

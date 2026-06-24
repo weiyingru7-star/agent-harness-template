@@ -1,0 +1,44 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Step",
+  "description": "Minimal contract for a single step within a run.",
+  "type": "object",
+  "required": ["id", "run_id", "name", "status", "created_at"],
+  "properties": {
+    "id": {
+      "type": "string",
+      "description": "Unique step identifier."
+    },
+    "run_id": {
+      "type": "string",
+      "description": "Run identifier that owns this step."
+    },
+    "name": {
+      "type": "string",
+      "description": "Step name."
+    },
+    "status": {
+      "type": "string",
+      "description": "Current step status."
+    },
+    "input": {
+      "type": "string",
+      "description": "Step input text."
+    },
+    "output": {
+      "type": "string",
+      "description": "Step output text."
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Step creation timestamp."
+    },
+    "updated_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Last step update timestamp."
+    }
+  },
+  "additionalProperties": false
+}

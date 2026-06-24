@@ -1,0 +1,36 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Module",
+  "description": "Minimal contract for a module definition.",
+  "type": "object",
+  "required": ["id", "name", "description"],
+  "properties": {
+    "id": {
+      "type": "string",
+      "description": "Unique module identifier."
+    },
+    "name": {
+      "type": "string",
+      "description": "Human-readable module name."
+    },
+    "description": {
+      "type": "string",
+      "description": "Module purpose and boundary."
+    },
+    "version": {
+      "type": "string",
+      "description": "Module version."
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Module creation timestamp."
+    },
+    "updated_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Last module update timestamp."
+    }
+  },
+  "additionalProperties": false
+}

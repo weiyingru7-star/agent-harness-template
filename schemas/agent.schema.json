@@ -1,0 +1,40 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Agent",
+  "description": "Minimal contract for an agent definition inside a module.",
+  "type": "object",
+  "required": ["id", "module_id", "name", "description"],
+  "properties": {
+    "id": {
+      "type": "string",
+      "description": "Unique agent identifier."
+    },
+    "module_id": {
+      "type": "string",
+      "description": "Module identifier that owns this agent."
+    },
+    "name": {
+      "type": "string",
+      "description": "Human-readable agent name."
+    },
+    "description": {
+      "type": "string",
+      "description": "Agent purpose and boundary."
+    },
+    "version": {
+      "type": "string",
+      "description": "Agent version."
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Agent creation timestamp."
+    },
+    "updated_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Last agent update timestamp."
+    }
+  },
+  "additionalProperties": false
+}

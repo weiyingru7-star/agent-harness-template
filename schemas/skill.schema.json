@@ -1,0 +1,40 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Skill",
+  "description": "Minimal contract for a reusable skill definition.",
+  "type": "object",
+  "required": ["id", "name", "description"],
+  "properties": {
+    "id": {
+      "type": "string",
+      "description": "Unique skill identifier."
+    },
+    "name": {
+      "type": "string",
+      "description": "Human-readable skill name."
+    },
+    "description": {
+      "type": "string",
+      "description": "Skill purpose and boundary."
+    },
+    "input_schema": {
+      "type": "object",
+      "description": "Optional JSON Schema for skill input."
+    },
+    "output_schema": {
+      "type": "object",
+      "description": "Optional JSON Schema for skill output."
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Skill creation timestamp."
+    },
+    "updated_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Last skill update timestamp."
+    }
+  },
+  "additionalProperties": false
+}

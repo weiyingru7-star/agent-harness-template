@@ -39,6 +39,15 @@ modules/sample_agent/
 - `evals/`：模块局部评测资产。
 - `README.md`：模块说明。
 
+## Schema 参考
+
+V0.1.3 为模块配置补齐了最小 schema 草案：
+
+- `module.yaml` 应参考 `schemas/module.schema.json`。
+- `agent.yaml` 应参考 `schemas/agent.schema.json`。
+
+这些 schema 是通用契约草案，不会自动校验现有文件，也不会改变现有 API 行为。模块配置可以在模块目录内扩展，但不应把模块自己的逻辑写进底座核心目录。
+
 ## 开发建议
 
 - 先明确模块边界。

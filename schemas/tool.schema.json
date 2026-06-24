@@ -1,0 +1,40 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Tool",
+  "description": "Minimal contract for a reusable tool definition.",
+  "type": "object",
+  "required": ["id", "name", "description"],
+  "properties": {
+    "id": {
+      "type": "string",
+      "description": "Unique tool identifier."
+    },
+    "name": {
+      "type": "string",
+      "description": "Human-readable tool name."
+    },
+    "description": {
+      "type": "string",
+      "description": "Tool purpose and boundary."
+    },
+    "input_schema": {
+      "type": "object",
+      "description": "Optional JSON Schema for tool input."
+    },
+    "output_schema": {
+      "type": "object",
+      "description": "Optional JSON Schema for tool output."
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Tool creation timestamp."
+    },
+    "updated_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Last tool update timestamp."
+    }
+  },
+  "additionalProperties": false
+}

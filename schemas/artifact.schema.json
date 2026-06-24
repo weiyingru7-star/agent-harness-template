@@ -1,0 +1,40 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Artifact",
+  "description": "Minimal contract for a run-associated artifact.",
+  "type": "object",
+  "required": ["id", "run_id", "name", "type", "created_at"],
+  "properties": {
+    "id": {
+      "type": "string",
+      "description": "Unique artifact identifier."
+    },
+    "run_id": {
+      "type": "string",
+      "description": "Run identifier associated with this artifact."
+    },
+    "file_id": {
+      "type": "string",
+      "description": "Optional file identifier backing this artifact."
+    },
+    "name": {
+      "type": "string",
+      "description": "Artifact display name."
+    },
+    "type": {
+      "type": "string",
+      "description": "Generic artifact type."
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Artifact creation timestamp."
+    },
+    "updated_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Last artifact update timestamp."
+    }
+  },
+  "additionalProperties": false
+}

@@ -1,0 +1,40 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Provider",
+  "description": "Minimal contract for an AI runtime provider definition.",
+  "type": "object",
+  "required": ["id", "name", "type", "status"],
+  "properties": {
+    "id": {
+      "type": "string",
+      "description": "Unique provider identifier."
+    },
+    "name": {
+      "type": "string",
+      "description": "Human-readable provider name."
+    },
+    "type": {
+      "type": "string",
+      "description": "Provider capability type."
+    },
+    "description": {
+      "type": "string",
+      "description": "Provider purpose and boundary."
+    },
+    "status": {
+      "type": "string",
+      "description": "Current provider status."
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Provider creation timestamp."
+    },
+    "updated_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Last provider update timestamp."
+    }
+  },
+  "additionalProperties": false
+}

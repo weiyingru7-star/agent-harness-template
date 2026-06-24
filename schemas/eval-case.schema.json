@@ -1,0 +1,44 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Eval Case",
+  "description": "Minimal contract for a single evaluation case.",
+  "type": "object",
+  "required": ["id", "name", "input", "expected_output"],
+  "properties": {
+    "id": {
+      "type": "string",
+      "description": "Unique evaluation case identifier."
+    },
+    "name": {
+      "type": "string",
+      "description": "Human-readable evaluation case name."
+    },
+    "description": {
+      "type": "string",
+      "description": "Evaluation case purpose and boundary."
+    },
+    "input": {
+      "type": "string",
+      "description": "Evaluation input."
+    },
+    "expected_output": {
+      "type": "string",
+      "description": "Expected output or acceptance description."
+    },
+    "metadata": {
+      "type": "object",
+      "description": "Optional generic metadata."
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Evaluation case creation timestamp."
+    },
+    "updated_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Last evaluation case update timestamp."
+    }
+  },
+  "additionalProperties": false
+}

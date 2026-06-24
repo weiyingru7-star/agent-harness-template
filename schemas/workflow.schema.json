@@ -1,0 +1,46 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Workflow",
+  "description": "Minimal contract for a workflow definition.",
+  "type": "object",
+  "required": ["id", "name", "nodes", "edges"],
+  "properties": {
+    "id": {
+      "type": "string",
+      "description": "Unique workflow identifier."
+    },
+    "name": {
+      "type": "string",
+      "description": "Human-readable workflow name."
+    },
+    "description": {
+      "type": "string",
+      "description": "Workflow purpose and boundary."
+    },
+    "nodes": {
+      "type": "array",
+      "description": "Workflow node definitions.",
+      "items": {
+        "type": "object"
+      }
+    },
+    "edges": {
+      "type": "array",
+      "description": "Workflow edge definitions.",
+      "items": {
+        "type": "object"
+      }
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Workflow creation timestamp."
+    },
+    "updated_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Last workflow update timestamp."
+    }
+  },
+  "additionalProperties": false
+}

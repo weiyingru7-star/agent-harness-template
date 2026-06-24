@@ -1,0 +1,43 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Policy",
+  "description": "Minimal contract for a generic policy definition.",
+  "type": "object",
+  "required": ["id", "name", "scope", "rules"],
+  "properties": {
+    "id": {
+      "type": "string",
+      "description": "Unique policy identifier."
+    },
+    "name": {
+      "type": "string",
+      "description": "Human-readable policy name."
+    },
+    "description": {
+      "type": "string",
+      "description": "Policy purpose and boundary."
+    },
+    "scope": {
+      "type": "string",
+      "description": "Generic scope where the policy applies."
+    },
+    "rules": {
+      "type": "array",
+      "description": "Generic policy rules.",
+      "items": {
+        "type": "object"
+      }
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Policy creation timestamp."
+    },
+    "updated_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Last policy update timestamp."
+    }
+  },
+  "additionalProperties": false
+}

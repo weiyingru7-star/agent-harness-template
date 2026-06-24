@@ -1,0 +1,41 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "File",
+  "description": "Minimal contract for an uploaded file resource.",
+  "type": "object",
+  "required": ["id", "filename", "content_type", "storage_path", "created_at"],
+  "properties": {
+    "id": {
+      "type": "string",
+      "description": "Unique file identifier."
+    },
+    "filename": {
+      "type": "string",
+      "description": "Original display filename."
+    },
+    "content_type": {
+      "type": "string",
+      "description": "File content type."
+    },
+    "size_bytes": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "File size in bytes."
+    },
+    "storage_path": {
+      "type": "string",
+      "description": "Internal storage path or key."
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "File creation timestamp."
+    },
+    "updated_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Last file update timestamp."
+    }
+  },
+  "additionalProperties": false
+}

@@ -1,0 +1,48 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Run",
+  "description": "Minimal contract for an agent execution run.",
+  "type": "object",
+  "required": ["id", "input", "status", "created_at"],
+  "properties": {
+    "id": {
+      "type": "string",
+      "description": "Unique run identifier."
+    },
+    "task_id": {
+      "type": "string",
+      "description": "Optional task identifier that started this run."
+    },
+    "module_id": {
+      "type": "string",
+      "description": "Optional module identifier used by this run."
+    },
+    "agent_id": {
+      "type": "string",
+      "description": "Optional agent identifier used by this run."
+    },
+    "input": {
+      "type": "string",
+      "description": "Run input text."
+    },
+    "output": {
+      "type": "string",
+      "description": "Run output text."
+    },
+    "status": {
+      "type": "string",
+      "description": "Current run status."
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Run creation timestamp."
+    },
+    "updated_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Last run update timestamp."
+    }
+  },
+  "additionalProperties": false
+}

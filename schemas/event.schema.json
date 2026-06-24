@@ -1,0 +1,39 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Event",
+  "description": "Minimal contract for an event emitted by a run or step.",
+  "type": "object",
+  "required": ["id", "run_id", "type", "created_at"],
+  "properties": {
+    "id": {
+      "type": "string",
+      "description": "Unique event identifier."
+    },
+    "run_id": {
+      "type": "string",
+      "description": "Run identifier associated with this event."
+    },
+    "step_id": {
+      "type": "string",
+      "description": "Optional step identifier associated with this event."
+    },
+    "type": {
+      "type": "string",
+      "description": "Event type."
+    },
+    "message": {
+      "type": "string",
+      "description": "Human-readable event message."
+    },
+    "payload": {
+      "type": "object",
+      "description": "Optional event payload."
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Event creation timestamp."
+    }
+  },
+  "additionalProperties": false
+}

@@ -1,0 +1,32 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Task",
+  "description": "Minimal contract for a user-submitted task before it becomes one or more runs.",
+  "type": "object",
+  "required": ["id", "input", "status", "created_at"],
+  "properties": {
+    "id": {
+      "type": "string",
+      "description": "Unique task identifier."
+    },
+    "input": {
+      "type": "string",
+      "description": "Original task input text."
+    },
+    "status": {
+      "type": "string",
+      "description": "Current task status."
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Task creation timestamp."
+    },
+    "updated_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Last task update timestamp."
+    }
+  },
+  "additionalProperties": false
+}

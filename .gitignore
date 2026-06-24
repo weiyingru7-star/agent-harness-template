@@ -20,4 +20,5 @@ npm-debug.log*
 
 # Local data
 data/
+apps/api/data/
 .docker/

@@ -2,6 +2,14 @@
 
 本文档定义 Stage 1 期间哪些内容可以改，哪些内容不能改。
 
+## Business-Agnostic Principle 业务无关原则
+
+`agent-harness-template` 是通用 Agent 底座，核心代码、核心文档、默认页面和 `demo_agent` 不允许绑定任何具体行业。
+
+禁止在模板核心中写死电商、客服、服装、CAD、售后、订单、商品等业务词。具体行业只能出现在 `modules/xxx_agent` 业务模块中。
+
+如需示例，只能使用中性表达，例如：文档助手、流程助手、分析助手。
+
 ## Stage 1 Allowed Scope Stage 1 允许范围
 
 Stage 1 只允许修改最小项目骨架：

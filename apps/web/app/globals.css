@@ -152,6 +152,17 @@ main {
   line-height: 1.5;
 }
 
+.text-input,
+.file-input {
+  width: 100%;
+  padding: 10px 12px;
+  color: var(--foreground);
+  background: #ffffff;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font: inherit;
+}
+
 .form-row {
   display: flex;
   align-items: center;
@@ -203,6 +214,10 @@ main {
 .stack {
   display: grid;
   gap: 12px;
+}
+
+.spaced {
+  margin-top: 14px;
 }
 
 .compact {
@@ -259,6 +274,16 @@ main {
   margin: 0;
   color: var(--muted);
   font-size: 14px;
+}
+
+.artifact-meta {
+  margin-bottom: 8px;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.muted-block {
+  color: var(--muted);
 }
 
 @media (max-width: 760px) {

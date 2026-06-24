@@ -8,6 +8,7 @@ class Settings(BaseSettings):
     openai_compatible_base_url: str = ""
     openai_compatible_api_key: str = ""
     openai_compatible_model: str = "gpt-4o-mini"
+    local_storage_dir: str = "data/uploads"
 
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 

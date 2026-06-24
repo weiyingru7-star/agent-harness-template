@@ -140,6 +140,34 @@ curl -X POST http://localhost:8005/api/llm/smoke \
   -d '{"prompt":"hello","provider":"mock","structured":true}'
 ```
 
+## Stage 4 Files And Artifacts
+
+Stage 4 adds local `.txt` and `.md` upload support plus run artifacts.
+Uploaded files are stored with internal IDs instead of trusted filenames.
+
+Create a run, upload a file, and attach it as an artifact:
+
+```bash
+RUN_ID=$(curl -s -X POST http://localhost:8005/api/runs \
+  -H 'Content-Type: application/json' \
+  -d '{"input":"hello"}' \
+  | python3 -c "import json, sys; print(json.load(sys.stdin)['id'])")
+
+FILE_ID=$(curl -s -X POST http://localhost:8005/api/files/upload \
+  -F "file=@README.md" \
+  | python3 -c "import json, sys; print(json.load(sys.stdin)['id'])")
+
+curl http://localhost:8005/api/files/$FILE_ID
+
+ARTIFACT_ID=$(curl -s -X POST http://localhost:8005/api/runs/$RUN_ID/artifacts \
+  -H 'Content-Type: application/json' \
+  -d "{\"file_id\":\"$FILE_ID\",\"name\":\"README artifact\"}" \
+  | python3 -c "import json, sys; print(json.load(sys.stdin)['id'])")
+
+curl http://localhost:8005/api/runs/$RUN_ID/artifacts
+curl http://localhost:8005/api/artifacts/$ARTIFACT_ID
+```
+
 ## Stop Infrastructure 停止基础设施
 
 ```bash

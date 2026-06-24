@@ -8,6 +8,14 @@
 
 未来阶段可以加入 agent runtime、ai runtime、registries、memory、RAG、files、workflows、human review、observability 和 evals。但除非当前任务明确要求，否则这些能力都不能提前加入。
 
+## Business-Agnostic Principle 业务无关原则
+
+`agent-harness-template` 是通用 Agent 底座，核心代码、核心文档、默认页面和 `demo_agent` 不允许绑定任何具体行业。
+
+禁止在模板核心中写死电商、客服、服装、CAD、售后、订单、商品等业务词。具体行业只能出现在 `modules/xxx_agent` 业务模块中。
+
+如需示例，只能使用中性表达，例如：文档助手、流程助手、分析助手。
+
 ## Current Stage 当前阶段
 
 当前阶段：Stage 1。

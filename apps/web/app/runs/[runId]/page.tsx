@@ -1,7 +1,8 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
-import { getRun, getRunEvents } from "@/lib/api";
+import { FileUploadForm } from "@/app/runs/[runId]/file-upload-form";
+import { getRun, getRunArtifacts, getRunEvents } from "@/lib/api";
 
 type RunPageProps = {
   params: {
@@ -16,6 +17,7 @@ export default async function RunPage({ params }: RunPageProps) {
   }
 
   const events = await getRunEvents(params.runId);
+  const artifacts = await getRunArtifacts(params.runId);
 
   return (
     <main>
@@ -63,6 +65,30 @@ export default async function RunPage({ params }: RunPageProps) {
             <h2>Output</h2>
           </div>
           <div className="detail-block">{run.output ?? "No output yet."}</div>
+        </section>
+
+        <section className="section">
+          <div className="section-heading">
+            <h2>Artifacts</h2>
+            <p>Upload .txt or .md files as run artifacts.</p>
+          </div>
+          <FileUploadForm runId={run.id} />
+          <div className="stack spaced">
+            {artifacts.length === 0 ? (
+              <div className="detail-block muted-block">No artifacts yet.</div>
+            ) : (
+              artifacts.map((artifact) => (
+                <article className="panel compact" key={artifact.id}>
+                  <div className="split-row">
+                    <h3>{artifact.name}</h3>
+                    <span className="badge">{artifact.kind}</span>
+                  </div>
+                  <p className="artifact-meta">File: {artifact.file_id}</p>
+                  <p>{artifact.text}</p>
+                </article>
+              ))
+            )}
+          </div>
         </section>
 
         <section className="section">

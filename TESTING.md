@@ -248,6 +248,75 @@ curl -X POST http://localhost:8005/api/runs \
 - run 正常完成
 - output 显示 demo_agent 通过 mock skill 和 mock tool 生成结果
 
+## Stage 4 Files And Artifacts Acceptance Stage 4 验收
+
+运行测试：
+
+```bash
+make test-api
+```
+
+预期结果：
+
+- `tests/test_files.py` 通过
+- `tests/test_artifacts.py` 通过
+
+启动后端：
+
+```bash
+make dev-api
+```
+
+创建 run：
+
+```bash
+RUN_ID=$(curl -s -X POST http://localhost:8005/api/runs \
+  -H 'Content-Type: application/json' \
+  -d '{"input":"hello"}' \
+  | python3 -c "import json, sys; print(json.load(sys.stdin)['id'])")
+```
+
+上传 `.md` 文件：
+
+```bash
+FILE_ID=$(curl -s -X POST http://localhost:8005/api/files/upload \
+  -F "file=@README.md" \
+  | python3 -c "import json, sys; print(json.load(sys.stdin)['id'])")
+```
+
+读取 file：
+
+```bash
+curl http://localhost:8005/api/files/$FILE_ID
+```
+
+创建 artifact：
+
+```bash
+ARTIFACT_ID=$(curl -s -X POST http://localhost:8005/api/runs/$RUN_ID/artifacts \
+  -H 'Content-Type: application/json' \
+  -d "{\"file_id\":\"$FILE_ID\",\"name\":\"README artifact\"}" \
+  | python3 -c "import json, sys; print(json.load(sys.stdin)['id'])")
+```
+
+读取 run artifacts：
+
+```bash
+curl http://localhost:8005/api/runs/$RUN_ID/artifacts
+```
+
+读取 artifact：
+
+```bash
+curl http://localhost:8005/api/artifacts/$ARTIFACT_ID
+```
+
+预期结果：
+
+- 只接受 `.txt` 和 `.md`
+- artifact 与 run 关联
+- artifact text 来自上传文件的最小文本提取
+
 ## Common Errors 常见错误排查
 
 ### `python: command not found`

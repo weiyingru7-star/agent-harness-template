@@ -2,6 +2,60 @@
 
 这是一个**业务无关的通用 Agent Harness 模板**，用于未来快速构建可复用的 AI Agent 应用。
 
+## V0.1.0 Current Capabilities 当前能力
+
+V0.1.0 已完成通用 Agent 底座的最小可运行闭环：
+
+- Next.js 前端和 FastAPI 后端。
+- PostgreSQL 和 Redis 本地基础设施。
+- Agent Run 主链路：Run、Step、Event。
+- Mock AI Runtime 和 registry。
+- `.txt` / `.md` 文件上传。
+- File 与 Artifact 最小模型。
+- demo agent 最小状态机。
+- 基于已上传文本文件的简单知识检索和 citation。
+- module scaffold 脚手架。
+- V0 总体验收和新模块创建文档。
+
+## V0.1.1 Blueprint Alignment 蓝图对齐
+
+V0.1.1 只补齐通用底座目录结构和文档，不改变现有 API 行为，不移动可运行代码，不实现复杂新功能。
+
+新增蓝图目录包括：
+
+- `core/config/`
+- `core/db/`
+- `core/cache/`
+- `core/security/`
+- `core/observability/`
+- `core/utils/`
+- `ai_runtime/`
+- `harness/runtime/`
+- `harness/workflow/`
+- `harness/memory/`
+- `harness/files/`
+- `harness/multimodal/`
+- `harness/policies/`
+- `harness/events/`
+- `schemas/`
+- `evals/`
+- `infra/`
+
+这些目录当前主要包含 README，用于说明未来边界。它们不代表已经实现真实外部模型、embedding、向量数据库、多模态、人审、权限系统或 Eval Runner。
+
+更多说明：
+
+- [Architecture 架构说明](docs/architecture.md)
+- [Agent Runtime](docs/agent-runtime.md)
+- [AI Runtime](docs/ai-runtime.md)
+- [Module Development](docs/module-development.md)
+- [Workflow Execution](docs/workflow-execution.md)
+- [Human Review](docs/human-review.md)
+- [Observability](docs/observability.md)
+- [Evals](docs/evals.md)
+- [V0 总体验收](docs/v0-acceptance.md)
+- [创建新 Agent](docs/how-to-create-new-agent.md)
+
 ## Stage 1 Scope Stage 1 范围
 
 当前 Stage 1 只包含：

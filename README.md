@@ -452,16 +452,35 @@ Retrieval 数据契约。
 - [RAG Pipeline](docs/rag-pipeline.md)
 - [RAG Contracts](docs/rag-contracts.md)
 
+## V0.4.1 Chunking Strategy / 文档切分策略增强
+
+V0.4.1 增强了 RAG Pipeline 的文档切分策略，支持可配置
+`chunk_size`、`chunk_overlap`、按段落优先切分、超长段落 fallback。
+
+增强内容：
+- 新增 `ChunkingConfig`：`chunk_size` / `chunk_overlap` / `split_by` / `preserve_paragraphs` / `min_chunk_size`
+- 段落优先切分（paragraph-first），超长段落自动 fallback 到固定字符切分
+- 后处理模式 overlap（不传时行为与 V0.4.0 一致）
+- Chunk 新增 `chunk_metadata`（start_char / end_char / split_strategy / overlap_with_previous / chunk_size / chunk_overlap）
+- 存储于已有 `ChunkRecord.metadata_` JSON 列
+
+ingest 时可通过 `chunking_config` 字段自定义切分参数，不传时使用默认策略。
+
+更多说明：
+
+- [RAG Chunking](docs/rag-chunking.md)
+
 ## Current Scope 当前范围
 
-当前版本（V0.4.0）已完成：
+当前版本（V0.4.1）已完成：
 - **V0.2.x Agent Runtime**：Trace / Span、Checkpoint、Failure / Retry、Timeline API 与前端视图、Eval Trajectory runner
 - **V0.3.x Tool Runtime**：Tool Call Contract、Tool Args Schema、Tool Result Contract、Tool Timeout、Tool Retry、Tool Permission、Tool Sandbox Policy、文档收口
 - **V0.4.0 RAG Pipeline**：增强 Document / Chunk / Citation / Retrieval Contract、新增文档详情与集合分块 API
+- **V0.4.1 Chunking Strategy**：可配置 chunk_size / chunk_overlap、段落优先切分、超长段落 fallback、chunk_metadata
 
 模板核心保持业务无关，具体业务逻辑应放在 `modules/{module_name}/` 内由使用者自行创建。详见 [Project Boundaries](PROJECT_BOUNDARIES.md)。
 
-下一阶段规划：V0.4.0 RAG Pipeline 增强。
+下一阶段规划：V0.4.x Embedding / Vector Store / Rerank。
 
 ## Requirements 环境要求
 

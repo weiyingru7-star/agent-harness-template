@@ -3,7 +3,8 @@ from uuid import uuid4
 from app.models.file import UploadedFile
 from core.db import session_scope
 from core.db.repositories.knowledge_repository import KnowledgeRepository
-from harness.rag.chunking import chunk_text
+from harness.rag.chunking import chunk_text, chunk_text_with_strategy
+from harness.rag.chunking_types import ChunkingConfig
 from harness.rag.models import Chunk, Citation, Document, IngestResponse, RetrieveResult
 
 
@@ -12,7 +13,12 @@ def _compute_chunk_stats(text: str) -> tuple[int, int]:
 
 
 class KnowledgeStore:
-    def ingest_file(self, uploaded_file: UploadedFile, collection: str = "default") -> IngestResponse:
+    def ingest_file(
+        self,
+        uploaded_file: UploadedFile,
+        collection: str = "default",
+        chunking_config: ChunkingConfig | None = None,
+    ) -> IngestResponse:
         document = Document(
             id=self._new_id("doc"),
             file_id=uploaded_file.id,
@@ -22,19 +28,44 @@ class KnowledgeStore:
             source="file",
             content_type=uploaded_file.content_type,
         )
-        chunks = [
-            Chunk(
-                id=self._new_id("chunk"),
-                document_id=document.id,
-                file_id=uploaded_file.id,
-                text=text,
-                index=index,
-                collection=collection,
-                char_count=_compute_chunk_stats(text)[0],
-                token_count=_compute_chunk_stats(text)[1],
-            )
-            for index, text in enumerate(chunk_text(uploaded_file.text))
-        ]
+
+        if chunking_config is not None:
+            results = chunk_text_with_strategy(uploaded_file.text, chunking_config)
+            chunks = [
+                Chunk(
+                    id=self._new_id("chunk"),
+                    document_id=document.id,
+                    file_id=uploaded_file.id,
+                    text=r.text,
+                    index=r.chunk_index,
+                    collection=collection,
+                    char_count=r.char_count,
+                    token_count=r.token_count,
+                    chunk_metadata={
+                        "start_char": r.start_char,
+                        "end_char": r.end_char,
+                        "split_strategy": r.split_strategy,
+                        "overlap_with_previous": r.overlap_with_previous,
+                        "chunk_size": chunking_config.chunk_size,
+                        "chunk_overlap": chunking_config.chunk_overlap,
+                    },
+                )
+                for r in results
+            ]
+        else:
+            chunks = [
+                Chunk(
+                    id=self._new_id("chunk"),
+                    document_id=document.id,
+                    file_id=uploaded_file.id,
+                    text=text,
+                    index=index,
+                    collection=collection,
+                    char_count=_compute_chunk_stats(text)[0],
+                    token_count=_compute_chunk_stats(text)[1],
+                )
+                for index, text in enumerate(chunk_text(uploaded_file.text))
+            ]
 
         with session_scope() as session:
             repository = KnowledgeRepository(session)

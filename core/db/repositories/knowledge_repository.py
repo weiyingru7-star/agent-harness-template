@@ -45,7 +45,7 @@ class KnowledgeRepository:
                     collection=chunk.collection,
                     char_count=chunk.char_count,
                     token_count=chunk.token_count,
-                    metadata_={},
+                    metadata_=chunk.chunk_metadata or {},
                     created_at=chunk.created_at,
                 )
             )
@@ -101,5 +101,6 @@ class KnowledgeRepository:
             collection=record.collection,
             char_count=record.char_count or 0,
             token_count=record.token_count or 0,
+            chunk_metadata=record.metadata_ or {},
             created_at=record.created_at,
         )

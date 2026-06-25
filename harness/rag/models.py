@@ -28,6 +28,7 @@ class Chunk(BaseModel):
     collection: str | None = None
     char_count: int = 0
     token_count: int = 0
+    chunk_metadata: dict = Field(default_factory=dict)
     created_at: datetime = Field(default_factory=utc_now)
 
 

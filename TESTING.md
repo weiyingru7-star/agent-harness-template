@@ -1016,6 +1016,18 @@ curl http://localhost:8005/api/runs/$RUN_ID/tool-calls
 
 ## V0.4.0 RAG Pipeline Acceptance V0.4.0 RAG Pipeline 验收
 
+### API 清单
+
+| 方法 | 路径 | 用途 |
+|---|---|---|
+| POST | `/api/knowledge/ingest` | **文档创建入口**（需要先上传文件获得 file_id） |
+| GET | `/api/knowledge/documents` | 列出所有文档 |
+| GET | `/api/knowledge/documents/{document_id}` | 查询单文档详情 |
+| GET | `/api/knowledge/collections/{collection}/chunks` | 按集合查询分块 |
+| POST | `/api/knowledge/retrieve` | 检索 chunks |
+
+注意：`POST /api/knowledge/documents` 当前不存在，文档创建须通过 `POST /api/knowledge/ingest`。
+
 ### Unified Commands 统一命令
 
 ```bash
@@ -1104,4 +1116,55 @@ python3 scripts/run_evals.py
 
 - [RAG Pipeline](docs/rag-pipeline.md)
 - [RAG Contracts](docs/rag-contracts.md)
+
+## V0.4.1 Chunking Strategy Acceptance V0.4.1 切分策略验收
+
+### Default Chunking 默认策略（兼容 V0.4.0）
+
+```bash
+FILE_ID=$(curl -s -X POST http://localhost:8005/api/files/upload \
+  -F "file=@README.md" | python3 -c "import json,sys;print(json.load(sys.stdin)['id'])")
+curl -s -X POST http://localhost:8005/api/knowledge/ingest \
+  -H 'Content-Type: application/json' \
+  -d "{\"file_id\":\"$FILE_ID\"}" | python3 -c "
+import json,sys;d=json.load(sys.stdin)
+print(f'chunks: {len(d[\"chunks\"])}, first: {d[\"chunks\"][0].get(\"chunk_metadata\",{})}')
+"
+```
+
+预期结果：chunks 数 > 0，chunk_metadata 字段完整。
+
+### Custom Chunking 自定义策略
+
+使用 `chunking_config` 设置 chunk_size=100，chunk_overlap=20：
+
+```bash
+FILE_ID=$(curl -s -X POST http://localhost:8005/api/files/upload \
+  -F "file=@README.md" | python3 -c "import json,sys;print(json.load(sys.stdin)['id'])")
+curl -s -X POST http://localhost:8005/api/knowledge/ingest \
+  -H 'Content-Type: application/json' \
+  -d "{\"file_id\":\"$FILE_ID\",\"chunking_config\":{\"chunk_size\":100,\"chunk_overlap\":20}}" \
+  | python3 -c "
+import json,sys;d=json.load(sys.stdin)
+print(f'chunks: {len(d[\"chunks\"])}')
+if len(d['chunks']) > 1:
+    print(f'overlap: {d[\"chunks\"][1][\"chunk_metadata\"][\"overlap_with_previous\"]}')
+"
+```
+
+预期结果：
+- 不传 chunking_config 时使用默认策略（500，0 overlap）
+- 传 chunking_config 时按配置切分
+- chunk_metadata 包含 start_char / end_char / split_strategy / overlap_with_previous / chunk_size / chunk_overlap
+
+### Compatibility 兼容性
+
+```bash
+make test-api
+python3 scripts/run_evals.py
+```
+
+### 文档参考
+
+- [RAG Chunking](docs/rag-chunking.md)
 

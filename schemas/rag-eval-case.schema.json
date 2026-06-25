@@ -1,0 +1,42 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "RAG Eval Case",
+  "description": "Contract for a single RAG evaluation case.",
+  "type": "object",
+  "required": ["id", "name", "documents", "queries"],
+  "properties": {
+    "id": { "type": "string", "description": "Unique eval case identifier." },
+    "name": { "type": "string", "description": "Human-readable eval case name." },
+    "description": { "type": "string", "description": "Eval case purpose." },
+    "documents": {
+      "type": "array",
+      "description": "Test documents to create before retrieval queries.",
+      "items": {
+        "type": "object",
+        "required": ["title", "text"],
+        "properties": {
+          "title": { "type": "string" },
+          "text": { "type": "string" },
+          "source": { "type": "string" }
+        }
+      }
+    },
+    "queries": {
+      "type": "array",
+      "description": "Retrieval queries with expected results.",
+      "items": {
+        "type": "object",
+        "required": ["query"],
+        "properties": {
+          "query": { "type": "string" },
+          "expected_min_results": { "type": "integer", "minimum": 0 },
+          "expected_document_title": { "type": "string" },
+          "expected_source": { "type": "string" },
+          "expected_chunk_contains": { "type": "string" },
+          "expected_min_score": { "type": "integer", "minimum": 0 }
+        }
+      }
+    }
+  },
+  "additionalProperties": false
+}

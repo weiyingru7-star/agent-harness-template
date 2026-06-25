@@ -1,0 +1,27 @@
+{
+  "id": "retrieve_tool_call_title",
+  "name": "Retrieve Tool Call Title",
+  "description": "Create a document about tool call contract, then verify retrieve hits it.",
+  "documents": [
+    {
+      "title": "Agent Checkpoints",
+      "text": "Runtime records checkpoints after each completed node. Each checkpoint stores a state snapshot for later review.",
+      "source": "eval"
+    },
+    {
+      "title": "Tool Call Contract",
+      "text": "Tool calls include arguments, result, status, error type and duration. Each call is recorded as a ToolCall record.",
+      "source": "eval"
+    }
+  ],
+  "queries": [
+    {
+      "query": "ToolCall",
+      "expected_min_results": 1,
+      "expected_document_title": "Tool Call Contract",
+      "expected_source": "eval",
+      "expected_chunk_contains": "arguments",
+      "expected_min_score": 1
+    }
+  ]
+}

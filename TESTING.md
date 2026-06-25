@@ -1261,3 +1261,33 @@ python3 scripts/run_evals.py
 
 - [RAG Pipeline](docs/rag-pipeline.md)
 
+
+## V0.4.3 RAG Eval Acceptance V0.4.3 检索评估验收
+
+### Run RAG Eval 运行 RAG 评估
+
+```bash
+python3 scripts/run_rag_evals.py
+```
+
+预期结果：
+
+```
+PASS retrieve_checkpoint_title
+PASS retrieve_tool_call_title
+Summary: 2 passed, 0 failed, 2 total
+```
+
+### Full Regression 完整回归
+
+```bash
+make test-api
+python3 scripts/run_evals.py
+python3 scripts/run_rag_evals.py
+npm run build --prefix apps/web
+python3 scripts/check_business_terms.py
+```
+
+### 文档参考
+
+- [RAG Eval](docs/rag-eval.md)

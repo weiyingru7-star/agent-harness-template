@@ -226,6 +226,19 @@ curl -X POST http://localhost:8005/api/runs/$RUN_ID/retry
 
 - [Failure / Retry Runtime](docs/failure-retry-runtime.md)
 
+## V0.2.4 Timeline API / 前端 Timeline 视图
+
+V0.2.4 增加最小 Timeline API 和前端 Timeline 视图，把 run 的 steps、events、
+spans、checkpoints 按时间顺序聚合为一条统一时间线，便于 debug 和轨迹回看。
+
+查询 run 的 timeline：
+
+```bash
+curl http://localhost:8005/api/runs/$RUN_ID/timeline
+```
+
+前端在 run 详情页（`apps/web/app/runs/[runId]/page.tsx`）直接渲染该时间线。
+
 ## V0.2.5 Eval Trajectory 最小评估
 
 V0.2.5 增加最小 eval runner，用固定 eval cases 检查 demo_agent 的 run
@@ -279,21 +292,11 @@ curl http://localhost:8005/api/tool-calls/$TOOL_CALL_ID
 - [V0 总体验收](docs/v0-acceptance.md)
 - [创建新 Agent](docs/how-to-create-new-agent.md)
 
-## Stage 1 Scope Stage 1 范围
+## Current Scope 当前范围
 
-当前 Stage 1 只包含：
+当前版本（V0.3.0）已交付的通用底座能力见上文各版本小节：Run / Step / Event 主链路、PostgreSQL 持久化、Module Registry、Agent Execution Contract、Trace / Span、Checkpoint、Failure / Retry、Timeline API 与前端视图、Eval Trajectory runner、Tool Call Contract。
 
-- Next.js 前端首页
-- FastAPI 后端 `/health`
-- PostgreSQL 和 Redis 的 Docker Compose 配置
-- `.env.example`
-- Makefile
-- README
-- `AGENTS.md`
-- `CLAUDE.md`
-- 后端基础健康检查测试
-
-Stage 1 明确不包含 agent runtime、runs、steps、events、AI Runtime、RAG、file upload 或 business modules。
+模板核心保持业务无关，具体业务逻辑应放在 `modules/{module_name}/` 内由使用者自行创建。详见 [Project Boundaries](PROJECT_BOUNDARIES.md)。
 
 ## Requirements 环境要求
 

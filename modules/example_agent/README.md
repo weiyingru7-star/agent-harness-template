@@ -1,4 +1,4 @@
-# travel_agent Module
+# example_agent Module
 
 This disabled scaffold module was generated from the generic Agent Harness module template.
 
@@ -6,7 +6,7 @@ This disabled scaffold module was generated from the generic Agent Harness modul
 
 - `module.yaml`: module metadata
 - `agent.yaml`: agent metadata
-- `services/travel_agent_service.py`: module service placeholder
+- `services/example_agent_service.py`: module service placeholder
 - `prompts/system.md`: neutral system prompt
 - `skills/`: local module skills
 - `evals/`: local module eval assets

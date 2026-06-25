@@ -849,3 +849,168 @@ make test-api
 npm run build --prefix apps/web
 python3 scripts/check_business_terms.py
 ```
+
+## V0.3.x Tool Runtime Acceptance V0.3.x 工具运行时验收
+
+### Unified Acceptance Commands 统一验收命令
+
+```bash
+# 全量后端测试（当前预期 96 passed）
+make test-api
+
+# Eval runner（预期 8 passed）
+python3 scripts/run_evals.py
+
+# 业务词污染检查
+python3 scripts/check_business_terms.py
+
+# 前端构建
+npm run build --prefix apps/web
+```
+
+### Normal Tool Call 正常工具调用
+
+创建 run 并检查正常路径：
+
+```bash
+RUN_ID=$(curl -s -X POST http://localhost:8005/api/runs \
+  -H 'Content-Type: application/json' \
+  -d '{"input":"hello"}' \
+  | python3 -c "import json, sys; print(json.load(sys.stdin)['id'])")
+
+curl http://localhost:8005/api/runs/$RUN_ID/tool-calls | python3 -m json.tool
+```
+
+预期结果：
+- tool_call.status = `completed`
+- tool_call.result.status = `completed`
+- tool_call.result.output 以 `Mock tool echo` 开头
+- events 包含 `tool.call.started` 和 `tool.call.completed`
+
+### Invalid Args 参数校验失败
+
+```bash
+FAILED_RUN_ID=$(curl -s -X POST http://localhost:8005/api/runs \
+  -H 'Content-Type: application/json' \
+  -d '{"input":"trigger __invalid_tool_args__"}' \
+  | python3 -c "import json, sys; print(json.load(sys.stdin)['id'])")
+
+curl http://localhost:8005/api/runs/$FAILED_RUN_ID/tool-calls | python3 -c "
+import json, sys
+tc = json.load(sys.stdin)[0]
+print(f'status={tc[\"status\"]}, error_type={tc[\"error_type\"]}')
+"
+```
+
+预期结果：`status=failed, error_type=ToolArgsValidationError`
+
+### Tool Exception 工具异常
+
+```bash
+EXC_RUN_ID=$(curl -s -X POST http://localhost:8005/api/runs \
+  -H 'Content-Type: application/json' \
+  -d '{"input":"trigger __tool_exception__"}' \
+  | python3 -c "import json, sys; print(json.load(sys.stdin)['id'])")
+
+curl http://localhost:8005/api/runs/$EXC_RUN_ID/tool-calls | python3 -c "
+import json, sys
+tc = json.load(sys.stdin)[0]
+print(f'status={tc[\"status\"]}, error_type={tc[\"error_type\"]}')
+"
+```
+
+预期结果：`status=failed, error_type=ToolExecutionError`
+
+### Tool Timeout 工具超时
+
+```bash
+TIMEOUT_RUN_ID=$(curl -s -X POST http://localhost:8005/api/runs \
+  -H 'Content-Type: application/json' \
+  -d '{"input":"trigger __slow_tool__ timeout"}' \
+  | python3 -c "import json, sys; print(json.load(sys.stdin)['id'])")
+
+curl http://localhost:8005/api/runs/$TIMEOUT_RUN_ID/tool-calls | python3 -c "
+import json, sys
+tc = json.load(sys.stdin)[0]
+print(f'status={tc[\"status\"]}, error_type={tc[\"error_type\"]}, duration_ms={tc[\"duration_ms\"]}')
+"
+```
+
+预期结果：`status=failed, error_type=ToolTimeoutError, duration_ms≥900`
+
+### Flaky Tool Retry 工具重试
+
+```bash
+RETRY_RUN_ID=$(curl -s -X POST http://localhost:8005/api/runs \
+  -H 'Content-Type: application/json' \
+  -d '{"input":"trigger __flaky_tool__"}' \
+  | python3 -c "import json, sys; print(json.load(sys.stdin)['id'])")
+
+curl http://localhost:8005/api/runs/$RETRY_RUN_ID/tool-calls | python3 -c "
+import json, sys
+tc = json.load(sys.stdin)[0]
+print(f'status={tc[\"status\"]}, retry_count={tc[\"metadata\"][\"retry_count\"]}, attempts={len(tc[\"metadata\"][\"attempts\"])}')
+"
+```
+
+预期结果：`status=completed, retry_count=1, attempts=2`
+
+### Permission Denied 权限拒绝
+
+```bash
+PERM_RUN_ID=$(curl -s -X POST http://localhost:8005/api/runs \
+  -H 'Content-Type: application/json' \
+  -d '{"input":"trigger __restricted_tool__"}' \
+  | python3 -c "import json, sys; print(json.load(sys.stdin)['id'])")
+
+curl http://localhost:8005/api/runs/$PERM_RUN_ID/tool-calls | python3 -c "
+import json, sys
+tc = json.load(sys.stdin)[0]
+print(f'status={tc[\"status\"]}, error_type={tc[\"error_type\"]}')
+"
+```
+
+预期结果：`status=failed, error_type=ToolPermissionDenied`
+
+### Sandbox Blocked 沙箱拒绝
+
+```bash
+SBOX_RUN_ID=$(curl -s -X POST http://localhost:8005/api/runs \
+  -H 'Content-Type: application/json' \
+  -d '{"input":"trigger __sandbox_blocked__"}' \
+  | python3 -c "import json, sys; print(json.load(sys.stdin)['id'])")
+
+curl http://localhost:8005/api/runs/$SBOX_RUN_ID/tool-calls | python3 -c "
+import json, sys
+tc = json.load(sys.stdin)[0]
+print(f'status={tc[\"status\"]}, error_type={tc[\"error_type\"]}')
+"
+```
+
+预期结果：`status=failed, error_type=ToolSandboxViolation`
+
+### Compatibility Check 兼容性检查
+
+所有 8 条路径的 events、trace、checkpoints、timeline 均可查询：
+
+```bash
+# 以正常路径为例
+RUN_ID=$(curl -s -X POST http://localhost:8005/api/runs \
+  -H 'Content-Type: application/json' \
+  -d '{"input":"compatibility check"}' \
+  | python3 -c "import json, sys; print(json.load(sys.stdin)['id'])")
+
+curl http://localhost:8005/api/runs/$RUN_ID/events
+curl http://localhost:8005/api/runs/$RUN_ID/trace
+curl http://localhost:8005/api/runs/$RUN_ID/checkpoints
+curl http://localhost:8005/api/runs/$RUN_ID/timeline
+curl http://localhost:8005/api/runs/$RUN_ID/tool-calls
+```
+
+### 文档参考
+
+- [Tool Runtime 文档](docs/tool-runtime.md)
+- [Tool Runtime Architecture](docs/tool-runtime-architecture.md)
+- [Tool Runtime Errors](docs/tool-runtime-errors.md)
+- [Tool Runtime Eval](docs/tool-runtime-eval.md)
+

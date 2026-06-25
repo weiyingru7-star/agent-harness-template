@@ -396,6 +396,30 @@ demo_agent 触发方式：
 
 - [Tool Sandbox](docs/tool-sandbox.md)
 
+## V0.3.x Tool Runtime 总结
+
+V0.3.0–V0.3.6 构建了一个完整的 Tool Runtime 执行栈，
+从基础记录到安全执行共 7 层：
+
+| 层级 | 版本 | 说明 | 文档 |
+|---|---|---|---|
+| 基础记录 | V0.3.0 | ToolCall 模型、事件记录、API 路由 | [Tool Call Contract](docs/tool-call-contract.md) |
+| 参数校验 | V0.3.1 | args_schema 声明与 ToolArgsValidator | [Tool Args Schema](docs/tool-args-schema.md) |
+| 结果标准化 | V0.3.2 | ToolResult 统一结构 | [Tool Result Contract](docs/tool-result-contract.md) |
+| 超时控制 | V0.3.3 | timeout_ms + execute_with_timeout | [Tool Timeout](docs/tool-timeout.md) |
+| 失败重试 | V0.3.4 | max_attempts + execute_with_retry | [Tool Retry](docs/tool-retry.md) |
+| 权限校验 | V0.3.5 | permission_level + ToolPermissionChecker | [Tool Permission](docs/tool-permission.md) |
+| 安全执行 | V0.3.6 | execution_mode + ToolSandboxChecker | [Tool Sandbox](docs/tool-sandbox.md) |
+
+执行顺序：
+
+```
+tool.call.started → Permission → Sandbox → Args Validation
+  → Timeout/Retry → Execution → ToolResult → tool.call.completed/failed
+```
+
+详细说明：[Tool Runtime 文档](docs/tool-runtime.md)
+
 更多说明：
 
 - [Architecture 架构说明](docs/architecture.md)

@@ -3,7 +3,16 @@
   "title": "Module",
   "description": "Minimal contract for a module definition.",
   "type": "object",
-  "required": ["id", "name", "description"],
+  "required": [
+    "id",
+    "name",
+    "version",
+    "description",
+    "entrypoint",
+    "enabled",
+    "capabilities",
+    "default_agent"
+  ],
   "properties": {
     "id": {
       "type": "string",
@@ -20,6 +29,25 @@
     "version": {
       "type": "string",
       "description": "Module version."
+    },
+    "entrypoint": {
+      "type": "string",
+      "description": "Python entrypoint using module.path:function format."
+    },
+    "enabled": {
+      "type": "boolean",
+      "description": "Whether this module can be discovered and selected."
+    },
+    "capabilities": {
+      "type": "array",
+      "description": "Generic capabilities exposed by the module.",
+      "items": {
+        "type": "string"
+      }
+    },
+    "default_agent": {
+      "type": "string",
+      "description": "Default agent id for this module."
     },
     "created_at": {
       "type": "string",

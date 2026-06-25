@@ -2,3 +2,8 @@ id: "{{module_name}}_agent"
 module_id: "{{module_name}}"
 name: "{{module_title}} Agent"
 description: "Generic agent scaffold for this module."
+system_prompt_path: prompts/system.md
+skills: []
+tools: []
+workflow: service
+provider: mock

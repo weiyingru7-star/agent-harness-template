@@ -7,11 +7,12 @@ from core.db.repositories.event_repository import EventRepository
 from core.db.repositories.run_repository import RunRepository
 from core.db.repositories.step_repository import StepRepository
 from core.db.repositories.task_repository import TaskRepository
-from modules.demo_agent import run_demo_agent_state_machine
+from app.registries.modules import execute_module
 
 
 class RunStore:
-    def create_run(self, task_input: str) -> Run:
+    def create_run(self, task_input: str, module_id: str | None = None) -> Run:
+        selected_module_id = module_id or "demo_agent"
         task = Task(id=self._new_id("task"), input=task_input)
         run = Run(id=self._new_id("run"), status="pending", task=task)
 
@@ -28,8 +29,8 @@ class RunStore:
             run_repository.update(run)
             event_repository.create(run.id, "run.started", "Run started")
 
-            state = run_demo_agent_state_machine(task_input)
-            for node_trace in state.node_traces:
+            result = execute_module(selected_module_id, task_input, run.id)
+            for node_trace in result.steps:
                 step = Step(id=self._new_id("step"), name=node_trace.name, status="running")
                 run.steps.append(step)
                 step_repository.create(run.id, step)
@@ -52,7 +53,7 @@ class RunStore:
                 )
 
             run.status = "completed"
-            run.output = state.final_output
+            run.output = result.output
             run.completed_at = self._utc_now()
             run_repository.update(run)
             event_repository.create(run.id, "run.completed", "Run completed")

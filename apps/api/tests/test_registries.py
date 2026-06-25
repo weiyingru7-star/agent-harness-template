@@ -11,13 +11,13 @@ def test_list_modules() -> None:
 
     assert response.status_code == 200
     modules = response.json()
-    assert modules == [
-        {
-            "id": "demo_agent",
-            "name": "Demo Agent",
-            "description": "Minimal demo module that runs local mock skill and tool calls.",
-        }
-    ]
+    demo_agent = next(module for module in modules if module["id"] == "demo_agent")
+    assert demo_agent["name"] == "Demo Agent"
+    assert demo_agent["version"] == "0.1.0"
+    assert demo_agent["description"] == "Generic demo module for local Agent Harness validation."
+    assert demo_agent["enabled"] is True
+    assert demo_agent["capabilities"] == ["demo", "state_machine"]
+    assert demo_agent["default_agent"] == "demo_agent"
 
 
 def test_list_skills() -> None:

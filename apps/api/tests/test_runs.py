@@ -33,6 +33,32 @@ def test_create_and_get_run() -> None:
     assert get_response.json()["id"] == run["id"]
 
 
+def test_create_run_with_demo_module_id() -> None:
+    response = client.post(
+        "/api/runs",
+        json={"input": "hello module", "module_id": "demo_agent"},
+    )
+
+    assert response.status_code == 201
+    run = response.json()
+    assert run["status"] == "completed"
+    assert run["output"] == (
+        "demo_agent mock response | "
+        "skill=Mock skill summary: hello module | "
+        "tool=Mock tool echo: Mock skill summary: hello module"
+    )
+
+
+def test_create_run_with_unknown_module_returns_400() -> None:
+    response = client.post(
+        "/api/runs",
+        json={"input": "hello module", "module_id": "missing_module"},
+    )
+
+    assert response.status_code == 400
+    assert response.json()["detail"] == "Module not found or disabled: missing_module"
+
+
 def test_get_run_events() -> None:
     create_response = client.post("/api/runs", json={"input": "events please"})
     run_id = create_response.json()["id"]

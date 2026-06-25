@@ -3,7 +3,17 @@
   "title": "Agent",
   "description": "Minimal contract for an agent definition inside a module.",
   "type": "object",
-  "required": ["id", "module_id", "name", "description"],
+  "required": [
+    "id",
+    "module_id",
+    "name",
+    "description",
+    "system_prompt_path",
+    "skills",
+    "tools",
+    "workflow",
+    "provider"
+  ],
   "properties": {
     "id": {
       "type": "string",
@@ -24,6 +34,32 @@
     "version": {
       "type": "string",
       "description": "Agent version."
+    },
+    "system_prompt_path": {
+      "type": "string",
+      "description": "Path to the agent system prompt inside the module."
+    },
+    "skills": {
+      "type": "array",
+      "description": "Skill ids requested by this agent.",
+      "items": {
+        "type": "string"
+      }
+    },
+    "tools": {
+      "type": "array",
+      "description": "Tool ids requested by this agent.",
+      "items": {
+        "type": "string"
+      }
+    },
+    "workflow": {
+      "type": "string",
+      "description": "Workflow mode used by this agent."
+    },
+    "provider": {
+      "type": "string",
+      "description": "Default provider id for this agent."
     },
     "created_at": {
       "type": "string",

@@ -517,6 +517,38 @@ for f in schemas/*.schema.json; do python3 -m json.tool "$f" >/dev/null || exit 
 cd apps/web && npm run build
 ```
 
+## V0.1.8 Module Registry V0.1.8 模块注册验收
+
+查看模块：
+
+```bash
+curl http://localhost:8005/api/modules
+```
+
+默认创建 Run：
+
+```bash
+curl -X POST http://localhost:8005/api/runs \
+  -H 'Content-Type: application/json' \
+  -d '{"input":"hello"}'
+```
+
+显式使用 demo module：
+
+```bash
+curl -X POST http://localhost:8005/api/runs \
+  -H 'Content-Type: application/json' \
+  -d '{"input":"hello","module_id":"demo_agent"}'
+```
+
+完整验收：
+
+```bash
+make test-api
+npm run build --prefix apps/web
+python3 scripts/check_business_terms.py
+```
+
 ## Common Errors 常见错误排查
 
 ### `python: command not found`

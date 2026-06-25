@@ -115,6 +115,52 @@ for f in schemas/*.schema.json; do python3 -m json.tool "$f" >/dev/null || exit 
 
 - [V0.1.5 测试与验收增强](docs/v0.1.5-acceptance.md)
 
+## V0.1.8 Module Registry 模块注册
+
+V0.1.8 增强模块发现和 Agent 执行契约，不创建新的业务模块。
+
+模块 manifest：
+
+```text
+modules/{module_name}/module.yaml
+modules/{module_name}/agent.yaml
+```
+
+运行契约：
+
+```python
+def execute(input_text, context):
+    ...
+```
+
+默认创建 Run 仍运行 `demo_agent`：
+
+```bash
+curl -X POST http://localhost:8005/api/runs \
+  -H 'Content-Type: application/json' \
+  -d '{"input":"hello"}'
+```
+
+也可以显式选择模块：
+
+```bash
+curl -X POST http://localhost:8005/api/runs \
+  -H 'Content-Type: application/json' \
+  -d '{"input":"hello","module_id":"demo_agent"}'
+```
+
+查看模块：
+
+```bash
+curl http://localhost:8005/api/modules
+```
+
+更多说明：
+
+- [V0.1.8 Module Registry](docs/v0.1.8-acceptance.md)
+- [Module Development](docs/module-development.md)
+- [Agent Runtime](docs/agent-runtime.md)
+
 更多说明：
 
 - [Architecture 架构说明](docs/architecture.md)

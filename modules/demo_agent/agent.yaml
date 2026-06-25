@@ -1,0 +1,11 @@
+id: demo_agent
+module_id: demo_agent
+name: Demo Agent
+description: Generic demo agent for local execution.
+system_prompt_path: prompts/system.md
+skills:
+  - mock_summarize
+tools:
+  - mock_echo
+workflow: state_machine
+provider: mock

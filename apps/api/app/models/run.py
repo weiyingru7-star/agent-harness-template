@@ -45,3 +45,4 @@ class RunEvent(BaseModel):
 
 class CreateRunRequest(BaseModel):
     input: str = Field(min_length=1)
+    module_id: str | None = None

@@ -21,6 +21,8 @@ from core.db.repositories.step_repository import StepRepository
 from core.db.repositories.task_repository import TaskRepository
 from core.db.repositories.tool_call_repository import ToolCallRepository
 from app.registries.modules import execute_module
+from app.registries.tool_args import ToolArgsValidator
+from app.registries.tools import get_tool, get_tool_definition
 
 
 class RunStore:
@@ -223,45 +225,104 @@ class RunStore:
                     )
                     sequence += 1
 
+                    tool_arguments = self._build_tool_arguments(node_trace)
+                    tool_definition = get_tool_definition("mock_echo")
+                    validation = ToolArgsValidator.validate(
+                        tool_arguments,
+                        tool_definition.args_schema if tool_definition else None,
+                    )
                     tool_call_ended_at = self._utc_now()
-                    tool_call = ToolCall(
-                        id=self._new_id("tool_call"),
-                        run_id=run.id,
-                        step_id=step.id,
-                        trace_id=trace_id,
-                        span_id=span_id,
-                        tool_id="mock_echo",
-                        tool_name="Mock Echo Tool",
-                        arguments={"input": node_trace.state.get("skill_output")},
-                        result={"output": node_trace.output},
-                        status="completed",
-                        started_at=tool_call_started_at,
-                        ended_at=tool_call_ended_at,
-                        duration_ms=self._duration_ms(tool_call_started_at, tool_call_ended_at),
-                        metadata={"step_name": node_trace.name, "step_type": step.type},
-                    )
-                    tool_call_repository.create(tool_call)
-                    tool_call_id = tool_call.id
-                    event_repository.create(
-                        run_id=run.id,
-                        event_type="tool.call.completed",
-                        message="mock_echo tool call completed",
-                        step_id=step.id,
-                        trace_id=trace_id,
-                        span_id=span_id,
-                        sequence=sequence,
-                        status="completed",
-                        started_at=tool_call_started_at,
-                        ended_at=tool_call_ended_at,
-                        duration_ms=tool_call.duration_ms,
-                        metadata={
-                            "step_name": node_trace.name,
-                            "tool_id": tool_call.tool_id,
-                            "tool_name": tool_call.tool_name,
-                            "tool_call_id": tool_call.id,
-                        },
-                    )
-                    sequence += 1
+                    if validation.valid:
+                        tool_handler = get_tool("mock_echo")
+                        tool_result_output = tool_handler(tool_arguments)
+                        tool_call = ToolCall(
+                            id=self._new_id("tool_call"),
+                            run_id=run.id,
+                            step_id=step.id,
+                            trace_id=trace_id,
+                            span_id=span_id,
+                            tool_id="mock_echo",
+                            tool_name="Mock Echo Tool",
+                            arguments=tool_arguments,
+                            result={"output": tool_result_output},
+                            status="completed",
+                            started_at=tool_call_started_at,
+                            ended_at=tool_call_ended_at,
+                            duration_ms=self._duration_ms(tool_call_started_at, tool_call_ended_at),
+                            metadata={"step_name": node_trace.name, "step_type": step.type},
+                        )
+                        tool_call_repository.create(tool_call)
+                        tool_call_id = tool_call.id
+                        event_repository.create(
+                            run_id=run.id,
+                            event_type="tool.call.completed",
+                            message="mock_echo tool call completed",
+                            step_id=step.id,
+                            trace_id=trace_id,
+                            span_id=span_id,
+                            sequence=sequence,
+                            status="completed",
+                            started_at=tool_call_started_at,
+                            ended_at=tool_call_ended_at,
+                            duration_ms=tool_call.duration_ms,
+                            metadata={
+                                "step_name": node_trace.name,
+                                "tool_id": tool_call.tool_id,
+                                "tool_name": tool_call.tool_name,
+                                "tool_call_id": tool_call.id,
+                            },
+                        )
+                        sequence += 1
+                    else:
+                        error = validation.error
+                        tool_call = ToolCall(
+                            id=self._new_id("tool_call"),
+                            run_id=run.id,
+                            step_id=step.id,
+                            trace_id=trace_id,
+                            span_id=span_id,
+                            tool_id="mock_echo",
+                            tool_name="Mock Echo Tool",
+                            arguments=tool_arguments,
+                            result={},
+                            status="failed",
+                            started_at=tool_call_started_at,
+                            ended_at=tool_call_ended_at,
+                            duration_ms=self._duration_ms(tool_call_started_at, tool_call_ended_at),
+                            error_type="ToolArgsValidationError",
+                            error_message=error.message if error else "tool args validation failed",
+                            metadata={
+                                "step_name": node_trace.name,
+                                "step_type": step.type,
+                                "args_validation_errors": validation.details,
+                            },
+                        )
+                        tool_call_repository.create(tool_call)
+                        tool_call_id = tool_call.id
+                        event_repository.create(
+                            run_id=run.id,
+                            event_type="tool.call.failed",
+                            message="mock_echo tool call failed: args validation",
+                            step_id=step.id,
+                            trace_id=trace_id,
+                            span_id=span_id,
+                            sequence=sequence,
+                            status="failed",
+                            started_at=tool_call_started_at,
+                            ended_at=tool_call_ended_at,
+                            duration_ms=tool_call.duration_ms,
+                            error=tool_call.error_message,
+                            metadata={
+                                "step_name": node_trace.name,
+                                "tool_id": tool_call.tool_id,
+                                "tool_name": tool_call.tool_name,
+                                "tool_call_id": tool_call.id,
+                                "error_type": tool_call.error_type,
+                                "error_message": tool_call.error_message,
+                                "args_validation_errors": validation.details,
+                            },
+                        )
+                        sequence += 1
 
                 step.status = "completed"
                 step.output = node_trace.output
@@ -457,6 +518,12 @@ class RunStore:
     def get_tool_call(self, tool_call_id: str) -> ToolCall | None:
         with session_scope() as session:
             return ToolCallRepository(session).get(tool_call_id)
+
+    @staticmethod
+    def _build_tool_arguments(node_trace) -> dict:
+        if node_trace.state.get("intentional_invalid_args"):
+            return {"input": 123}
+        return {"input": node_trace.state.get("skill_output")}
 
     @staticmethod
     def _new_id(prefix: str) -> str:

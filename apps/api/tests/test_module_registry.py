@@ -47,7 +47,7 @@ def test_module_registry_executes_demo_agent() -> None:
     assert result.output == (
         "demo_agent mock response | "
         "skill=Mock skill summary: hello contract | "
-        "tool=Mock tool echo: Mock skill summary: hello contract"
+        "tool=tool pending execution"
     )
     assert [step.name for step in result.steps] == [
         "input_node",

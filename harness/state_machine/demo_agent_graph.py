@@ -1,5 +1,4 @@
 from app.registries.skills import get_skill
-from app.registries.tools import get_tool
 from harness.state_machine.types import DemoAgentNodeTrace, DemoAgentState
 
 
@@ -28,8 +27,18 @@ def skill_node(state: DemoAgentState) -> DemoAgentState:
 
 
 def tool_node(state: DemoAgentState) -> DemoAgentState:
-    tool = get_tool("mock_echo")
-    state.tool_output = tool(state.skill_output or "")
+    if "__invalid_tool_args__" in (state.normalized_input or ""):
+        state.tool_output = ""
+        _record_node(
+            state,
+            "tool_node",
+            "",
+            status="completed",
+            state_snapshot_extras={"intentional_invalid_args": True},
+        )
+        return state
+
+    state.tool_output = "tool pending execution"
     _record_node(state, "tool_node", state.tool_output)
     return state
 
@@ -60,8 +69,11 @@ def _record_node(
     status: str = "completed",
     error_type: str | None = None,
     error_message: str | None = None,
+    state_snapshot_extras: dict | None = None,
 ) -> None:
     snapshot = state.model_dump(exclude={"node_traces"})
+    if state_snapshot_extras:
+        snapshot.update(state_snapshot_extras)
     state.node_traces.append(
         DemoAgentNodeTrace(
             name=name,

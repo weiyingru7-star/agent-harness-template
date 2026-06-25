@@ -25,7 +25,7 @@ def test_create_and_get_run() -> None:
     assert run["output"] == (
         "demo_agent mock response | "
         "skill=Mock skill summary: hello stage two | "
-        "tool=Mock tool echo: Mock skill summary: hello stage two"
+        "tool=tool pending execution"
     )
 
     get_response = client.get(f"/api/runs/{run['id']}")
@@ -46,7 +46,7 @@ def test_create_run_with_demo_module_id() -> None:
     assert run["output"] == (
         "demo_agent mock response | "
         "skill=Mock skill summary: hello module | "
-        "tool=Mock tool echo: Mock skill summary: hello module"
+        "tool=tool pending execution"
     )
 
 

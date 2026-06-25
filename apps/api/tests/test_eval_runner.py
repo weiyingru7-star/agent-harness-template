@@ -17,6 +17,7 @@ def test_eval_runner_passes_builtin_cases() -> None:
     assert {result.case_id for result in results} == {
         "demo_agent_success",
         "demo_agent_failure",
+        "demo_agent_invalid_tool_args",
     }
 
 

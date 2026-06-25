@@ -279,6 +279,27 @@ curl http://localhost:8005/api/tool-calls/$TOOL_CALL_ID
 
 - [Tool Call Contract](docs/tool-call-contract.md)
 
+## V0.3.1 Tool Args Schema / 参数校验最小版
+
+V0.3.1 为 Tool 系统增加 `args_schema` 能力。每个 tool 可声明输入参数结构，
+`ToolArgsValidator` 在 tool 执行前做最小校验。校验失败时不执行 tool，
+记录 `tool.call.failed` event 和 `failed` 状态的 tool_call，但 run 仍然 `completed`。
+
+demo_agent 触发方式：
+
+- 正常输入：tool_call.status = `completed`
+- `__invalid_tool_args__`：tool_call.status = `failed`，run 仍 `completed`
+
+校验失败的 tool_call：
+
+```bash
+curl http://localhost:8005/api/runs/$RUN_ID/tool-calls
+```
+
+更多说明：
+
+- [Tool Args Schema](docs/tool-args-schema.md)
+
 更多说明：
 
 - [Architecture 架构说明](docs/architecture.md)

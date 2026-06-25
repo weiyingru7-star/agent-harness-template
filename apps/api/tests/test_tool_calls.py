@@ -85,3 +85,35 @@ def test_missing_tool_call_returns_404() -> None:
     response = client.get("/api/tool-calls/tool_call_missing")
 
     assert response.status_code == 404
+
+
+def test_invalid_tool_args_records_failed_tool_call_without_executing_tool() -> None:
+    run = client.post("/api/runs", json={"input": "trigger __invalid_tool_args__"}).json()
+
+    tool_calls = client.get(f"/api/runs/{run['id']}/tool-calls").json()
+    assert len(tool_calls) == 1
+    tool_call = tool_calls[0]
+    assert tool_call["status"] == "failed"
+    assert tool_call["error_type"] == "ToolArgsValidationError"
+    assert tool_call["error_message"]
+    assert tool_call["result"] == {}
+    assert tool_call["arguments"] == {"input": 123}
+    assert "args_validation_errors" in tool_call["metadata"]
+
+    events = client.get(f"/api/runs/{run['id']}/events").json()
+    event_types = [event["event_type"] for event in events]
+    assert "tool.call.started" in event_types
+    assert "tool.call.failed" in event_types
+    assert "tool.call.completed" not in event_types
+
+    assert run["status"] == "completed"
+
+
+def test_invalid_tool_args_does_not_break_normal_run_afterwards() -> None:
+    invalid_run = client.post("/api/runs", json={"input": "before __invalid_tool_args__"}).json()
+    normal_run = client.post("/api/runs", json={"input": "after normal"}).json()
+
+    assert invalid_run["status"] == "completed"
+    normal_tool_calls = client.get(f"/api/runs/{normal_run['id']}/tool-calls").json()
+    assert normal_tool_calls[0]["status"] == "completed"
+

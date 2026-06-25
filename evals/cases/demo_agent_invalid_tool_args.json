@@ -1,0 +1,18 @@
+{
+  "id": "demo_agent_invalid_tool_args",
+  "name": "Demo Agent Invalid Tool Args",
+  "description": "Checks that the generic demo agent records a failed tool_call when tool args validation fails, while the run still completes.",
+  "module_id": "demo_agent",
+  "input": "hello eval __invalid_tool_args__",
+  "expected_status": "completed",
+  "expected_output_contains": ["demo_agent mock response"],
+  "expected_events": ["run.created", "run.started", "tool.call.started", "tool.call.failed", "run.completed"],
+  "expected_steps": ["input_node", "skill_node", "tool_node", "final_node"],
+  "expected_checkpoints_min": 4,
+  "expected_trace_spans_min": 4,
+  "expected_timeline_items_min": 4,
+  "expected_tool_calls_min": 1,
+  "metadata": {
+    "path": "invalid_tool_args"
+  }
+}

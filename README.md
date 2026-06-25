@@ -184,6 +184,27 @@ curl http://localhost:8005/api/runs/$RUN_ID/trace
 
 - [Trace Runtime](docs/trace-runtime.md)
 
+## V0.2.2 Checkpoint Runtime 状态快照
+
+V0.2.2 在每个 completed step 后保存一次 checkpoint。checkpoint 只保存
+state snapshot，不实现 resume、retry 或 time travel。
+
+查询 run checkpoints：
+
+```bash
+curl http://localhost:8005/api/runs/$RUN_ID/checkpoints
+```
+
+查询单个 checkpoint：
+
+```bash
+curl http://localhost:8005/api/checkpoints/$CHECKPOINT_ID
+```
+
+更多说明：
+
+- [Checkpoint Runtime](docs/checkpoint-runtime.md)
+
 更多说明：
 
 - [Architecture 架构说明](docs/architecture.md)

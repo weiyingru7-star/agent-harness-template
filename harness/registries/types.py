@@ -6,6 +6,7 @@ from pydantic import BaseModel, Field
 class AgentStepTrace(BaseModel):
     name: str
     output: str
+    state: dict[str, Any] = Field(default_factory=dict)
 
 
 class AgentExecutionContext(BaseModel):

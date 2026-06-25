@@ -28,6 +28,12 @@ V0.2.1 增强了 Trace / Event Contract：
 - Event 保留旧字段，同时增加 typed event 字段。
 - 新增 `GET /api/runs/{run_id}/trace`，用于后续 timeline、debug 和 eval。
 
+V0.2.2 增强了 Checkpoint Runtime：
+
+- 每个 completed step 后保存一次 state snapshot。
+- `demo_agent` 成功运行会产生 input / skill / tool / final 四个 checkpoint。
+- checkpoint 只用于 debug、后续 resume 和 eval trajectory 的基础，不实现恢复。
+
 API 保持：
 
 ```text
@@ -92,6 +98,13 @@ Trace 查询接口：
 
 ```text
 GET /api/runs/{run_id}/trace
+```
+
+Checkpoint 查询接口：
+
+```text
+GET /api/runs/{run_id}/checkpoints
+GET /api/checkpoints/{checkpoint_id}
 ```
 
 ## 当前不实现

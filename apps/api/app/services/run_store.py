@@ -1,8 +1,9 @@
 from datetime import datetime, timezone
 from uuid import uuid4
 
-from app.models.run import Run, RunEvent, RunTrace, Step, Task, TraceSpan
+from app.models.run import Checkpoint, Run, RunEvent, RunTrace, Step, Task, TraceSpan
 from core.db import session_scope
+from core.db.repositories.checkpoint_repository import CheckpointRepository
 from core.db.repositories.event_repository import EventRepository
 from core.db.repositories.run_repository import RunRepository
 from core.db.repositories.step_repository import StepRepository
@@ -23,6 +24,7 @@ class RunStore:
             run_repository = RunRepository(session)
             step_repository = StepRepository(session)
             event_repository = EventRepository(session)
+            checkpoint_repository = CheckpointRepository(session)
 
             run_repository.create(run)
             event_repository.create(
@@ -50,6 +52,7 @@ class RunStore:
             sequence += 1
 
             result = execute_module(selected_module_id, task_input, run.id)
+            checkpoint_index = 1
             for node_trace in result.steps:
                 step_started_at = self._utc_now()
                 span_id = self._new_id("span")
@@ -100,6 +103,19 @@ class RunStore:
                     duration_ms=step.duration_ms,
                     metadata={"step_name": node_trace.name, "step_type": step.type},
                 )
+                checkpoint_repository.create(
+                    Checkpoint(
+                        id=self._new_id("checkpoint"),
+                        run_id=run.id,
+                        step_id=step.id,
+                        trace_id=trace_id,
+                        span_id=span_id,
+                        checkpoint_index=checkpoint_index,
+                        state=node_trace.state,
+                        metadata={"step_name": node_trace.name, "step_type": step.type},
+                    )
+                )
+                checkpoint_index += 1
                 sequence += 1
 
             run.status = "completed"
@@ -159,6 +175,16 @@ class RunStore:
                 for step in run.steps
             ]
             return RunTrace(run_id=run.id, trace_id=trace_id, spans=spans, events=events)
+
+    def get_checkpoints(self, run_id: str) -> list[Checkpoint] | None:
+        with session_scope() as session:
+            if not RunRepository(session).exists(run_id):
+                return None
+            return CheckpointRepository(session).list_by_run(run_id)
+
+    def get_checkpoint(self, checkpoint_id: str) -> Checkpoint | None:
+        with session_scope() as session:
+            return CheckpointRepository(session).get(checkpoint_id)
 
     @staticmethod
     def _new_id(prefix: str) -> str:

@@ -601,6 +601,45 @@ git diff --check
 - 已存在的本地 PostgreSQL 表不会被 `create_all` 自动修改。
 - 如旧开发库报字段不存在，请先备份需要的数据，再手动补字段或重建本地开发数据库。
 
+## V0.2.2 Checkpoint Runtime V0.2.2 状态快照验收
+
+创建 Run：
+
+```bash
+RUN_ID=$(curl -s -X POST http://localhost:8005/api/runs \
+  -H 'Content-Type: application/json' \
+  -d '{"input":"hello checkpoint"}' \
+  | python3 -c "import json, sys; print(json.load(sys.stdin)['id'])")
+```
+
+检查 checkpoints：
+
+```bash
+curl http://localhost:8005/api/runs/$RUN_ID/checkpoints
+```
+
+预期结果：
+
+- 返回 4 条 checkpoint。
+- `checkpoint_index` 为 1、2、3、4。
+- metadata 中的 step name 对应 input / skill / tool / final。
+
+读取单个 checkpoint：
+
+```bash
+CHECKPOINT_ID=$(curl -s http://localhost:8005/api/runs/$RUN_ID/checkpoints \
+  | python3 -c "import json, sys; print(json.load(sys.stdin)[0]['id'])")
+
+curl http://localhost:8005/api/checkpoints/$CHECKPOINT_ID
+```
+
+兼容性检查：
+
+```bash
+curl http://localhost:8005/api/runs/$RUN_ID/events
+curl http://localhost:8005/api/runs/$RUN_ID/trace
+```
+
 ## Common Errors 常见错误排查
 
 ### `python: command not found`

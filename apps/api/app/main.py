@@ -6,6 +6,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.core.config import settings
 from app.routes.artifacts import router as artifacts_router
+from app.routes.checkpoints import router as checkpoints_router
 from app.routes.files import router as files_router
 from app.routes.health import router as health_router
 from app.routes.knowledge import router as knowledge_router
@@ -33,6 +34,7 @@ app.add_middleware(
 
 app.include_router(health_router)
 app.include_router(runs_router)
+app.include_router(checkpoints_router)
 app.include_router(registries_router)
 app.include_router(llm_router)
 app.include_router(files_router)

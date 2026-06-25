@@ -12,7 +12,11 @@ def execute(task_input: str, context: AgentExecutionContext) -> AgentExecutionRe
     return AgentExecutionResult(
         output=state.final_output or "",
         steps=[
-            AgentStepTrace(name=node_trace.name, output=node_trace.output)
+            AgentStepTrace(
+                name=node_trace.name,
+                output=node_trace.output,
+                state=node_trace.state,
+            )
             for node_trace in state.node_traces
         ],
         metadata={

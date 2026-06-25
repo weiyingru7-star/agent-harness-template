@@ -41,4 +41,5 @@ def run_demo_agent_graph(task_input: str) -> DemoAgentState:
 
 
 def _record_node(state: DemoAgentState, name: str, output: str) -> None:
-    state.node_traces.append(DemoAgentNodeTrace(name=name, output=output))
+    snapshot = state.model_dump(exclude={"node_traces"})
+    state.node_traces.append(DemoAgentNodeTrace(name=name, output=output, state=snapshot))

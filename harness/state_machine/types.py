@@ -4,6 +4,7 @@ from pydantic import BaseModel, Field
 class DemoAgentNodeTrace(BaseModel):
     name: str
     output: str
+    state: dict = Field(default_factory=dict)
 
 
 class DemoAgentState(BaseModel):

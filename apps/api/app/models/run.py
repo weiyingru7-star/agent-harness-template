@@ -90,3 +90,15 @@ class RunTrace(BaseModel):
     trace_id: str | None = None
     spans: list[TraceSpan] = Field(default_factory=list)
     events: list[RunEvent] = Field(default_factory=list)
+
+
+class Checkpoint(BaseModel):
+    id: str
+    run_id: str
+    step_id: str
+    trace_id: str | None = None
+    span_id: str | None = None
+    checkpoint_index: int
+    state: dict = Field(default_factory=dict)
+    metadata: dict = Field(default_factory=dict)
+    created_at: datetime = Field(default_factory=utc_now)

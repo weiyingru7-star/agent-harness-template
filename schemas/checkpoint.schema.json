@@ -1,0 +1,55 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Checkpoint",
+  "description": "Minimal contract for a state snapshot saved after a completed step.",
+  "type": "object",
+  "required": [
+    "id",
+    "run_id",
+    "step_id",
+    "checkpoint_index",
+    "state",
+    "metadata",
+    "created_at"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "description": "Unique checkpoint identifier."
+    },
+    "run_id": {
+      "type": "string",
+      "description": "Run identifier associated with this checkpoint."
+    },
+    "step_id": {
+      "type": "string",
+      "description": "Step identifier associated with this checkpoint."
+    },
+    "trace_id": {
+      "type": "string",
+      "description": "Trace identifier associated with this checkpoint."
+    },
+    "span_id": {
+      "type": "string",
+      "description": "Span identifier associated with this checkpoint."
+    },
+    "checkpoint_index": {
+      "type": "integer",
+      "description": "Monotonic checkpoint sequence within a run."
+    },
+    "state": {
+      "type": "object",
+      "description": "Serializable state snapshot."
+    },
+    "metadata": {
+      "type": "object",
+      "description": "Checkpoint metadata."
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Checkpoint creation timestamp."
+    }
+  },
+  "additionalProperties": false
+}

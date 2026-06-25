@@ -84,6 +84,20 @@ class RunEventRecord(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now)
 
 
+class CheckpointRecord(Base):
+    __tablename__ = "checkpoints"
+
+    id: Mapped[str] = mapped_column(String(64), primary_key=True)
+    run_id: Mapped[str] = mapped_column(ForeignKey("runs.id"))
+    step_id: Mapped[str] = mapped_column(ForeignKey("steps.id"))
+    trace_id: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    span_id: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    checkpoint_index: Mapped[int] = mapped_column(Integer)
+    state: Mapped[dict] = mapped_column(JSON, default=dict)
+    metadata_: Mapped[dict] = mapped_column("metadata", JSON, default=dict)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now)
+
+
 class FileRecord(Base):
     __tablename__ = "files"
 

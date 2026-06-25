@@ -19,6 +19,7 @@ def test_eval_runner_passes_builtin_cases() -> None:
         "demo_agent_failure",
         "demo_agent_invalid_tool_args",
         "demo_agent_tool_exception",
+        "demo_agent_tool_timeout",
     }
 
 

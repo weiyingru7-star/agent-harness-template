@@ -23,6 +23,7 @@ from core.db.repositories.tool_call_repository import ToolCallRepository
 from app.registries.modules import execute_module
 from app.registries.tool_args import ToolArgsValidator
 from app.registries.tool_result import ToolResult
+from app.registries.tool_timeout import execute_with_timeout
 from app.registries.tools import get_tool, get_tool_definition
 
 
@@ -232,27 +233,17 @@ class RunStore:
                         tool_arguments,
                         tool_definition.args_schema if tool_definition else None,
                     )
-                    tool_call_ended_at = self._utc_now()
 
                     if validation.valid:
                         tool_handler = get_tool("mock_echo")
-                        try:
-                            tool_result = tool_handler(tool_arguments)
-                            result_data = tool_result.model_dump()
-                            tool_call_status = "completed"
-                            tool_call_error_type = None
-                            tool_call_error_message = None
-                            result_summary = tool_result.summary
-                        except Exception as exc:
-                            result_data = ToolResult(
-                                status="failed",
-                                error_type="ToolExecutionError",
-                                error_message=f"{type(exc).__name__}: {exc}",
-                            ).model_dump()
-                            tool_call_status = "failed"
-                            tool_call_error_type = "ToolExecutionError"
-                            tool_call_error_message = f"{type(exc).__name__}: {exc}"
-                            result_summary = None
+                        tool_timeout_ms = tool_definition.timeout_ms if tool_definition else None
+                        tool_result = execute_with_timeout(tool_handler, tool_arguments, tool_timeout_ms)
+                        tool_call_ended_at = self._utc_now()
+                        result_data = tool_result.model_dump()
+                        tool_call_status = tool_result.status
+                        tool_call_error_type = tool_result.error_type
+                        tool_call_error_message = tool_result.error_message
+                        result_summary = tool_result.summary
 
                         tool_call = ToolCall(
                             id=self._new_id("tool_call"),
@@ -298,10 +289,27 @@ class RunStore:
                                 },
                             )
                         else:
+                            if tool_call_error_type == "ToolTimeoutError":
+                                fail_message = "mock_echo tool call failed: timeout"
+                            elif tool_call_error_type == "ToolExecutionError":
+                                fail_message = "mock_echo tool call failed: execution exception"
+                            else:
+                                fail_message = "mock_echo tool call failed"
+                            event_metadata = {
+                                "step_name": node_trace.name,
+                                "tool_id": tool_call.tool_id,
+                                "tool_name": tool_call.tool_name,
+                                "tool_call_id": tool_call.id,
+                                "error_type": tool_call_error_type,
+                                "error_message": tool_call_error_message,
+                                "result_status": "failed",
+                            }
+                            if tool_call_error_type == "ToolTimeoutError" and tool_timeout_ms is not None:
+                                event_metadata["timeout_ms"] = tool_timeout_ms
                             event_repository.create(
                                 run_id=run.id,
                                 event_type="tool.call.failed",
-                                message="mock_echo tool call failed: execution exception",
+                                message=fail_message,
                                 step_id=step.id,
                                 trace_id=trace_id,
                                 span_id=span_id,
@@ -311,18 +319,12 @@ class RunStore:
                                 ended_at=tool_call_ended_at,
                                 duration_ms=tool_call.duration_ms,
                                 error=tool_call_error_message,
-                                metadata={
-                                    "step_name": node_trace.name,
-                                    "tool_id": tool_call.tool_id,
-                                    "tool_name": tool_call.tool_name,
-                                    "tool_call_id": tool_call.id,
-                                    "error_type": tool_call_error_type,
-                                    "error_message": tool_call_error_message,
-                                    "result_status": "failed",
-                                },
+                                metadata=event_metadata,
                             )
                         sequence += 1
+
                     else:
+                        tool_call_ended_at = self._utc_now()
                         error = validation.error
                         result_data = ToolResult(
                             status="failed",
@@ -580,6 +582,8 @@ class RunStore:
             return {"input": 123}
         if node_trace.state.get("intentional_tool_exception"):
             return {"input": "__TOOL_EXCEPTION__"}
+        if node_trace.state.get("intentional_slow_tool"):
+            return {"input": "__SLOW_TOOL__"}
         return {"input": node_trace.state.get("skill_output")}
 
     @staticmethod

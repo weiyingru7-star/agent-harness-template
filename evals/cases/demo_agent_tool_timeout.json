@@ -1,0 +1,18 @@
+{
+  "id": "demo_agent_tool_timeout",
+  "name": "Demo Agent Tool Timeout",
+  "description": "Checks that the generic demo agent records a failed tool_call when tool execution times out, while the run still completes.",
+  "module_id": "demo_agent",
+  "input": "hello eval __slow_tool__",
+  "expected_status": "completed",
+  "expected_output_contains": ["demo_agent mock response"],
+  "expected_events": ["run.created", "run.started", "tool.call.started", "tool.call.failed", "run.completed"],
+  "expected_steps": ["input_node", "skill_node", "tool_node", "final_node"],
+  "expected_checkpoints_min": 4,
+  "expected_trace_spans_min": 4,
+  "expected_timeline_items_min": 4,
+  "expected_tool_calls_min": 1,
+  "metadata": {
+    "path": "timeout"
+  }
+}

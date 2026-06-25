@@ -318,6 +318,30 @@ demo_agent 触发方式：
 
 - [Tool Result Contract](docs/tool-result-contract.md)
 
+## V0.3.3 Tool Timeout / 工具超时最小版
+
+V0.3.3 为 Tool 系统增加最小 `timeout_ms` 能力。每个 tool 可声明超时时间，
+工具执行超过限制时，记录 `ToolTimeoutError` 和 `tool.call.failed` event，
+但 run 仍然 `completed`。
+
+超时基于 `threading.Thread` 实现，纯标准库，无外部依赖。
+`mock_echo` 默认 `timeout_ms=1000`。
+
+demo_agent 触发方式：
+
+- 正常输入：正常完成，`timeout_ms` 不生效
+- `__slow_tool__`：模拟慢工具，触发 ToolTimeoutError
+
+超时后的 tool_call：
+
+```bash
+curl http://localhost:8005/api/runs/$RUN_ID/tool-calls
+```
+
+更多说明：
+
+- [Tool Timeout](docs/tool-timeout.md)
+
 更多说明：
 
 - [Architecture 架构说明](docs/architecture.md)

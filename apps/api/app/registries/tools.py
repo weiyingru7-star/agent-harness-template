@@ -12,12 +12,16 @@ class ToolDefinition(BaseModel):
     name: str
     description: str
     args_schema: dict | None = None
+    timeout_ms: int | None = None
 
 
 def mock_echo(args: dict) -> ToolResult:
     input_text = args["input"]
     if input_text == "__TOOL_EXCEPTION__":
         raise RuntimeError("mock_echo intentional exception for test")
+    if input_text == "__SLOW_TOOL__":
+        import time
+        time.sleep(10)
 
     output = f"Mock tool echo: {input_text}"
     return ToolResult(
@@ -44,6 +48,7 @@ TOOLS: dict[str, tuple[ToolDefinition, Callable[[dict], ToolResult]]] = {
             name="Mock Echo",
             description="Echoes local input for demo_agent.",
             args_schema=MOCK_ECHO_ARGS_SCHEMA,
+            timeout_ms=1000,
         ),
         mock_echo,
     ),

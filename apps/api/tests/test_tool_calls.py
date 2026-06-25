@@ -154,3 +154,54 @@ def test_completed_tool_call_has_standard_result_structure() -> None:
     assert result["summary"].startswith("Echoed")
     assert "char_count" in result["metadata"]
 
+
+def test_slow_tool_triggers_timeout() -> None:
+    run = client.post("/api/runs", json={"input": "trigger __slow_tool__ timeout"}).json()
+
+    tool_calls = client.get(f"/api/runs/{run['id']}/tool-calls").json()
+    assert len(tool_calls) == 1
+    tool_call = tool_calls[0]
+    assert tool_call["status"] == "failed"
+    assert tool_call["error_type"] == "ToolTimeoutError"
+    assert "timed out" in tool_call["error_message"]
+    assert tool_call["result"]["status"] == "failed"
+    assert tool_call["result"]["error_type"] == "ToolTimeoutError"
+    assert tool_call["result"]["metadata"]["timeout_ms"] == 1000
+    assert tool_call["duration_ms"] is not None
+    assert tool_call["duration_ms"] >= 900
+
+    events = client.get(f"/api/runs/{run['id']}/events").json()
+    event_types = [event["event_type"] for event in events]
+    assert "tool.call.started" in event_types
+    assert "tool.call.failed" in event_types
+    assert "tool.call.completed" not in event_types
+
+    failed_events = [
+        e for e in events
+        if e.get("event_type") == "tool.call.failed"
+        and e.get("metadata", {}).get("error_type") == "ToolTimeoutError"
+    ]
+    assert len(failed_events) == 1
+    assert failed_events[0]["metadata"].get("timeout_ms") == 1000
+
+
+def test_timeout_run_stays_completed() -> None:
+    run = client.post("/api/runs", json={"input": "timeout __slow_tool__"}).json()
+
+    assert run["status"] == "completed"
+
+
+def test_timeout_is_visible_in_timeline() -> None:
+    run = client.post("/api/runs", json={"input": "timeline __slow_tool__"}).json()
+    tool_call = client.get(f"/api/runs/{run['id']}/tool-calls").json()[0]
+    timeline = client.get(f"/api/runs/{run['id']}/timeline").json()
+
+    tool_items = [
+        item
+        for item in timeline.get("items", [])
+        if item.get("metadata", {}).get("step_name") == "tool_node"
+    ]
+    assert tool_items
+    assert tool_items[0]["tool_call_id"] == tool_call["id"]
+    assert tool_items[0]["duration_ms"] is not None
+

@@ -1325,3 +1325,38 @@ python3 scripts/check_business_terms.py
 ### 文档参考
 
 - [RAG Embeddings](docs/rag-embeddings.md)
+
+## V0.4.5 Vector Store Interface Acceptance V0.4.5 向量存储接口验收
+
+V0.4.5 不暴露 HTTP API。VectorStore contract 通过测试验收。
+
+### 功能验证
+
+- InMemoryVectorStore 支持 upsert / search / delete / count
+- collection 过滤生效
+- reference 按 cosine similarity（dot product）排序
+- 相同 vector score ≈ 1.0，正交 vector score ≈ 0.0
+- MockEmbeddingProvider 向量可进出 vector store
+- 批量操作正确
+
+验证命令：
+
+```bash
+make test-api
+```
+
+（`tests/test_rag_vector_store.py` 覆盖上述全部功能，12 条测试。）
+
+### Full Regression 完整回归
+
+```bash
+make test-api
+python3 scripts/run_evals.py
+python3 scripts/run_rag_evals.py
+npm run build --prefix apps/web
+python3 scripts/check_business_terms.py
+```
+
+### 文档参考
+
+- [RAG Vector Store](docs/rag-vector-store.md)

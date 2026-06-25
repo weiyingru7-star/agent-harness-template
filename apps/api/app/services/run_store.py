@@ -10,6 +10,7 @@ from app.models.run import (
     Step,
     Task,
     TimelineItem,
+    ToolCall,
     TraceSpan,
 )
 from core.db import session_scope
@@ -18,6 +19,7 @@ from core.db.repositories.event_repository import EventRepository
 from core.db.repositories.run_repository import RunRepository
 from core.db.repositories.step_repository import StepRepository
 from core.db.repositories.task_repository import TaskRepository
+from core.db.repositories.tool_call_repository import ToolCallRepository
 from app.registries.modules import execute_module
 
 
@@ -66,6 +68,7 @@ class RunStore:
             step_repository = StepRepository(session)
             event_repository = EventRepository(session)
             checkpoint_repository = CheckpointRepository(session)
+            tool_call_repository = ToolCallRepository(session)
 
             run_repository.create(run)
             event_repository.create(
@@ -199,11 +202,79 @@ class RunStore:
                     )
                     return run
 
+                tool_call_id = None
+                if node_trace.name == "tool_node":
+                    tool_call_started_at = self._utc_now()
+                    event_repository.create(
+                        run_id=run.id,
+                        event_type="tool.call.started",
+                        message="mock_echo tool call started",
+                        step_id=step.id,
+                        trace_id=trace_id,
+                        span_id=span_id,
+                        sequence=sequence,
+                        status="running",
+                        started_at=tool_call_started_at,
+                        metadata={
+                            "step_name": node_trace.name,
+                            "tool_id": "mock_echo",
+                            "tool_name": "Mock Echo Tool",
+                        },
+                    )
+                    sequence += 1
+
+                    tool_call_ended_at = self._utc_now()
+                    tool_call = ToolCall(
+                        id=self._new_id("tool_call"),
+                        run_id=run.id,
+                        step_id=step.id,
+                        trace_id=trace_id,
+                        span_id=span_id,
+                        tool_id="mock_echo",
+                        tool_name="Mock Echo Tool",
+                        arguments={"input": node_trace.state.get("skill_output")},
+                        result={"output": node_trace.output},
+                        status="completed",
+                        started_at=tool_call_started_at,
+                        ended_at=tool_call_ended_at,
+                        duration_ms=self._duration_ms(tool_call_started_at, tool_call_ended_at),
+                        metadata={"step_name": node_trace.name, "step_type": step.type},
+                    )
+                    tool_call_repository.create(tool_call)
+                    tool_call_id = tool_call.id
+                    event_repository.create(
+                        run_id=run.id,
+                        event_type="tool.call.completed",
+                        message="mock_echo tool call completed",
+                        step_id=step.id,
+                        trace_id=trace_id,
+                        span_id=span_id,
+                        sequence=sequence,
+                        status="completed",
+                        started_at=tool_call_started_at,
+                        ended_at=tool_call_ended_at,
+                        duration_ms=tool_call.duration_ms,
+                        metadata={
+                            "step_name": node_trace.name,
+                            "tool_id": tool_call.tool_id,
+                            "tool_name": tool_call.tool_name,
+                            "tool_call_id": tool_call.id,
+                        },
+                    )
+                    sequence += 1
+
                 step.status = "completed"
                 step.output = node_trace.output
                 step.ended_at = step_ended_at
                 step.duration_ms = self._duration_ms(step_started_at, step_ended_at)
                 step.completed_at = step_ended_at
+                if tool_call_id is not None:
+                    step.metadata = {
+                        **step.metadata,
+                        "step_name": node_trace.name,
+                        "step_type": step.type,
+                        "tool_call_id": tool_call_id,
+                    }
                 step_repository.update(step)
                 event_repository.create(
                     run_id=run.id,
@@ -217,7 +288,11 @@ class RunStore:
                     started_at=step_started_at,
                     ended_at=step_ended_at,
                     duration_ms=step.duration_ms,
-                    metadata={"step_name": node_trace.name, "step_type": step.type},
+                    metadata={
+                        "step_name": node_trace.name,
+                        "step_type": step.type,
+                        **({"tool_call_id": tool_call_id} if tool_call_id else {}),
+                    },
                 )
                 checkpoint_repository.create(
                     Checkpoint(
@@ -228,7 +303,11 @@ class RunStore:
                         span_id=span_id,
                         checkpoint_index=checkpoint_index,
                         state=node_trace.state,
-                        metadata={"step_name": node_trace.name, "step_type": step.type},
+                        metadata={
+                            "step_name": node_trace.name,
+                            "step_type": step.type,
+                            **({"tool_call_id": tool_call_id} if tool_call_id else {}),
+                        },
                     )
                 )
                 checkpoint_index += 1
@@ -312,7 +391,9 @@ class RunStore:
 
             events = EventRepository(session).list_by_run(run_id)
             checkpoints = CheckpointRepository(session).list_by_run(run_id)
+            tool_calls = ToolCallRepository(session).list_by_run(run_id)
             checkpoint_by_step_id = {checkpoint.step_id: checkpoint for checkpoint in checkpoints}
+            tool_call_by_step_id = {tool_call.step_id: tool_call for tool_call in tool_calls}
             terminal_events_by_span_id = {}
             for event in events:
                 if event.span_id and event.event_type in {"step.completed", "step.failed"}:
@@ -322,6 +403,7 @@ class RunStore:
                 self._build_step_timeline_item(
                     step,
                     checkpoint_by_step_id.get(step.id),
+                    tool_call_by_step_id.get(step.id),
                     terminal_events_by_span_id.get(step.span_id or ""),
                 )
                 for step in run.steps
@@ -366,6 +448,16 @@ class RunStore:
         with session_scope() as session:
             return CheckpointRepository(session).get(checkpoint_id)
 
+    def get_tool_calls(self, run_id: str) -> list[ToolCall] | None:
+        with session_scope() as session:
+            if not RunRepository(session).exists(run_id):
+                return None
+            return ToolCallRepository(session).list_by_run(run_id)
+
+    def get_tool_call(self, tool_call_id: str) -> ToolCall | None:
+        with session_scope() as session:
+            return ToolCallRepository(session).get(tool_call_id)
+
     @staticmethod
     def _new_id(prefix: str) -> str:
         return f"{prefix}_{uuid4().hex[:12]}"
@@ -382,17 +474,21 @@ class RunStore:
     def _build_step_timeline_item(
         step: Step,
         checkpoint: Checkpoint | None,
+        tool_call: ToolCall | None,
         terminal_event: RunEvent | None,
     ) -> TimelineItem:
         metadata = dict(step.metadata)
         if terminal_event is not None:
             metadata.update(terminal_event.metadata)
+        if tool_call is not None:
+            metadata["tool_call_id"] = tool_call.id
         return TimelineItem(
             type="step",
             label=f"{step.name} {step.status}",
             status=step.status,
             step_id=step.id,
             span_id=step.span_id,
+            tool_call_id=tool_call.id if tool_call else None,
             checkpoint_id=checkpoint.id if checkpoint else None,
             checkpoint_index=checkpoint.checkpoint_index if checkpoint else None,
             sequence=terminal_event.sequence if terminal_event else None,

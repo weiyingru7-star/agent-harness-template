@@ -13,6 +13,7 @@ from app.routes.knowledge import router as knowledge_router
 from app.routes.llm import router as llm_router
 from app.routes.registries import router as registries_router
 from app.routes.runs import router as runs_router
+from app.routes.tool_calls import router as tool_calls_router
 from core.db import init_db
 
 
@@ -34,6 +35,7 @@ app.add_middleware(
 
 app.include_router(health_router)
 app.include_router(runs_router)
+app.include_router(tool_calls_router)
 app.include_router(checkpoints_router)
 app.include_router(registries_router)
 app.include_router(llm_router)

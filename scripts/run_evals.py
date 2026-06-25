@@ -40,6 +40,7 @@ REQUIRED_FIELDS = [
     "expected_checkpoints_min",
     "expected_trace_spans_min",
     "expected_timeline_items_min",
+    "expected_tool_calls_min",
     "metadata",
 ]
 
@@ -71,6 +72,7 @@ def validate_case(case: dict[str, Any]) -> list[str]:
         "expected_checkpoints_min",
         "expected_trace_spans_min",
         "expected_timeline_items_min",
+        "expected_tool_calls_min",
     ]:
         if field_name in case and not isinstance(case[field_name], int):
             failures.append(f"{field_name} must be an integer")
@@ -101,6 +103,7 @@ def run_eval_case(case: dict[str, Any], client: TestClient | None = None) -> Eva
     trace = _get_json(test_client, f"/api/runs/{run_id}/trace", failures)
     checkpoints = _get_json(test_client, f"/api/runs/{run_id}/checkpoints", failures)
     timeline = _get_json(test_client, f"/api/runs/{run_id}/timeline", failures)
+    tool_calls = _get_json(test_client, f"/api/runs/{run_id}/tool-calls", failures)
 
     _expect_equal("run.status", run["status"], case["expected_status"], failures)
     output = run.get("output") or ""
@@ -136,6 +139,12 @@ def run_eval_case(case: dict[str, Any], client: TestClient | None = None) -> Eva
         failures.append(
             "timeline.items count "
             f"{len(timeline_items)} < {case['expected_timeline_items_min']}"
+        )
+
+    if len(tool_calls) < case["expected_tool_calls_min"]:
+        failures.append(
+            "tool_calls count "
+            f"{len(tool_calls)} < {case['expected_tool_calls_min']}"
         )
 
     if case["expected_status"] == "failed":

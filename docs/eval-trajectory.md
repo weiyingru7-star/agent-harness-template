@@ -15,6 +15,7 @@ The runner checks:
 - trace span count
 - checkpoint count
 - timeline item count
+- tool call count
 
 It does not use a real model, external judge, score model, remote eval platform,
 permission system, or complex quality gate.
@@ -40,6 +41,7 @@ Each case follows `schemas/eval-case.schema.json` and includes:
 - `expected_checkpoints_min`
 - `expected_trace_spans_min`
 - `expected_timeline_items_min`
+- `expected_tool_calls_min`
 - `metadata`
 
 ## Runner

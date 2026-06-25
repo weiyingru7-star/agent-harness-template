@@ -55,7 +55,9 @@ def test_get_run_trace_returns_timeline_data() -> None:
     ]
     assert all(span["id"].startswith("span_") for span in trace["spans"])
     assert all(span["trace_id"] == run["trace_id"] for span in trace["spans"])
-    assert [event["sequence"] for event in trace["events"]] == list(range(1, 12))
+    assert [event["sequence"] for event in trace["events"]] == list(
+        range(1, len(trace["events"]) + 1)
+    )
 
 
 def test_unknown_run_trace_returns_404() -> None:

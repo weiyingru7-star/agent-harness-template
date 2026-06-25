@@ -2,7 +2,14 @@ from fastapi.testclient import TestClient
 
 from app.main import app
 from core.db import session_scope
-from core.db.models import CheckpointRecord, RunEventRecord, RunRecord, StepRecord, TaskRecord
+from core.db.models import (
+    CheckpointRecord,
+    RunEventRecord,
+    RunRecord,
+    StepRecord,
+    TaskRecord,
+    ToolCallRecord,
+)
 
 
 client = TestClient(app)
@@ -41,8 +48,9 @@ def test_run_persistence_and_api_compatibility() -> None:
         assert run_record.trace_id == run["trace_id"]
         assert session.query(TaskRecord).count() == 1
         assert session.query(StepRecord).filter_by(run_id=run_id).count() == 4
-        assert session.query(RunEventRecord).filter_by(run_id=run_id).count() == 11
+        assert session.query(RunEventRecord).filter_by(run_id=run_id).count() == 13
         assert session.query(CheckpointRecord).filter_by(run_id=run_id).count() == 4
+        assert session.query(ToolCallRecord).filter_by(run_id=run_id).count() == 1
         first_step = session.query(StepRecord).filter_by(run_id=run_id).first()
         assert first_step is not None
         assert first_step.trace_id == run["trace_id"]

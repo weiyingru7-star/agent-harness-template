@@ -33,6 +33,7 @@ def test_eval_runner_identifies_failed_expectation() -> None:
         "expected_checkpoints_min": 99,
         "expected_trace_spans_min": 99,
         "expected_timeline_items_min": 99,
+        "expected_tool_calls_min": 99,
         "metadata": {},
     }
 

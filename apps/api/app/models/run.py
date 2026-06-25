@@ -107,6 +107,7 @@ class TimelineItem(BaseModel):
     status: str | None = None
     step_id: str | None = None
     span_id: str | None = None
+    tool_call_id: str | None = None
     checkpoint_id: str | None = None
     checkpoint_index: int | None = None
     sequence: int | None = None
@@ -136,5 +137,25 @@ class Checkpoint(BaseModel):
     span_id: str | None = None
     checkpoint_index: int
     state: dict = Field(default_factory=dict)
+    metadata: dict = Field(default_factory=dict)
+    created_at: datetime = Field(default_factory=utc_now)
+
+
+class ToolCall(BaseModel):
+    id: str
+    run_id: str
+    step_id: str
+    trace_id: str | None = None
+    span_id: str | None = None
+    tool_id: str
+    tool_name: str
+    arguments: dict = Field(default_factory=dict)
+    result: dict = Field(default_factory=dict)
+    status: str
+    started_at: datetime | None = None
+    ended_at: datetime | None = None
+    duration_ms: int | None = None
+    error_type: str | None = None
+    error_message: str | None = None
     metadata: dict = Field(default_factory=dict)
     created_at: datetime = Field(default_factory=utc_now)

@@ -242,6 +242,30 @@ python3 scripts/run_evals.py
 
 - [Eval Trajectory](docs/eval-trajectory.md)
 
+## V0.3.0 Tool Call Contract 工具调用记录
+
+V0.3.0 增加最小标准化 tool call 记录。`demo_agent` 在 `tool_node`
+调用 mock echo tool 时会记录一条 `tool_call`，并写入 typed events：
+
+- `tool.call.started`
+- `tool.call.completed`
+
+查询 run 的 tool calls：
+
+```bash
+curl http://localhost:8005/api/runs/$RUN_ID/tool-calls
+```
+
+查询单条 tool call：
+
+```bash
+curl http://localhost:8005/api/tool-calls/$TOOL_CALL_ID
+```
+
+更多说明：
+
+- [Tool Call Contract](docs/tool-call-contract.md)
+
 更多说明：
 
 - [Architecture 架构说明](docs/architecture.md)

@@ -1,0 +1,93 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Tool Call",
+  "description": "Minimal contract for a structured tool call record.",
+  "type": "object",
+  "required": [
+    "id",
+    "run_id",
+    "step_id",
+    "tool_id",
+    "tool_name",
+    "arguments",
+    "result",
+    "status",
+    "metadata",
+    "created_at"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "description": "Unique tool call identifier."
+    },
+    "run_id": {
+      "type": "string",
+      "description": "Run that owns this tool call."
+    },
+    "step_id": {
+      "type": "string",
+      "description": "Step that triggered this tool call."
+    },
+    "trace_id": {
+      "type": ["string", "null"],
+      "description": "Trace identifier for the run."
+    },
+    "span_id": {
+      "type": ["string", "null"],
+      "description": "Span identifier associated with the triggering step."
+    },
+    "tool_id": {
+      "type": "string",
+      "description": "Stable tool identifier."
+    },
+    "tool_name": {
+      "type": "string",
+      "description": "Human-readable tool name."
+    },
+    "arguments": {
+      "type": "object",
+      "description": "Structured tool arguments."
+    },
+    "result": {
+      "type": "object",
+      "description": "Structured tool result."
+    },
+    "status": {
+      "type": "string",
+      "enum": ["pending", "running", "completed", "failed"],
+      "description": "Tool call status."
+    },
+    "started_at": {
+      "type": ["string", "null"],
+      "format": "date-time",
+      "description": "Tool call start time."
+    },
+    "ended_at": {
+      "type": ["string", "null"],
+      "format": "date-time",
+      "description": "Tool call end time."
+    },
+    "duration_ms": {
+      "type": ["integer", "null"],
+      "description": "Tool call duration in milliseconds."
+    },
+    "error_type": {
+      "type": ["string", "null"],
+      "description": "Tool error type when failed."
+    },
+    "error_message": {
+      "type": ["string", "null"],
+      "description": "Tool error message when failed."
+    },
+    "metadata": {
+      "type": "object",
+      "description": "Generic metadata for the tool call."
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Record creation timestamp."
+    }
+  },
+  "additionalProperties": false
+}

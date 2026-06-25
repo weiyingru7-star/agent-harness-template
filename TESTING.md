@@ -808,3 +808,44 @@ eval runner 会检查：
 - trace spans 数量。
 - checkpoints 数量。
 - timeline items 数量。
+
+## V0.3.0 Tool Call Contract Acceptance V0.3.0 工具调用记录验收
+
+创建 run：
+
+```bash
+RUN_ID=$(curl -s -X POST http://localhost:8005/api/runs \
+  -H 'Content-Type: application/json' \
+  -d '{"input":"hello tool call"}' \
+  | python3 -c "import json, sys; print(json.load(sys.stdin)['id'])")
+```
+
+读取 run tool calls：
+
+```bash
+curl http://localhost:8005/api/runs/$RUN_ID/tool-calls
+```
+
+读取单条 tool call：
+
+```bash
+TOOL_CALL_ID=$(curl -s http://localhost:8005/api/runs/$RUN_ID/tool-calls \
+  | python3 -c "import json, sys; print(json.load(sys.stdin)[0]['id'])")
+
+curl http://localhost:8005/api/tool-calls/$TOOL_CALL_ID
+```
+
+预期结果：
+
+- 返回一条 `mock_echo` tool call。
+- events 包含 `tool.call.started` 和 `tool.call.completed`。
+- timeline 中 `tool_node` item 包含 `tool_call_id`。
+
+完整回归：
+
+```bash
+python3 scripts/run_evals.py
+make test-api
+npm run build --prefix apps/web
+python3 scripts/check_business_terms.py
+```

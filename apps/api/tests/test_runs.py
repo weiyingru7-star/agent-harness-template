@@ -79,7 +79,7 @@ def test_get_run_events() -> None:
         "tool_node completed",
         "final_node completed",
     ]
-    assert [event["sequence"] for event in events] == list(range(1, 12))
+    assert [event["sequence"] for event in events] == list(range(1, len(events) + 1))
     assert all(event["event_type"] == event["type"] for event in events)
     assert all(event["trace_id"].startswith("trace_") for event in events)
 

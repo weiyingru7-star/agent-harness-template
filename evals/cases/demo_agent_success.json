@@ -11,6 +11,7 @@
   "expected_checkpoints_min": 4,
   "expected_trace_spans_min": 4,
   "expected_timeline_items_min": 4,
+  "expected_tool_calls_min": 1,
   "metadata": {
     "path": "success"
   }

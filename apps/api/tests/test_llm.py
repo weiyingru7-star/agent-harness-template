@@ -41,6 +41,17 @@ def test_unconfigured_openai_compatible_smoke_returns_400() -> None:
     )
 
     assert response.status_code == 400
+    assert "not configured" in response.json()["detail"]
+
+
+def test_unknown_provider_smoke_returns_400() -> None:
+    response = client.post(
+        "/api/llm/smoke",
+        json={"prompt": "hello", "provider": "unknown"},
+    )
+
+    assert response.status_code == 400
+    assert response.json()["detail"] == "Unsupported LLM provider: unknown"
 
 
 def test_parse_structured_output_rejects_non_json() -> None:

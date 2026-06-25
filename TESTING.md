@@ -235,6 +235,27 @@ curl -X POST http://localhost:8005/api/llm/smoke \
 
 - `structured_output.ok` 为 `true`
 
+检查未配置的 OpenAI-compatible provider：
+
+```bash
+curl -X POST http://localhost:8005/api/llm/smoke \
+  -H 'Content-Type: application/json' \
+  -d '{"prompt":"hello","provider":"openai_compatible"}'
+```
+
+预期结果：
+
+- HTTP 400
+- `detail` 说明 provider 缺少配置
+- 不需要真实 API Key
+
+V0.1.6 Provider 框架验收：
+
+```bash
+make test-api
+python3 scripts/check_business_terms.py
+```
+
 再次创建 run：
 
 ```bash

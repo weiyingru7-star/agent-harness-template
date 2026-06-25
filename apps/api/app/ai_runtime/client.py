@@ -2,7 +2,7 @@ from dataclasses import dataclass
 from typing import Any
 
 from app.ai_runtime.providers import LLMProvider
-from app.ai_runtime.structured_output import parse_structured_output
+from app.ai_runtime.structured_output import parse_structured_output_or_raise
 
 
 @dataclass(frozen=True)
@@ -17,8 +17,12 @@ class LLMClient:
         self.provider = provider
 
     def generate(self, prompt: str, structured: bool = False) -> LLMResponse:
-        result = self.provider.generate(prompt=prompt, structured=structured)
-        parsed_output = parse_structured_output(result.output) if structured else None
+        if structured:
+            result = self.provider.generate_json(prompt=prompt)
+            parsed_output = parse_structured_output_or_raise(result.output)
+        else:
+            result = self.provider.generate_text(prompt=prompt)
+            parsed_output = None
         return LLMResponse(
             provider=self.provider.id,
             output=result.output,

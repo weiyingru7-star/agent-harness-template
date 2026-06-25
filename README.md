@@ -319,6 +319,23 @@ Stage 3 adds a minimal AI runtime and static local registries.
 The default LLM provider is `mock`. The OpenAI-compatible provider is present as
 a basic adapter, but the run flow does not depend on a real API.
 
+V0.1.6 adds a minimal Provider Router and a unified provider interface. The mock
+provider remains the default, and real providers are optional.
+
+Provider environment variables:
+
+```env
+AI_PROVIDER=mock
+AI_BASE_URL=
+AI_API_KEY=
+AI_MODEL=gpt-4o-mini
+AI_TIMEOUT=30
+```
+
+`AI_PROVIDER` can be `mock` or `openai_compatible`. If a real provider is
+selected without the required configuration, `/api/llm/smoke` returns a clear
+400 error instead of affecting the default mock flow.
+
 List local registries:
 
 ```bash
@@ -341,6 +358,14 @@ Run the structured mock smoke test:
 curl -X POST http://localhost:8005/api/llm/smoke \
   -H 'Content-Type: application/json' \
   -d '{"prompt":"hello","provider":"mock","structured":true}'
+```
+
+Check an unconfigured OpenAI-compatible provider:
+
+```bash
+curl -X POST http://localhost:8005/api/llm/smoke \
+  -H 'Content-Type: application/json' \
+  -d '{"prompt":"hello","provider":"openai_compatible"}'
 ```
 
 ## Stage 4 Files And Artifacts

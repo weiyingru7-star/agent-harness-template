@@ -49,6 +49,8 @@ class RetrieveResult(BaseModel):
     chunk: Chunk
     score: int
     citation: Citation
+    retrieval_mode: str | None = None
+    score_type: str | None = None
 
 
 class IngestResponse(BaseModel):
@@ -59,3 +61,4 @@ class IngestResponse(BaseModel):
 class RetrieveResponse(BaseModel):
     query: str
     results: list[RetrieveResult]
+    metadata: dict = Field(default_factory=dict)

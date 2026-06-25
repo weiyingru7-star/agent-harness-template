@@ -1360,3 +1360,47 @@ python3 scripts/check_business_terms.py
 ### 文档参考
 
 - [RAG Vector Store](docs/rag-vector-store.md)
+
+## V0.4.6 Retrieval Mode Contract Acceptance V0.4.6 检索模式验收
+
+V0.4.6 新增 `retrieval_mode` 字段，支持 `"keyword"` / `"vector"` / `"hybrid"`。
+
+### API 使用
+
+```bash
+# keyword（默认）
+curl -s -X POST http://localhost:8005/api/knowledge/retrieve \
+  -H 'Content-Type: application/json' \
+  -d '{"query":"checkpoints","retrieval_mode":"keyword"}' \
+  | python3 -c "import json,sys;r=json.load(sys.stdin);print('results:',len(r['results']),'mode:',r['metadata']['retrieval_mode'])"
+```
+
+```bash
+# vector
+curl -s -X POST http://localhost:8005/api/knowledge/retrieve \
+  -H 'Content-Type: application/json' \
+  -d '{"query":"state snapshots","retrieval_mode":"vector"}' \
+  | python3 -c "import json,sys;r=json.load(sys.stdin)['results'][0];print('score:',r['score'],'score_type:',r['score_type'],'mode:',r['retrieval_mode'])"
+```
+
+```bash
+# hybrid
+curl -s -X POST http://localhost:8005/api/knowledge/retrieve \
+  -H 'Content-Type: application/json' \
+  -d '{"query":"execution","retrieval_mode":"hybrid"}' \
+  | python3 -c "import json,sys;r=json.load(sys.stdin);print('results:',len(r['results']),'mode:',r['metadata']['retrieval_mode'])"
+```
+
+### Full Regression 完整回归
+
+```bash
+make test-api
+python3 scripts/run_evals.py
+python3 scripts/run_rag_evals.py
+npm run build --prefix apps/web
+python3 scripts/check_business_terms.py
+```
+
+### 文档参考
+
+- [RAG Retrieval Modes](docs/rag-retrieval-modes.md)

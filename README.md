@@ -538,9 +538,25 @@ V0.4.5 为 RAG Pipeline 增加 vector store 抽象层。当前只实现
 
 - [RAG Vector Store](docs/rag-vector-store.md)
 
+## V0.4.6 Retrieval Mode Contract / 检索模式合同
+
+V0.4.6 为 RAG retrieve 增加 `retrieval_mode` 合同，支持
+keyword / vector / hybrid 三种模式：
+
+- **keyword**（默认）：现有关键词计数检索，兼容 V0.4.0–0.4.5
+- **vector**：MockEmbeddingProvider + InMemoryVectorStore 惰性索引
+- **hybrid**：keyword + vector 去重合并
+
+通过 `POST /api/knowledge/retrieve` 的可选字段 `retrieval_mode`
+和 `collection` 控制。不传时走 keyword 路径，已有行为不变。
+
+更多说明：
+
+- [RAG Retrieval Modes](docs/rag-retrieval-modes.md)
+
 ## Current Scope 当前范围
 
-当前版本（V0.4.5）已完成：
+当前版本（V0.4.6）已完成：
 - **V0.2.x Agent Runtime**：Trace / Span、Checkpoint、Failure / Retry、Timeline API 与前端视图、Eval Trajectory runner
 - **V0.3.x Tool Runtime**：Tool Call Contract、Tool Args Schema、Tool Result Contract、Tool Timeout、Tool Retry、Tool Permission、Tool Sandbox Policy、文档收口
 - **V0.4.0 RAG Pipeline**：增强 Document / Chunk / Citation / Retrieval Contract、新增文档详情与集合分块 API
@@ -549,6 +565,7 @@ V0.4.5 为 RAG Pipeline 增加 vector store 抽象层。当前只实现
 - **V0.4.3 RAG Eval**：独立 RAG eval runner + 结构化 eval case
 - **V0.4.4 Embedding Provider**：EmbeddingRequest / Result / Provider contract、MockEmbeddingProvider、Registry
 - **V0.4.5 Vector Store**：VectorRecord / Search contract、InMemoryVectorStore、cosine similarity
+- **V0.4.6 Retrieval Modes**：keyword / vector / hybrid 三种检索模式、惰性向量索引
 
 模板核心保持业务无关，具体业务逻辑应放在 `modules/{module_name}/` 内由使用者自行创建。详见 [Project Boundaries](PROJECT_BOUNDARIES.md)。
 

@@ -29,6 +29,8 @@ class CreateDocumentRequest(BaseModel):
 class RetrieveRequest(BaseModel):
     query: str = Field(min_length=1)
     limit: int = Field(default=3, ge=1, le=10)
+    retrieval_mode: str = "keyword"
+    collection: str | None = None
 
 
 @router.post("/ingest", response_model=IngestResponse, status_code=status.HTTP_201_CREATED)
@@ -64,9 +66,22 @@ def list_documents() -> list[Document]:
 
 @router.post("/retrieve", response_model=RetrieveResponse)
 def retrieve(request: RetrieveRequest) -> RetrieveResponse:
+    try:
+        results = knowledge_store.retrieve(
+            query=request.query,
+            limit=request.limit,
+            retrieval_mode=request.retrieval_mode,
+            collection=request.collection,
+        )
+    except ValueError as exc:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc)) from exc
     return RetrieveResponse(
         query=request.query,
-        results=knowledge_store.retrieve(query=request.query, limit=request.limit),
+        results=results,
+        metadata={
+            "retrieval_mode": request.retrieval_mode,
+            "score_type": "cosine" if request.retrieval_mode in ("vector", "hybrid") else "term_frequency",
+        },
     )
 
 

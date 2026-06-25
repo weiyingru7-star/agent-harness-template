@@ -96,7 +96,8 @@ def test_invalid_tool_args_records_failed_tool_call_without_executing_tool() -> 
     assert tool_call["status"] == "failed"
     assert tool_call["error_type"] == "ToolArgsValidationError"
     assert tool_call["error_message"]
-    assert tool_call["result"] == {}
+    assert tool_call["result"]["status"] == "failed"
+    assert tool_call["result"]["error_type"] == "ToolArgsValidationError"
     assert tool_call["arguments"] == {"input": 123}
     assert "args_validation_errors" in tool_call["metadata"]
 
@@ -116,4 +117,40 @@ def test_invalid_tool_args_does_not_break_normal_run_afterwards() -> None:
     assert invalid_run["status"] == "completed"
     normal_tool_calls = client.get(f"/api/runs/{normal_run['id']}/tool-calls").json()
     assert normal_tool_calls[0]["status"] == "completed"
+
+
+def test_tool_exception_records_failed_tool_call_without_running_tool() -> None:
+    run = client.post("/api/runs", json={"input": "trigger __tool_exception__"}).json()
+
+    tool_calls = client.get(f"/api/runs/{run['id']}/tool-calls").json()
+    assert len(tool_calls) == 1
+    tool_call = tool_calls[0]
+    assert tool_call["status"] == "failed"
+    assert tool_call["error_type"] == "ToolExecutionError"
+    assert "RuntimeError" in tool_call["error_message"]
+    assert tool_call["result"]["status"] == "failed"
+    assert tool_call["result"]["error_type"] == "ToolExecutionError"
+
+    events = client.get(f"/api/runs/{run['id']}/events").json()
+    event_types = [event["event_type"] for event in events]
+    assert "tool.call.started" in event_types
+    assert "tool.call.failed" in event_types
+    assert "tool.call.completed" not in event_types
+
+
+def test_tool_exception_run_stays_completed() -> None:
+    run = client.post("/api/runs", json={"input": "exception __tool_exception__"}).json()
+
+    assert run["status"] == "completed"
+
+
+def test_completed_tool_call_has_standard_result_structure() -> None:
+    run = client.post("/api/runs", json={"input": "result structure test"}).json()
+    tool_call = client.get(f"/api/runs/{run['id']}/tool-calls").json()[0]
+
+    result = tool_call["result"]
+    assert result["status"] == "completed"
+    assert result["output"].startswith("Mock tool echo")
+    assert result["summary"].startswith("Echoed")
+    assert "char_count" in result["metadata"]
 

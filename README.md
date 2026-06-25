@@ -300,6 +300,24 @@ curl http://localhost:8005/api/runs/$RUN_ID/tool-calls
 
 - [Tool Args Schema](docs/tool-args-schema.md)
 
+## V0.3.2 Tool Result Contract / 工具结果标准化最小版
+
+V0.3.2 为 Tool 系统增加标准化 `ToolResult` Contract。每次工具执行后，
+不管成功还是失败，都返回统一结构，便于 trace、timeline、eval 和后续
+tool retry / timeout / permission / sandbox 扩展。
+
+`mock_echo` 现返回标准 `ToolResult`。工具执行抛异常时被 `RunStore` 捕获，
+记录 `failed` tool_call 和 `tool.call.failed` event。
+
+demo_agent 触发方式：
+
+- 正常输入：ToolResult(completed)，result 含 status/output/summary
+- `__tool_exception__`：工具执行抛异常，捕获后 result(status=failed)
+
+更多说明：
+
+- [Tool Result Contract](docs/tool-result-contract.md)
+
 更多说明：
 
 - [Architecture 架构说明](docs/architecture.md)

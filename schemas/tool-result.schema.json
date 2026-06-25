@@ -1,0 +1,43 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "ToolResult",
+  "description": "Standardized result contract for tool execution.",
+  "type": "object",
+  "required": ["status"],
+  "properties": {
+    "status": {
+      "type": "string",
+      "enum": ["completed", "failed"],
+      "description": "Tool execution result status."
+    },
+    "output": {
+      "type": ["string", "null"],
+      "description": "Tool standard output."
+    },
+    "raw_output": {
+      "description": "Tool raw output."
+    },
+    "summary": {
+      "type": ["string", "null"],
+      "description": "Human-readable result summary for timeline and eval."
+    },
+    "artifacts": {
+      "type": "array",
+      "description": "Tool-generated artifacts (reserved for future use).",
+      "items": { "type": "object" }
+    },
+    "metadata": {
+      "type": "object",
+      "description": "Tool execution metadata."
+    },
+    "error_type": {
+      "type": ["string", "null"],
+      "description": "Error type when tool execution fails."
+    },
+    "error_message": {
+      "type": ["string", "null"],
+      "description": "Error message when tool execution fails."
+    }
+  },
+  "additionalProperties": false
+}

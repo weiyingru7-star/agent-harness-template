@@ -1,6 +1,10 @@
+from __future__ import annotations
+
 from collections.abc import Callable
 
 from pydantic import BaseModel
+
+from app.registries.tool_result import ToolResult
 
 
 class ToolDefinition(BaseModel):
@@ -10,8 +14,19 @@ class ToolDefinition(BaseModel):
     args_schema: dict | None = None
 
 
-def mock_echo(args: dict) -> str:
-    return f"Mock tool echo: {args['input']}"
+def mock_echo(args: dict) -> ToolResult:
+    input_text = args["input"]
+    if input_text == "__TOOL_EXCEPTION__":
+        raise RuntimeError("mock_echo intentional exception for test")
+
+    output = f"Mock tool echo: {input_text}"
+    return ToolResult(
+        status="completed",
+        output=output,
+        raw_output=output,
+        summary=f"Echoed: '{input_text}'",
+        metadata={"char_count": len(input_text)},
+    )
 
 
 MOCK_ECHO_ARGS_SCHEMA: dict = {
@@ -22,7 +37,7 @@ MOCK_ECHO_ARGS_SCHEMA: dict = {
     },
 }
 
-TOOLS: dict[str, tuple[ToolDefinition, Callable[[dict], str]]] = {
+TOOLS: dict[str, tuple[ToolDefinition, Callable[[dict], ToolResult]]] = {
     "mock_echo": (
         ToolDefinition(
             id="mock_echo",
@@ -39,7 +54,7 @@ def list_tools() -> list[ToolDefinition]:
     return [definition for definition, _handler in TOOLS.values()]
 
 
-def get_tool(tool_id: str) -> Callable[[dict], str]:
+def get_tool(tool_id: str) -> Callable[[dict], ToolResult]:
     return TOOLS[tool_id][1]
 
 

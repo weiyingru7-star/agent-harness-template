@@ -435,9 +435,13 @@ tool.call.started → Permission → Sandbox → Args Validation
 
 ## Current Scope 当前范围
 
-当前版本（V0.3.0）已交付的通用底座能力见上文各版本小节：Run / Step / Event 主链路、PostgreSQL 持久化、Module Registry、Agent Execution Contract、Trace / Span、Checkpoint、Failure / Retry、Timeline API 与前端视图、Eval Trajectory runner、Tool Call Contract。
+当前版本（V0.3.7）已完成：
+- **V0.2.x Agent Runtime**：Trace / Span、Checkpoint、Failure / Retry、Timeline API 与前端视图、Eval Trajectory runner
+- **V0.3.x Tool Runtime**：Tool Call Contract、Tool Args Schema、Tool Result Contract、Tool Timeout、Tool Retry、Tool Permission、Tool Sandbox Policy、文档收口
 
 模板核心保持业务无关，具体业务逻辑应放在 `modules/{module_name}/` 内由使用者自行创建。详见 [Project Boundaries](PROJECT_BOUNDARIES.md)。
+
+下一阶段规划：V0.4.0 RAG Pipeline 增强。
 
 ## Requirements 环境要求
 

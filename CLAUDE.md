@@ -18,37 +18,33 @@
 
 ## Current Stage 当前阶段
 
-当前阶段：Stage 1。
+当前阶段：V0.3.7 Tool Runtime documentation consolidated。
 
-Stage 1 只允许包含：
+已完成的通用底座能力：
+- Agent Runtime（V0.2.x）：模块注册、执行契约、Trace / Span、Checkpoint、Failure / Retry、Timeline、Eval Trajectory
+- Tool Runtime（V0.3.x）：Tool Call Contract、参数校验、结果标准化、超时控制、重试、权限校验、沙箱策略、文档收口
 
-- Next.js 前端首页
-- FastAPI `/health`
-- PostgreSQL 和 Redis 的 Docker Compose 配置
-- `.env.example`
-- Makefile
-- README
-- AI 开发约束文档
-- `test_health.py`
+下一阶段规划：V0.4.0 RAG Pipeline 增强。
 
-## Do Not Implement Early 禁止提前实现
+## Current Scope Constraints 当前修改约束
 
-不要创建或实现：
+允许创建或修改：
+- `apps/api/`：后端增量开发（不改现有 API 路径与响应契约）
+- `apps/web/`：前端增量开发（不删已有页面）
+- `core/`：共享基础设施（改 db 需谨慎）
+- `harness/`：蓝图目录（多数为 README 占位）
+- `modules/`：中性示例模块（不创建业务 Agent）
+- `schemas/`：JSON Schema 维护
+- `evals/`、`scripts/`、`cli/`、`docs/`：辅助工具与文档
 
-- Agent logic
-- Run / Step / Event / Task / Artifact models
-- AI Runtime
-- LLM providers
-- Database ORM
-- RAG
-- File upload
-- Skill registry
-- Tool registry
-- LangGraph state machine
-- Human review
-- Evals
-- Business-specific modules
-- Stage 2-5 directories
+禁止提前实现：
+- 业务 Agent（电商、客服、服装等具体行业）
+- 真实外部模型 provider（保持 mock 默认）
+- 真实向量数据库（V0.4.0 以前）
+- 真实 embedding provider
+- 多租户、权限系统、多模态
+- 复杂异步队列、外部 sandbox
+- 改现有 API 路径或响应结构
 
 ## File Modification Rules 文件修改规则
 
@@ -78,7 +74,7 @@ Stage 1 只允许包含：
 
 不确定时先提问。不要推断未来需求，不要实现推测性的功能。
 
-## Stage 1 Commands Stage 1 命令
+## Commands 常用命令
 
 - `make install-api`
 - `make install-web`

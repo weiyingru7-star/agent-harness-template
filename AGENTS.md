@@ -18,39 +18,25 @@
 
 ## Current Stage 当前阶段
 
-当前阶段：Stage 1。
+当前阶段：V0.3.7 Tool Runtime documentation consolidated。
 
-Stage 1 只允许包含：
+已完成的通用底座能力：
+- Agent Runtime（V0.2.x）：Trace / Span、Checkpoint、Failure / Retry、Timeline、Eval Trajectory
+- Tool Runtime（V0.3.x）：Tool Call Contract、参数校验、结果标准化、超时控制、重试、权限校验、沙箱策略、文档收口
 
-- Next.js 前端首页
-- FastAPI 后端 `/health`
-- PostgreSQL 和 Redis 的 Docker Compose 配置
-- `.env.example`
-- Makefile
-- README
-- AI 开发约束文档
-- 后端基础健康检查测试
+下一阶段规划：V0.4.0 RAG Pipeline 增强。
 
 ## Forbidden Scope 禁止提前实现
 
-除非用户明确批准进入对应阶段，否则不要实现或创建以下内容：
+除非用户明确批准，否则不要实现或创建以下内容：
 
-- Agent runtime
-- Run、Step、Event、Task、Artifact 数据模型
-- AI Runtime 或模型 provider
-- Skill registry
-- Tool registry
-- State machine
-- Memory
-- RAG
-- File upload 或 file processing
-- Multimodal processing
-- Workflow execution
-- Human review
-- Observability dashboards
-- Evals
-- Business modules
-- Stage 2-5 目录或占位实现
+- 业务 Agent（电商、客服、服装等具体行业）
+- 真实外部模型 provider（保持 mock 默认）
+- 真实向量数据库（V0.4.0 以前）
+- 真实 embedding provider
+- 多租户、权限系统、多模态
+- 复杂异步队列、外部 sandbox
+- 改现有 API 路径或响应结构
 
 ## File Modification Rules 文件修改规则
 

@@ -1,7 +1,17 @@
 from datetime import datetime, timezone
 from uuid import uuid4
 
-from app.models.run import Checkpoint, Run, RunEvent, RunTrace, Step, Task, TraceSpan
+from app.models.run import (
+    Checkpoint,
+    Run,
+    RunEvent,
+    RunTimeline,
+    RunTrace,
+    Step,
+    Task,
+    TimelineItem,
+    TraceSpan,
+)
 from core.db import session_scope
 from core.db.repositories.checkpoint_repository import CheckpointRepository
 from core.db.repositories.event_repository import EventRepository
@@ -294,6 +304,58 @@ class RunStore:
             ]
             return RunTrace(run_id=run.id, trace_id=trace_id, spans=spans, events=events)
 
+    def get_timeline(self, run_id: str) -> RunTimeline | None:
+        with session_scope() as session:
+            run = RunRepository(session).get(run_id)
+            if run is None:
+                return None
+
+            events = EventRepository(session).list_by_run(run_id)
+            checkpoints = CheckpointRepository(session).list_by_run(run_id)
+            checkpoint_by_step_id = {checkpoint.step_id: checkpoint for checkpoint in checkpoints}
+            terminal_events_by_span_id = {}
+            for event in events:
+                if event.span_id and event.event_type in {"step.completed", "step.failed"}:
+                    terminal_events_by_span_id[event.span_id] = event
+
+            items = [
+                self._build_step_timeline_item(
+                    step,
+                    checkpoint_by_step_id.get(step.id),
+                    terminal_events_by_span_id.get(step.span_id or ""),
+                )
+                for step in run.steps
+            ]
+
+            for event in events:
+                if event.event_type in {"run.retry_started", "run.retry_completed"}:
+                    items.append(
+                        TimelineItem(
+                            type="retry",
+                            label=event.message,
+                            status=event.status,
+                            sequence=event.sequence,
+                            started_at=event.started_at,
+                            ended_at=event.ended_at,
+                            duration_ms=event.duration_ms,
+                            error_message=event.error,
+                            metadata=event.metadata,
+                        )
+                    )
+
+            items.sort(key=lambda item: (item.sequence is None, item.sequence or 0, item.label))
+            return RunTimeline(
+                run_id=run.id,
+                trace_id=run.trace_id,
+                status=run.status,
+                started_at=run.created_at,
+                ended_at=run.completed_at,
+                duration_ms=self._duration_ms(run.created_at, run.completed_at)
+                if run.completed_at
+                else None,
+                items=items,
+            )
+
     def get_checkpoints(self, run_id: str) -> list[Checkpoint] | None:
         with session_scope() as session:
             if not RunRepository(session).exists(run_id):
@@ -315,6 +377,32 @@ class RunStore:
     @staticmethod
     def _duration_ms(started_at: datetime, ended_at: datetime) -> int:
         return max(0, int((ended_at - started_at).total_seconds() * 1000))
+
+    @staticmethod
+    def _build_step_timeline_item(
+        step: Step,
+        checkpoint: Checkpoint | None,
+        terminal_event: RunEvent | None,
+    ) -> TimelineItem:
+        metadata = dict(step.metadata)
+        if terminal_event is not None:
+            metadata.update(terminal_event.metadata)
+        return TimelineItem(
+            type="step",
+            label=f"{step.name} {step.status}",
+            status=step.status,
+            step_id=step.id,
+            span_id=step.span_id,
+            checkpoint_id=checkpoint.id if checkpoint else None,
+            checkpoint_index=checkpoint.checkpoint_index if checkpoint else None,
+            sequence=terminal_event.sequence if terminal_event else None,
+            started_at=step.started_at,
+            ended_at=step.ended_at,
+            duration_ms=step.duration_ms,
+            error_type=step.error_type,
+            error_message=step.error_message or step.error,
+            metadata=metadata,
+        )
 
 
 run_store = RunStore()

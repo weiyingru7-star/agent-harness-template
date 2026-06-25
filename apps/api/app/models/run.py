@@ -101,6 +101,33 @@ class RunTrace(BaseModel):
     events: list[RunEvent] = Field(default_factory=list)
 
 
+class TimelineItem(BaseModel):
+    type: str
+    label: str
+    status: str | None = None
+    step_id: str | None = None
+    span_id: str | None = None
+    checkpoint_id: str | None = None
+    checkpoint_index: int | None = None
+    sequence: int | None = None
+    started_at: datetime | None = None
+    ended_at: datetime | None = None
+    duration_ms: int | None = None
+    error_type: str | None = None
+    error_message: str | None = None
+    metadata: dict = Field(default_factory=dict)
+
+
+class RunTimeline(BaseModel):
+    run_id: str
+    trace_id: str | None = None
+    status: RunStatus
+    started_at: datetime | None = None
+    ended_at: datetime | None = None
+    duration_ms: int | None = None
+    items: list[TimelineItem] = Field(default_factory=list)
+
+
 class Checkpoint(BaseModel):
     id: str
     run_id: str

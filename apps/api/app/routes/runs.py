@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException, status
 
-from app.models.run import Checkpoint, CreateRunRequest, Run, RunEvent, RunTrace
+from app.models.run import Checkpoint, CreateRunRequest, Run, RunEvent, RunTimeline, RunTrace
 from app.services.run_store import run_store
 
 
@@ -40,6 +40,14 @@ def get_run_trace(run_id: str) -> RunTrace:
     if trace is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Run not found")
     return trace
+
+
+@router.get("/{run_id}/timeline", response_model=RunTimeline)
+def get_run_timeline(run_id: str) -> RunTimeline:
+    timeline = run_store.get_timeline(run_id)
+    if timeline is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Run not found")
+    return timeline
 
 
 @router.get("/{run_id}/checkpoints", response_model=list[Checkpoint])

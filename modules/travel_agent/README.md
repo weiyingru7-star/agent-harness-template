@@ -1,6 +1,6 @@
 # travel_agent Module
 
-This module was generated from the generic Agent Harness module template.
+This disabled scaffold module was generated from the generic Agent Harness module template.
 
 ## Contents
 
@@ -12,3 +12,5 @@ This module was generated from the generic Agent Harness module template.
 - `evals/`: local module eval assets
 
 Keep module-specific business logic inside this module directory.
+
+This scaffold is disabled by default and is not part of the core demo runtime.

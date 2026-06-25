@@ -1,9 +1,22 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "title": "Eval Case",
-  "description": "Minimal contract for a single evaluation case.",
+  "description": "Minimal contract for a single trajectory evaluation case.",
   "type": "object",
-  "required": ["id", "name", "input", "expected_output"],
+  "required": [
+    "id",
+    "name",
+    "module_id",
+    "input",
+    "expected_status",
+    "expected_output_contains",
+    "expected_events",
+    "expected_steps",
+    "expected_checkpoints_min",
+    "expected_trace_spans_min",
+    "expected_timeline_items_min",
+    "metadata"
+  ],
   "properties": {
     "id": {
       "type": "string",
@@ -17,13 +30,54 @@
       "type": "string",
       "description": "Evaluation case purpose and boundary."
     },
+    "module_id": {
+      "type": "string",
+      "description": "Module identifier to execute."
+    },
     "input": {
       "type": "string",
       "description": "Evaluation input."
     },
-    "expected_output": {
+    "expected_status": {
       "type": "string",
-      "description": "Expected output or acceptance description."
+      "description": "Expected final run status.",
+      "enum": ["completed", "failed"]
+    },
+    "expected_output_contains": {
+      "type": "array",
+      "description": "Strings expected to appear in the final output. Use an empty list when output is not expected.",
+      "items": {
+        "type": "string"
+      }
+    },
+    "expected_events": {
+      "type": "array",
+      "description": "Event types expected in the run trajectory.",
+      "items": {
+        "type": "string"
+      }
+    },
+    "expected_steps": {
+      "type": "array",
+      "description": "Step names expected in the run trajectory.",
+      "items": {
+        "type": "string"
+      }
+    },
+    "expected_checkpoints_min": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Minimum number of checkpoints expected."
+    },
+    "expected_trace_spans_min": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Minimum number of trace spans expected."
+    },
+    "expected_timeline_items_min": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Minimum number of timeline items expected."
     },
     "metadata": {
       "type": "object",

@@ -775,3 +775,36 @@ make dev-api
 ```text
 http://localhost:3005
 ```
+
+## V0.2.5 Eval Trajectory Acceptance V0.2.5 轨迹评估验收
+
+运行最小 eval runner：
+
+```bash
+python3 scripts/run_evals.py
+```
+
+预期结果：
+
+- `demo_agent_success` 通过。
+- `demo_agent_failure` 通过。
+- summary 显示全部 eval case passed。
+
+完整回归验收：
+
+```bash
+python3 scripts/run_evals.py
+make test-api
+npm run build --prefix apps/web
+python3 scripts/check_business_terms.py
+```
+
+eval runner 会检查：
+
+- run status。
+- output 是否包含预期文本。
+- events 是否包含预期 event type。
+- steps 是否包含预期 step name。
+- trace spans 数量。
+- checkpoints 数量。
+- timeline items 数量。

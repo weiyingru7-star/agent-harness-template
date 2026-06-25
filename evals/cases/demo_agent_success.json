@@ -1,0 +1,17 @@
+{
+  "id": "demo_agent_success",
+  "name": "Demo Agent Success",
+  "description": "Checks that the generic demo agent completes the standard runtime trajectory.",
+  "module_id": "demo_agent",
+  "input": "hello eval trajectory",
+  "expected_status": "completed",
+  "expected_output_contains": ["demo_agent mock response"],
+  "expected_events": ["run.created", "run.started", "run.completed"],
+  "expected_steps": ["input_node", "skill_node", "tool_node", "final_node"],
+  "expected_checkpoints_min": 4,
+  "expected_trace_spans_min": 4,
+  "expected_timeline_items_min": 4,
+  "metadata": {
+    "path": "success"
+  }
+}

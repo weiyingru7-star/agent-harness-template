@@ -1,6 +1,6 @@
 # Evals
 
-本文档说明 evals 的目录定位。V0.1.1 不实现 Eval Runner。
+本文档说明 evals 的目录定位和 V0.2.5 最小 Eval Trajectory Runner。
 
 ## 目录
 
@@ -16,7 +16,7 @@ evals/
 modules/{module_name}/evals/
 ```
 
-## 未来用途
+## 用途
 
 evals 可用于存放：
 
@@ -28,12 +28,36 @@ evals 可用于存放：
 
 ## 当前状态
 
-V0.1.1 只补齐目录和说明，不新增评测执行器。
+V0.2.5 已新增最小 eval runner：
+
+```bash
+python3 scripts/run_evals.py
+```
+
+runner 会读取：
+
+```text
+evals/cases/*.json
+```
+
+并通过现有 run execution API 检查：
+
+- run status。
+- output 包含预期文本。
+- events 包含预期 event type。
+- steps 包含预期 step name。
+- trace spans 数量。
+- checkpoints 数量。
+- timeline items 数量。
+
+详细说明见：
+
+- [Eval Trajectory](eval-trajectory.md)
 
 ## 当前不实现
 
-- Eval Runner。
-- 自动评分。
-- 批量评测。
+- 真实模型评测。
+- LLM-as-judge。
+- 复杂评分系统。
 - 外部评测平台接入。
 - 生产级质量门禁。

@@ -226,6 +226,22 @@ curl -X POST http://localhost:8005/api/runs/$RUN_ID/retry
 
 - [Failure / Retry Runtime](docs/failure-retry-runtime.md)
 
+## V0.2.5 Eval Trajectory 最小评估
+
+V0.2.5 增加最小 eval runner，用固定 eval cases 检查 demo_agent 的 run
+status、output、events、steps、trace、checkpoints 和 timeline，防止后续改动破坏
+Agent Runtime 轨迹。
+
+运行 eval：
+
+```bash
+python3 scripts/run_evals.py
+```
+
+更多说明：
+
+- [Eval Trajectory](docs/eval-trajectory.md)
+
 更多说明：
 
 - [Architecture 架构说明](docs/architecture.md)

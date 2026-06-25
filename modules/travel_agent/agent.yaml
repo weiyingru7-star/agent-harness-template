@@ -2,3 +2,8 @@ id: "travel_agent_agent"
 module_id: "travel_agent"
 name: "Travel Agent Agent"
 description: "Generic agent scaffold for this module."
+system_prompt_path: "prompts/system.md"
+skills: []
+tools: []
+workflow: "manual"
+provider: "mock"

@@ -1,0 +1,17 @@
+{
+  "id": "demo_agent_failure",
+  "name": "Demo Agent Failure",
+  "description": "Checks that the generic demo agent records failure trajectory data.",
+  "module_id": "demo_agent",
+  "input": "hello eval __fail__",
+  "expected_status": "failed",
+  "expected_output_contains": [],
+  "expected_events": ["run.created", "run.started", "step.failed", "run.failed"],
+  "expected_steps": ["input_node", "skill_node"],
+  "expected_checkpoints_min": 1,
+  "expected_trace_spans_min": 2,
+  "expected_timeline_items_min": 2,
+  "metadata": {
+    "path": "failure"
+  }
+}

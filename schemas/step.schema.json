@@ -21,6 +21,22 @@
       "type": "string",
       "description": "Current step status."
     },
+    "type": {
+      "type": "string",
+      "description": "Step type such as node, tool, llm, or final."
+    },
+    "trace_id": {
+      "type": "string",
+      "description": "Trace identifier associated with this step."
+    },
+    "span_id": {
+      "type": "string",
+      "description": "Span identifier associated with this step."
+    },
+    "parent_span_id": {
+      "type": "string",
+      "description": "Optional parent span identifier."
+    },
     "input": {
       "type": "string",
       "description": "Step input text."
@@ -28,6 +44,28 @@
     "output": {
       "type": "string",
       "description": "Step output text."
+    },
+    "started_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Step start timestamp."
+    },
+    "ended_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Step end timestamp."
+    },
+    "duration_ms": {
+      "type": "integer",
+      "description": "Step duration in milliseconds."
+    },
+    "error": {
+      "type": "string",
+      "description": "Error message when the step fails."
+    },
+    "metadata": {
+      "type": "object",
+      "description": "Step metadata."
     },
     "created_at": {
       "type": "string",

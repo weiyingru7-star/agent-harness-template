@@ -1,0 +1,74 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Span",
+  "description": "Minimal contract for an observable unit of work inside a trace.",
+  "type": "object",
+  "required": ["id", "trace_id", "run_id", "name", "type", "status", "created_at"],
+  "properties": {
+    "id": {
+      "type": "string",
+      "description": "Unique span identifier."
+    },
+    "trace_id": {
+      "type": "string",
+      "description": "Trace identifier associated with this span."
+    },
+    "run_id": {
+      "type": "string",
+      "description": "Run identifier associated with this span."
+    },
+    "step_id": {
+      "type": "string",
+      "description": "Optional step identifier associated with this span."
+    },
+    "parent_span_id": {
+      "type": "string",
+      "description": "Optional parent span identifier."
+    },
+    "name": {
+      "type": "string",
+      "description": "Span name."
+    },
+    "type": {
+      "type": "string",
+      "description": "Span type."
+    },
+    "status": {
+      "type": "string",
+      "description": "Span status."
+    },
+    "started_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Span start timestamp."
+    },
+    "ended_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Span end timestamp."
+    },
+    "duration_ms": {
+      "type": "integer",
+      "description": "Span duration in milliseconds."
+    },
+    "error": {
+      "type": "string",
+      "description": "Error message when the span fails."
+    },
+    "metadata": {
+      "type": "object",
+      "description": "Span metadata."
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Span creation timestamp."
+    },
+    "updated_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Last span update timestamp."
+    }
+  },
+  "additionalProperties": false
+}

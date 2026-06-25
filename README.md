@@ -161,6 +161,29 @@ curl http://localhost:8005/api/modules
 - [Module Development](docs/module-development.md)
 - [Agent Runtime](docs/agent-runtime.md)
 
+## V0.2.1 Trace Runtime 可观察运行轨迹
+
+V0.2.1 增强 Run 的可观察性。每次 Run 会生成 `trace_id`，每个 node step
+会生成 `span_id`，事件会保留旧字段并增加 typed event 字段。
+
+查询事件：
+
+```bash
+curl http://localhost:8005/api/runs/$RUN_ID/events
+```
+
+查询 trace：
+
+```bash
+curl http://localhost:8005/api/runs/$RUN_ID/trace
+```
+
+本阶段不实现 checkpoint、resume、retry，也不接外部 tracing 平台。
+
+更多说明：
+
+- [Trace Runtime](docs/trace-runtime.md)
+
 更多说明：
 
 - [Architecture 架构说明](docs/architecture.md)

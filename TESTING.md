@@ -549,6 +549,58 @@ npm run build --prefix apps/web
 python3 scripts/check_business_terms.py
 ```
 
+## V0.2.1 Trace Runtime V0.2.1 可观察运行轨迹验收
+
+创建 Run：
+
+```bash
+RUN_ID=$(curl -s -X POST http://localhost:8005/api/runs \
+  -H 'Content-Type: application/json' \
+  -d '{"input":"hello trace"}' \
+  | python3 -c "import json, sys; print(json.load(sys.stdin)['id'])")
+```
+
+检查旧事件接口兼容：
+
+```bash
+curl http://localhost:8005/api/runs/$RUN_ID/events
+```
+
+预期结果：
+
+- 返回 list。
+- 每个事件仍包含 `type`、`message`、`created_at`。
+- 新增 `event_type`、`trace_id`、`sequence` 等字段。
+
+检查 trace：
+
+```bash
+curl http://localhost:8005/api/runs/$RUN_ID/trace
+```
+
+预期结果：
+
+- 返回 `run_id`。
+- 返回 `trace_id`。
+- `spans` 包含 input / skill / tool / final 四个 node。
+- `events` 按 `sequence` 排序。
+
+完整验收：
+
+```bash
+make test-api
+npm run build --prefix apps/web
+python3 scripts/check_business_terms.py
+for f in schemas/*.schema.json; do python3 -m json.tool "$f" >/dev/null || exit 1; done
+git diff --check
+```
+
+开发期数据库说明：
+
+- 新测试库或新开发库会自动创建 V0.2.1 字段。
+- 已存在的本地 PostgreSQL 表不会被 `create_all` 自动修改。
+- 如旧开发库报字段不存在，请先备份需要的数据，再手动补字段或重建本地开发数据库。
+
 ## Common Errors 常见错误排查
 
 ### `python: command not found`

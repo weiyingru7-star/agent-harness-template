@@ -21,6 +21,13 @@ V0.1.8 增强了 Module Registry 和 Agent Execution Contract：
 - `POST /api/runs` 传 `module_id` 时尝试运行对应模块。
 - 模块入口统一为 `execute(input_text, context)`。
 
+V0.2.1 增强了 Trace / Event Contract：
+
+- 每次 Run 生成 `trace_id`。
+- 每个 node step 生成 `span_id`。
+- Event 保留旧字段，同时增加 typed event 字段。
+- 新增 `GET /api/runs/{run_id}/trace`，用于后续 timeline、debug 和 eval。
+
 API 保持：
 
 ```text
@@ -73,6 +80,18 @@ AgentExecutionResult
 
 ```json
 {"input":"hello","module_id":"demo_agent"}
+```
+
+事件接口保持兼容：
+
+```text
+GET /api/runs/{run_id}/events
+```
+
+Trace 查询接口：
+
+```text
+GET /api/runs/{run_id}/trace
 ```
 
 ## 当前不实现

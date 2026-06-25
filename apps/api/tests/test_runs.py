@@ -12,6 +12,7 @@ def test_create_and_get_run() -> None:
     assert response.status_code == 201
     run = response.json()
     assert run["id"].startswith("run_")
+    assert run["trace_id"].startswith("trace_")
     assert run["status"] == "completed"
     assert run["task"]["input"] == "hello stage two"
     assert [step["name"] for step in run["steps"]] == [
@@ -70,14 +71,17 @@ def test_get_run_events() -> None:
     event_types = [event["type"] for event in events]
     assert event_types[:2] == ["run.created", "run.started"]
     assert event_types[-1] == "run.completed"
-    assert event_types.count("node.started") == 4
-    assert event_types.count("node.completed") == 4
-    assert [event["message"] for event in events if event["type"] == "node.completed"] == [
+    assert event_types.count("step.started") == 4
+    assert event_types.count("step.completed") == 4
+    assert [event["message"] for event in events if event["type"] == "step.completed"] == [
         "input_node completed",
         "skill_node completed",
         "tool_node completed",
         "final_node completed",
     ]
+    assert [event["sequence"] for event in events] == list(range(1, 12))
+    assert all(event["event_type"] == event["type"] for event in events)
+    assert all(event["trace_id"].startswith("trace_") for event in events)
 
 
 def test_unknown_run_returns_404() -> None:

@@ -14,6 +14,7 @@ class RunRepository:
         self.session.add(
             RunRecord(
                 id=run.id,
+                trace_id=run.trace_id,
                 task_id=run.task.id,
                 module_id=module_id,
                 agent_id=agent_id,
@@ -32,6 +33,7 @@ class RunRepository:
         if record is not None:
             record.status = run.status
             record.output = run.output
+            record.trace_id = run.trace_id
             record.updated_at = run.completed_at
             record.completed_at = run.completed_at
         return run
@@ -52,6 +54,7 @@ class RunRepository:
         )
         return Run(
             id=record.id,
+            trace_id=record.trace_id,
             status=record.status,  # type: ignore[arg-type]
             task=task,
             steps=StepRepository(self.session).list_by_run(record.id),

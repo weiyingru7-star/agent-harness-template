@@ -3,7 +3,7 @@
   "title": "Event",
   "description": "Minimal contract for an event emitted by a run or step.",
   "type": "object",
-  "required": ["id", "run_id", "type", "created_at"],
+  "required": ["id", "run_id", "type", "event_type", "created_at"],
   "properties": {
     "id": {
       "type": "string",
@@ -21,9 +21,55 @@
       "type": "string",
       "description": "Event type."
     },
+    "event_type": {
+      "type": "string",
+      "description": "Typed event identifier. Kept in sync with type for compatibility."
+    },
+    "trace_id": {
+      "type": "string",
+      "description": "Trace identifier associated with this event."
+    },
+    "span_id": {
+      "type": "string",
+      "description": "Span identifier associated with this event."
+    },
+    "parent_span_id": {
+      "type": "string",
+      "description": "Optional parent span identifier."
+    },
+    "sequence": {
+      "type": "integer",
+      "description": "Monotonic event sequence within a run."
+    },
+    "status": {
+      "type": "string",
+      "description": "Runtime status associated with this event."
+    },
     "message": {
       "type": "string",
       "description": "Human-readable event message."
+    },
+    "started_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Start timestamp associated with this event."
+    },
+    "ended_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "End timestamp associated with this event."
+    },
+    "duration_ms": {
+      "type": "integer",
+      "description": "Duration in milliseconds associated with this event."
+    },
+    "error": {
+      "type": "string",
+      "description": "Error message associated with this event."
+    },
+    "metadata": {
+      "type": "object",
+      "description": "Typed event metadata."
     },
     "payload": {
       "type": "object",

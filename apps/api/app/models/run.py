@@ -22,13 +22,23 @@ class Step(BaseModel):
     id: str
     name: str
     status: StepStatus
+    type: str = "node"
+    trace_id: str | None = None
+    span_id: str | None = None
+    parent_span_id: str | None = None
     output: str | None = None
+    started_at: datetime | None = None
+    ended_at: datetime | None = None
+    duration_ms: int | None = None
+    error: str | None = None
+    metadata: dict = Field(default_factory=dict)
     created_at: datetime = Field(default_factory=utc_now)
     completed_at: datetime | None = None
 
 
 class Run(BaseModel):
     id: str
+    trace_id: str | None = None
     status: RunStatus
     task: Task
     steps: list[Step] = Field(default_factory=list)
@@ -40,9 +50,43 @@ class Run(BaseModel):
 class RunEvent(BaseModel):
     type: str
     message: str
+    event_type: str | None = None
+    trace_id: str | None = None
+    span_id: str | None = None
+    parent_span_id: str | None = None
+    sequence: int | None = None
+    status: str | None = None
+    started_at: datetime | None = None
+    ended_at: datetime | None = None
+    duration_ms: int | None = None
+    error: str | None = None
+    metadata: dict = Field(default_factory=dict)
     created_at: datetime = Field(default_factory=utc_now)
 
 
 class CreateRunRequest(BaseModel):
     input: str = Field(min_length=1)
     module_id: str | None = None
+
+
+class TraceSpan(BaseModel):
+    id: str
+    trace_id: str | None = None
+    run_id: str
+    step_id: str
+    parent_span_id: str | None = None
+    name: str
+    type: str
+    status: StepStatus
+    started_at: datetime | None = None
+    ended_at: datetime | None = None
+    duration_ms: int | None = None
+    error: str | None = None
+    metadata: dict = Field(default_factory=dict)
+
+
+class RunTrace(BaseModel):
+    run_id: str
+    trace_id: str | None = None
+    spans: list[TraceSpan] = Field(default_factory=list)
+    events: list[RunEvent] = Field(default_factory=list)

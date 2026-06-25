@@ -1,0 +1,50 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Trace",
+  "description": "Minimal contract for an observable trace created by a run.",
+  "type": "object",
+  "required": ["id", "run_id", "status", "created_at"],
+  "properties": {
+    "id": {
+      "type": "string",
+      "description": "Unique trace identifier."
+    },
+    "run_id": {
+      "type": "string",
+      "description": "Run identifier associated with this trace."
+    },
+    "status": {
+      "type": "string",
+      "description": "Trace status."
+    },
+    "started_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Trace start timestamp."
+    },
+    "ended_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Trace end timestamp."
+    },
+    "duration_ms": {
+      "type": "integer",
+      "description": "Trace duration in milliseconds."
+    },
+    "metadata": {
+      "type": "object",
+      "description": "Trace metadata."
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Trace creation timestamp."
+    },
+    "updated_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Last trace update timestamp."
+    }
+  },
+  "additionalProperties": false
+}

@@ -16,6 +16,7 @@ def test_run_persistence_and_api_compatibility() -> None:
     run_id = run["id"]
 
     assert run["status"] == "completed"
+    assert run["trace_id"].startswith("trace_")
     assert run["task"]["input"] == "persist this run"
     assert [step["name"] for step in run["steps"]] == [
         "input_node",
@@ -37,6 +38,17 @@ def test_run_persistence_and_api_compatibility() -> None:
         run_record = session.get(RunRecord, run_id)
         assert run_record is not None
         assert run_record.status == "completed"
+        assert run_record.trace_id == run["trace_id"]
         assert session.query(TaskRecord).count() == 1
         assert session.query(StepRecord).filter_by(run_id=run_id).count() == 4
         assert session.query(RunEventRecord).filter_by(run_id=run_id).count() == 11
+        first_step = session.query(StepRecord).filter_by(run_id=run_id).first()
+        assert first_step is not None
+        assert first_step.trace_id == run["trace_id"]
+        assert first_step.span_id is not None
+        assert first_step.type == "node"
+        first_event = session.query(RunEventRecord).filter_by(run_id=run_id).order_by(RunEventRecord.sequence).first()
+        assert first_event is not None
+        assert first_event.event_type == "run.created"
+        assert first_event.trace_id == run["trace_id"]
+        assert first_event.sequence == 1

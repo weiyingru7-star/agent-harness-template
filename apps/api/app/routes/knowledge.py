@@ -75,13 +75,29 @@ def retrieve(request: RetrieveRequest) -> RetrieveResponse:
         )
     except ValueError as exc:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc)) from exc
+
+    mode = request.retrieval_mode
+    meta: dict[str, object] = {
+        "retrieval_mode": mode,
+    }
+    if mode == "keyword":
+        meta["score_type"] = "term_frequency"
+        meta["retriever"] = "KnowledgeStore.keyword"
+    elif mode == "vector":
+        meta["score_type"] = "cosine"
+        meta["retriever"] = "KnowledgeStore.vector"
+        meta["embedding_provider"] = "mock-embedding"
+        meta["vector_store"] = "InMemoryVectorStore"
+    elif mode == "hybrid":
+        meta["score_type"] = "cosine"
+        meta["retriever"] = "KnowledgeStore.hybrid"
+        meta["embedding_provider"] = "mock-embedding"
+        meta["vector_store"] = "InMemoryVectorStore"
+
     return RetrieveResponse(
         query=request.query,
         results=results,
-        metadata={
-            "retrieval_mode": request.retrieval_mode,
-            "score_type": "cosine" if request.retrieval_mode in ("vector", "hybrid") else "term_frequency",
-        },
+        metadata=meta,
     )
 
 

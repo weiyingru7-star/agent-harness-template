@@ -109,8 +109,10 @@ def test_retrieve_response_has_metadata() -> None:
     assert resp.status_code == 200
     body = resp.json()
     assert "metadata" in body
-    assert body["metadata"]["retrieval_mode"] == "keyword"
-    assert body["metadata"]["score_type"] == "term_frequency"
+    m = body["metadata"]
+    assert m["retrieval_mode"] == "keyword"
+    assert m["score_type"] == "term_frequency"
+    assert m["retriever"] == "KnowledgeStore.keyword"
 
 
 def test_retrieve_response_metadata_vector() -> None:
@@ -121,8 +123,28 @@ def test_retrieve_response_metadata_vector() -> None:
 
     assert resp.status_code == 200
     body = resp.json()
-    assert body["metadata"]["retrieval_mode"] == "vector"
-    assert body["metadata"]["score_type"] == "cosine"
+    m = body["metadata"]
+    assert m["retrieval_mode"] == "vector"
+    assert m["score_type"] == "cosine"
+    assert m["retriever"] == "KnowledgeStore.vector"
+    assert m["embedding_provider"] == "mock-embedding"
+    assert m["vector_store"] == "InMemoryVectorStore"
+
+
+def test_hybrid_mode_metadata() -> None:
+    resp = client.post(
+        "/api/knowledge/retrieve",
+        json={"query": "checkpoints", "retrieval_mode": "hybrid"},
+    )
+
+    assert resp.status_code == 200
+    body = resp.json()
+    m = body["metadata"]
+    assert m["retrieval_mode"] == "hybrid"
+    assert m["score_type"] == "cosine"
+    assert m["retriever"] == "KnowledgeStore.hybrid"
+    assert m["embedding_provider"] == "mock-embedding"
+    assert m["vector_store"] == "InMemoryVectorStore"
 
 
 def test_unknown_retrieval_mode_errors() -> None:

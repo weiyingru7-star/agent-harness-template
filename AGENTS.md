@@ -18,13 +18,14 @@
 
 ## Current Stage 当前阶段
 
-当前阶段：V0.3.7 Tool Runtime documentation consolidated。
+当前阶段：V0.4.6 Retrieval Mode Contract。
 
 已完成的通用底座能力：
 - Agent Runtime（V0.2.x）：Trace / Span、Checkpoint、Failure / Retry、Timeline、Eval Trajectory
 - Tool Runtime（V0.3.x）：Tool Call Contract、参数校验、结果标准化、超时控制、重试、权限校验、沙箱策略、文档收口
+- RAG Runtime（V0.4.x）：Document/Chunk/Citation/RetrievalResult 合同、切分策略、直接文本创建、检索评估、嵌入层、向量存储、三种检索模式
 
-下一阶段规划：V0.4.0 RAG Pipeline 增强。
+下一阶段规划：V0.5.x Memory / Advanced RAG。
 
 ## Forbidden Scope 禁止提前实现
 

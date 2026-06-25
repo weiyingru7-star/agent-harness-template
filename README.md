@@ -554,22 +554,32 @@ keyword / vector / hybrid 三种模式：
 
 - [RAG Retrieval Modes](docs/rag-retrieval-modes.md)
 
+## V0.4.x RAG Runtime 总结
+
+V0.4.0–V0.4.6 构建了一个完整的 RAG Runtime 栈，共 7 个模块：
+
+| 模块 | 版本 | 说明 | 文档 |
+|---|---|---|---|
+| 数据合同 | V0.4.0 | Document / Chunk / Citation / RetrievalResult | [RAG Contracts](docs/rag-contracts.md) |
+| 切分策略 | V0.4.1 | chunk_size / chunk_overlap / paragraph-fallback | [RAG Chunking](docs/rag-chunking.md) |
+| 直接文本创建 | V0.4.2 | POST /api/knowledge/documents | [RAG Pipeline](docs/rag-pipeline.md) |
+| 检索评估 | V0.4.3 | scripts/run_rag_evals.py | [RAG Eval](docs/rag-eval.md) |
+| 嵌入层 | V0.4.4 | MockEmbeddingProvider + Registry | [RAG Embeddings](docs/rag-embeddings.md) |
+| 向量存储 | V0.4.5 | InMemoryVectorStore + cosine similarity | [RAG Vector Store](docs/rag-vector-store.md) |
+| 检索模式 | V0.4.6 | keyword / vector / hybrid + metadata | [RAG Retrieval Modes](docs/rag-retrieval-modes.md) |
+
+详细说明：[RAG Runtime 文档](docs/rag-runtime.md)
+
 ## Current Scope 当前范围
 
-当前版本（V0.4.6）已完成：
+当前版本（V0.4.7）已完成：
 - **V0.2.x Agent Runtime**：Trace / Span、Checkpoint、Failure / Retry、Timeline API 与前端视图、Eval Trajectory runner
 - **V0.3.x Tool Runtime**：Tool Call Contract、Tool Args Schema、Tool Result Contract、Tool Timeout、Tool Retry、Tool Permission、Tool Sandbox Policy、文档收口
-- **V0.4.0 RAG Pipeline**：增强 Document / Chunk / Citation / Retrieval Contract、新增文档详情与集合分块 API
-- **V0.4.1 Chunking Strategy**：可配置 chunk_size / chunk_overlap、段落优先切分、超长段落 fallback、chunk_metadata
-- **V0.4.2 Direct Text Document**：POST /api/knowledge/documents 直接文本创建
-- **V0.4.3 RAG Eval**：独立 RAG eval runner + 结构化 eval case
-- **V0.4.4 Embedding Provider**：EmbeddingRequest / Result / Provider contract、MockEmbeddingProvider、Registry
-- **V0.4.5 Vector Store**：VectorRecord / Search contract、InMemoryVectorStore、cosine similarity
-- **V0.4.6 Retrieval Modes**：keyword / vector / hybrid 三种检索模式、惰性向量索引
+- **V0.4.x RAG Runtime**：数据合同、切分策略、直接文本创建、检索评估、嵌入层、向量存储、检索模式、文档收口
 
 模板核心保持业务无关，具体业务逻辑应放在 `modules/{module_name}/` 内由使用者自行创建。详见 [Project Boundaries](PROJECT_BOUNDARIES.md)。
 
-下一阶段规划：V0.4.x Embedding / Vector Store / Rerank。
+下一阶段规划：V0.5.x Memory / Advanced RAG。
 
 ## Requirements 环境要求
 

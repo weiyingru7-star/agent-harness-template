@@ -1404,3 +1404,79 @@ python3 scripts/check_business_terms.py
 ### 文档参考
 
 - [RAG Retrieval Modes](docs/rag-retrieval-modes.md)
+
+## V0.4.x RAG Runtime Acceptance V0.4.x 运行时验收
+
+### Unified Acceptance Commands 统一验收命令
+
+```bash
+# 全量后端测试
+make test-api
+
+# Agent trajectory eval
+python3 scripts/run_evals.py
+
+# RAG eval
+python3 scripts/run_rag_evals.py
+
+# 业务词污染检查
+python3 scripts/check_business_terms.py
+
+# 前端构建
+npm run build --prefix apps/web
+```
+
+### Keyword Retrieval 关键词检索
+
+```bash
+curl -s -X POST http://localhost:8005/api/knowledge/retrieve \
+  -H 'Content-Type: application/json' \
+  -d '{"query":"checkpoints","retrieval_mode":"keyword"}' \
+  | python3 -c "
+import json,sys;r=json.load(sys.stdin)
+print('results:',len(r['results']),'metadata:',r.get('metadata'))
+"
+```
+
+预期结果：results > 0，`metadata.retrieval_mode = "keyword"`
+
+### Vector Retrieval 向量检索
+
+```bash
+curl -s -X POST http://localhost:8005/api/knowledge/retrieve \
+  -H 'Content-Type: application/json' \
+  -d '{"query":"checkpoints","retrieval_mode":"vector","collection":"default"}' \
+  | python3 -c "
+import json,sys;r=json.load(sys.stdin)
+print('results:',len(r['results']),'metadata:',r.get('metadata'))
+"
+```
+
+预期结果：results > 0，`metadata.retrieval_mode = "vector"`
+
+### Hybrid Retrieval 混合检索
+
+```bash
+curl -s -X POST http://localhost:8005/api/knowledge/retrieve \
+  -H 'Content-Type: application/json' \
+  -d '{"query":"checkpoints","retrieval_mode":"hybrid"}' \
+  | python3 -c "
+import json,sys;r=json.load(sys.stdin)
+print('results:',len(r['results']),'metadata:',r.get('metadata'))
+"
+```
+
+### Compatibility 兼容性
+
+```bash
+make test-api
+python3 scripts/run_evals.py
+python3 scripts/run_rag_evals.py
+```
+
+### 文档参考
+
+- [RAG Runtime 文档](docs/rag-runtime.md)
+- [RAG Runtime Architecture](docs/rag-runtime-architecture.md)
+- [RAG Runtime Contracts](docs/rag-runtime-contracts.md)
+- [RAG Runtime Eval](docs/rag-runtime-eval.md)

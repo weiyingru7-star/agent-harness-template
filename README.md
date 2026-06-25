@@ -377,6 +377,25 @@ demo_agent 触发方式：
 
 - [Tool Permission](docs/tool-permission.md)
 
+## V0.3.6 Tool Sandbox / 安全执行最小版
+
+V0.3.6 为 Tool 系统增加最小安全执行层。运行前检查该 tool
+是否允许在当前执行模式下运行。违反 sandbox_policy 时，
+记录 `ToolSandboxViolation` 和 `tool.call.failed` event。
+
+执行顺序：
+```
+tool.call.started → permission check → sandbox check → args validation → execution
+```
+
+demo_agent 触发方式：
+
+- `__sandbox_blocked__`：execution_mode 设为 disabled，被 sandbox 拒绝
+
+更多说明：
+
+- [Tool Sandbox](docs/tool-sandbox.md)
+
 更多说明：
 
 - [Architecture 架构说明](docs/architecture.md)

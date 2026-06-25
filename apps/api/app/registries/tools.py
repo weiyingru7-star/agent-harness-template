@@ -18,6 +18,8 @@ class ToolDefinition(BaseModel):
     permission_level: str = "safe"
     allowed_contexts: list[str] | None = None
     requires_approval: bool = False
+    execution_mode: str = "in_process"
+    sandbox_policy: dict | None = None
 
 
 def mock_echo(args: dict) -> ToolResult:

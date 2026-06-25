@@ -22,6 +22,7 @@ def test_eval_runner_passes_builtin_cases() -> None:
         "demo_agent_tool_timeout",
         "demo_agent_flaky_tool_retry",
         "demo_agent_tool_permission_denied",
+        "demo_agent_tool_sandbox_blocked",
     }
 
 

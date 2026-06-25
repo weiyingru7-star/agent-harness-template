@@ -5,12 +5,13 @@ V0.4.0 强化了最小 RAG Pipeline，建立标准化 Document / Chunk / Citatio
 ## 流程
 
 ```
-Upload File
-  → POST /api/files/upload
-  → POST /api/knowledge/ingest (file_id)
-    → Text Extraction (已存在)
-    → Simple Chunking (V0.4.0 enchancment)
-      → char_count / token_count 计算
+Upload File / Direct Text
+  → POST /api/files/upload → POST /api/knowledge/ingest (file_id)
+  或
+  → POST /api/knowledge/documents (title + text, no upload)
+    → Text Extraction
+    → Chunking (V0.4.1)
+      → char_count / token_count / chunk_metadata
     → Document + Chunks 写入数据库
   → 检索: POST /api/knowledge/retrieve (query)
     → Keyword matching (无 embedding)
@@ -27,6 +28,23 @@ Upload File
 | POST | `/api/knowledge/retrieve` | 检索文档 | V0 |
 | GET | `/api/knowledge/documents/{document_id}` | 查询单文档详情 | V0.4.0 |
 | GET | `/api/knowledge/collections/{collection}/chunks` | 按集合查询分块 | V0.4.0 |
+| POST | `/api/knowledge/documents` | 直接从文本创建文档 | V0.4.2 |
+
+## Direct Text Ingest
+
+V0.4.2 新增 `POST /api/knowledge/documents`，无需上传文件即可创建文档。
+
+请求字段：
+- `title`（必填）：文档标题
+- `text`（必填）：文档文本内容
+- `collection`（可选，默认 `"default"`）：文档集合
+- `source`（可选，默认 `"direct"`）：来源标签
+- `content_type`（可选，默认 `"text/plain"`）：内容类型
+- `metadata`（可选）：自定义元数据
+- `chunking_config`（可选）：切分配置，同 V0.4.1
+
+内部创建虚拟 `FileRecord` 满足外键约束，复用 V0.4.1 chunker 和已有检索链路。
+可通过 `POST /api/knowledge/retrieve` 检索到直接创建的文档。
 
 ## 分块
 

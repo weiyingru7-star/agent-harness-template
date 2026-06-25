@@ -470,13 +470,29 @@ ingest 时可通过 `chunking_config` 字段自定义切分参数，不传时使
 
 - [RAG Chunking](docs/rag-chunking.md)
 
+## V0.4.2 Direct Text Document Ingest / 直接文本创建文档
+
+V0.4.2 新增 `POST /api/knowledge/documents` 入口，直接用文本创建
+knowledge document，不依赖文件上传。
+
+请求字段：`title`（必填）、`text`（必填）、`collection`、`source`、
+`content_type`、`metadata`、`chunking_config`。
+
+内部创建虚拟 FileRecord 满足外键约束，复用 V0.4.1 chunker 和已有检索链路。
+可通过 `POST /api/knowledge/retrieve` 搜到直接创建的文档。
+
+更多说明：
+
+- [RAG Pipeline](docs/rag-pipeline.md)
+
 ## Current Scope 当前范围
 
-当前版本（V0.4.1）已完成：
+当前版本（V0.4.2）已完成：
 - **V0.2.x Agent Runtime**：Trace / Span、Checkpoint、Failure / Retry、Timeline API 与前端视图、Eval Trajectory runner
 - **V0.3.x Tool Runtime**：Tool Call Contract、Tool Args Schema、Tool Result Contract、Tool Timeout、Tool Retry、Tool Permission、Tool Sandbox Policy、文档收口
 - **V0.4.0 RAG Pipeline**：增强 Document / Chunk / Citation / Retrieval Contract、新增文档详情与集合分块 API
 - **V0.4.1 Chunking Strategy**：可配置 chunk_size / chunk_overlap、段落优先切分、超长段落 fallback、chunk_metadata
+- **V0.4.2 Direct Text Document**：POST /api/knowledge/documents 直接文本创建
 
 模板核心保持业务无关，具体业务逻辑应放在 `modules/{module_name}/` 内由使用者自行创建。详见 [Project Boundaries](PROJECT_BOUNDARIES.md)。
 

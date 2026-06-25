@@ -116,3 +116,93 @@ def test_ingested_chunks_have_correct_index_order() -> None:
     chunks = ingest_response.json()["chunks"]
     indices = [chunk["index"] for chunk in chunks]
     assert indices == sorted(indices)
+
+
+def test_direct_text_creates_document() -> None:
+    response = client.post(
+        "/api/knowledge/documents",
+        json={"title": "My Doc", "text": "This is a direct text document."},
+    )
+
+    assert response.status_code == 201
+    body = response.json()
+    assert body["document"]["title"] == "My Doc"
+    assert body["document"]["source"] == "direct"
+    assert body["document"]["collection"] == "default"
+    assert len(body["chunks"]) >= 1
+    assert body["chunks"][0]["text"] == "This is a direct text document."
+
+
+def test_direct_text_missing_title_returns_422() -> None:
+    response = client.post(
+        "/api/knowledge/documents",
+        json={"text": "Some content here."},
+    )
+
+    assert response.status_code == 422
+
+
+def test_direct_text_missing_text_returns_422() -> None:
+    response = client.post(
+        "/api/knowledge/documents",
+        json={"title": "No Content"},
+    )
+
+    assert response.status_code == 422
+
+
+def test_direct_text_with_chunking_config() -> None:
+    text = "\n\n".join([f"Paragraph {i} with text." for i in range(5)])
+    response = client.post(
+        "/api/knowledge/documents",
+        json={
+            "title": "Chunked Doc",
+            "text": text,
+            "chunking_config": {"chunk_size": 50, "chunk_overlap": 10},
+        },
+    )
+
+    assert response.status_code == 201
+    chunks = response.json()["chunks"]
+    assert len(chunks) > 0
+    meta = chunks[0].get("chunk_metadata", {})
+    assert meta.get("chunk_size") == 50
+    assert meta.get("chunk_overlap") == 10
+
+
+def test_direct_text_document_is_retrievable() -> None:
+    doc_response = client.post(
+        "/api/knowledge/documents",
+        json={"title": "Search Target", "text": "Agent Harness direct text for retrieval."},
+    )
+    doc_id = doc_response.json()["document"]["id"]
+
+    retrieve_response = client.post(
+        "/api/knowledge/retrieve",
+        json={"query": "Harness", "limit": 3},
+    )
+
+    assert retrieve_response.status_code == 200
+    results = retrieve_response.json()["results"]
+    doc_ids = {r["citation"]["document_id"] for r in results}
+    assert doc_id in doc_ids
+
+
+def test_direct_text_document_has_full_citation() -> None:
+    client.post(
+        "/api/knowledge/documents",
+        json={"title": "Cite Target", "text": "Citation verification for direct text."},
+    )
+
+    retrieve_response = client.post(
+        "/api/knowledge/retrieve",
+        json={"query": "Citation", "limit": 3},
+    )
+
+    assert retrieve_response.status_code == 200
+    result = retrieve_response.json()["results"][0]
+    citation = result["citation"]
+    assert citation["title"] == "Cite Target"
+    assert citation["source"] == "direct"
+    assert citation["score"] > 0
+    assert citation["quote"]

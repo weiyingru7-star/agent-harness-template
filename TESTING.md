@@ -1168,3 +1168,96 @@ python3 scripts/run_evals.py
 
 - [RAG Chunking](docs/rag-chunking.md)
 
+## V0.4.2 Direct Text Document Ingest Acceptance V0.4.2 直接文本创建验收
+
+### API 清单
+
+| 方法 | 路径 | 用途 |
+|---|---|---|
+| POST | `/api/knowledge/documents` | 直接从文本创建文档（不依赖文件上传） |
+
+### Create Document 创建文档
+
+```bash
+curl -s -X POST http://localhost:8005/api/knowledge/documents \
+  -H 'Content-Type: application/json' \
+  -d '{"title":"Hello World","text":"This is a direct text document created without file upload."}' \
+  | python3 -c "
+import json,sys;d=json.load(sys.stdin)
+print(f'doc_id={d[\"document\"][\"id\"]} title={d[\"document\"][\"title\"]} source={d[\"document\"][\"source\"]} chunks={len(d[\"chunks\"])}')
+"
+```
+
+预期结果：返回 document 和 chunks，source="direct"。
+
+### With ChunkingConfig 自定义切分
+
+```bash
+curl -s -X POST http://localhost:8005/api/knowledge/documents \
+  -H 'Content-Type: application/json' \
+  -d '{"title":"Long Document","text":"Para one.\n\nPara two.\n\nPara three.","chunking_config":{"chunk_size":30,"chunk_overlap":5}}' \
+  | python3 -c "
+import json,sys;d=json.load(sys.stdin)
+print(f'chunks: {len(d[\"chunks\"])}')
+if d['chunks']:
+    print(f'metadata: {d[\"chunks\"][0].get(\"chunk_metadata\",{})}')
+"
+```
+
+预期结果：chunks > 1，chunk_metadata 含 chunk_size=30。
+
+### Validation 校验
+
+```bash
+# Missing text
+curl -s -X POST http://localhost:8005/api/knowledge/documents \
+  -H 'Content-Type: application/json' \
+  -d '{"title":"No Text"}' -o /dev/null -w '%{http_code}'
+```
+
+预期结果：422。
+
+### Retrieval 检索
+
+```bash
+curl -s -X POST http://localhost:8005/api/knowledge/documents \
+  -H 'Content-Type: application/json' \
+  -d '{"title":"Findable","text":"This direct text document contains unique keyword for retrieval."}' \
+  > /dev/null
+
+curl -s -X POST http://localhost:8005/api/knowledge/retrieve \
+  -H 'Content-Type: application/json' \
+  -d '{"query":"unique keyword","limit":3}' \
+  | python3 -c "
+import json,sys;r=json.load(sys.stdin)['results']
+for res in r:
+    c=res['citation']
+    print(f'doc={c[\"title\"]} score={c[\"score\"]} source={c[\"source\"]} quote={c[\"quote\"][:40]}')
+"
+```
+
+预期结果：能检索到 direct text 创建的文档，citation 含完整字段。
+
+### File Ingest 不受影响
+
+```bash
+FILE_ID=$(curl -s -X POST http://localhost:8005/api/files/upload \
+  -F "file=@README.md" | python3 -c "import json,sys;print(json.load(sys.stdin)['id'])")
+curl -s -X POST http://localhost:8005/api/knowledge/ingest \
+  -H 'Content-Type: application/json' \
+  -d "{\"file_id\":\"$FILE_ID\"}" | python3 -c "import json,sys;d=json.load(sys.stdin);print('ingest ok:',d['document']['id'])"
+```
+
+预期结果：原有 file→ingest 链路正常运行。
+
+### Compatibility 兼容性
+
+```bash
+make test-api
+python3 scripts/run_evals.py
+```
+
+### 文档参考
+
+- [RAG Pipeline](docs/rag-pipeline.md)
+

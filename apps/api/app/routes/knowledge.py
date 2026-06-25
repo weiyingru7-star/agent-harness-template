@@ -16,6 +16,16 @@ class IngestRequest(BaseModel):
     chunking_config: dict | None = None
 
 
+class CreateDocumentRequest(BaseModel):
+    title: str = Field(min_length=1)
+    text: str = Field(min_length=1)
+    collection: str = "default"
+    source: str | None = "direct"
+    content_type: str = "text/plain"
+    metadata: dict = Field(default_factory=dict)
+    chunking_config: dict | None = None
+
+
 class RetrieveRequest(BaseModel):
     query: str = Field(min_length=1)
     limit: int = Field(default=3, ge=1, le=10)
@@ -30,6 +40,21 @@ def ingest(request: IngestRequest) -> IngestResponse:
     if request.chunking_config is not None:
         config = ChunkingConfig(**request.chunking_config)
     return knowledge_store.ingest_file(uploaded_file, chunking_config=config)
+
+
+@router.post("/documents", response_model=IngestResponse, status_code=status.HTTP_201_CREATED)
+def create_document(request: CreateDocumentRequest) -> IngestResponse:
+    config: ChunkingConfig | None = None
+    if request.chunking_config is not None:
+        config = ChunkingConfig(**request.chunking_config)
+    return knowledge_store.ingest_text(
+        title=request.title,
+        text=request.text,
+        collection=request.collection,
+        source=request.source,
+        content_type=request.content_type,
+        chunking_config=config,
+    )
 
 
 @router.get("/documents", response_model=list[Document])

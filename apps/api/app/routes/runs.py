@@ -15,6 +15,17 @@ def create_run(request: CreateRunRequest) -> Run:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc)) from exc
 
 
+@router.post("/{run_id}/retry", response_model=Run, status_code=status.HTTP_201_CREATED)
+def retry_run(run_id: str) -> Run:
+    try:
+        run = run_store.retry_run(run_id)
+    except ValueError as exc:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc)) from exc
+    if run is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Run not found")
+    return run
+
+
 @router.get("/{run_id}/events", response_model=list[RunEvent])
 def get_run_events(run_id: str) -> list[RunEvent]:
     events = run_store.get_events(run_id)

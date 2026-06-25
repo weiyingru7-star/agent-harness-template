@@ -13,10 +13,41 @@ from app.registries.modules import execute_module
 
 class RunStore:
     def create_run(self, task_input: str, module_id: str | None = None) -> Run:
+        return self._create_run(task_input=task_input, module_id=module_id)
+
+    def retry_run(self, run_id: str) -> Run | None:
+        original_run = self.get_run(run_id)
+        if original_run is None:
+            return None
+        if original_run.status != "failed":
+            raise ValueError("Only failed runs can be retried")
+        return self._create_run(
+            task_input=original_run.task.input,
+            module_id=original_run.metadata.get("module_id") if original_run.metadata else None,
+            attempt=original_run.metadata.get("attempt", 1) + 1 if original_run.metadata else 2,
+            retry_of_run_id=run_id,
+        )
+
+    def _create_run(
+        self,
+        task_input: str,
+        module_id: str | None = None,
+        attempt: int = 1,
+        retry_of_run_id: str | None = None,
+    ) -> Run:
         selected_module_id = module_id or "demo_agent"
         task = Task(id=self._new_id("task"), input=task_input)
         trace_id = self._new_id("trace")
-        run = Run(id=self._new_id("run"), trace_id=trace_id, status="pending", task=task)
+        run_metadata = {"module_id": selected_module_id, "attempt": attempt}
+        if retry_of_run_id is not None:
+            run_metadata["retry_of_run_id"] = retry_of_run_id
+        run = Run(
+            id=self._new_id("run"),
+            trace_id=trace_id,
+            status="pending",
+            task=task,
+            metadata=run_metadata,
+        )
         sequence = 1
 
         with session_scope() as session:
@@ -34,7 +65,7 @@ class RunStore:
                 trace_id=trace_id,
                 sequence=sequence,
                 status="pending",
-                metadata={"module_id": selected_module_id},
+                metadata=run_metadata,
             )
             sequence += 1
 
@@ -47,9 +78,20 @@ class RunStore:
                 trace_id=trace_id,
                 sequence=sequence,
                 status="running",
-                metadata={"module_id": selected_module_id},
+                metadata=run_metadata,
             )
             sequence += 1
+            if retry_of_run_id is not None:
+                event_repository.create(
+                    run.id,
+                    "run.retry_started",
+                    "Run retry started",
+                    trace_id=trace_id,
+                    sequence=sequence,
+                    status="running",
+                    metadata=run_metadata,
+                )
+                sequence += 1
 
             result = execute_module(selected_module_id, task_input, run.id)
             checkpoint_index = 1
@@ -64,7 +106,9 @@ class RunStore:
                     trace_id=trace_id,
                     span_id=span_id,
                     started_at=step_started_at,
-                    metadata={"module_id": selected_module_id},
+                    attempt=attempt,
+                    max_attempts=max(1, attempt),
+                    metadata=run_metadata,
                 )
                 run.steps.append(step)
                 step_repository.create(run.id, step)
@@ -83,6 +127,68 @@ class RunStore:
                 sequence += 1
 
                 step_ended_at = self._utc_now()
+                if node_trace.status == "failed":
+                    step.status = "failed"
+                    step.output = node_trace.output
+                    step.ended_at = step_ended_at
+                    step.duration_ms = self._duration_ms(step_started_at, step_ended_at)
+                    step.completed_at = step_ended_at
+                    step.failed_at = step_ended_at
+                    step.error_type = node_trace.error_type or "AgentStepFailed"
+                    step.error_message = node_trace.error_message or "Agent step failed"
+                    step.error = step.error_message
+                    step.metadata = {
+                        **run_metadata,
+                        "step_name": node_trace.name,
+                        "step_type": step.type,
+                    }
+                    step_repository.update(step)
+                    event_repository.create(
+                        run_id=run.id,
+                        event_type="step.failed",
+                        message=f"{node_trace.name} failed",
+                        step_id=step.id,
+                        trace_id=trace_id,
+                        span_id=span_id,
+                        sequence=sequence,
+                        status="failed",
+                        started_at=step_started_at,
+                        ended_at=step_ended_at,
+                        duration_ms=step.duration_ms,
+                        error=step.error_message,
+                        metadata={
+                            "step_name": node_trace.name,
+                            "step_type": step.type,
+                            "error_type": step.error_type,
+                            "error_message": step.error_message,
+                        },
+                    )
+                    sequence += 1
+
+                    run.status = "failed"
+                    run.error_type = step.error_type
+                    run.error_message = step.error_message
+                    run.failed_at = step_ended_at
+                    run.completed_at = step_ended_at
+                    run.output = None
+                    run_repository.update(run)
+                    event_repository.create(
+                        run.id,
+                        "run.failed",
+                        "Run failed",
+                        trace_id=trace_id,
+                        sequence=sequence,
+                        status="failed",
+                        ended_at=step_ended_at,
+                        error=step.error_message,
+                        metadata={
+                            **run_metadata,
+                            "error_type": step.error_type,
+                            "error_message": step.error_message,
+                        },
+                    )
+                    return run
+
                 step.status = "completed"
                 step.output = node_trace.output
                 step.ended_at = step_ended_at
@@ -122,6 +228,18 @@ class RunStore:
             run.output = result.output
             run.completed_at = self._utc_now()
             run_repository.update(run)
+            if retry_of_run_id is not None:
+                event_repository.create(
+                    run.id,
+                    "run.retry_completed",
+                    "Run retry completed",
+                    trace_id=trace_id,
+                    sequence=sequence,
+                    status="completed",
+                    ended_at=run.completed_at,
+                    metadata=run_metadata,
+                )
+                sequence += 1
             event_repository.create(
                 run.id,
                 "run.completed",
@@ -130,7 +248,7 @@ class RunStore:
                 sequence=sequence,
                 status="completed",
                 ended_at=run.completed_at,
-                metadata={"module_id": selected_module_id},
+                metadata=run_metadata,
             )
 
         return run

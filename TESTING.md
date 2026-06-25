@@ -640,6 +640,50 @@ curl http://localhost:8005/api/runs/$RUN_ID/events
 curl http://localhost:8005/api/runs/$RUN_ID/trace
 ```
 
+## V0.2.3 Failure / Retry Runtime V0.2.3 失败与重试验收
+
+创建失败 Run：
+
+```bash
+FAILED_RUN_ID=$(curl -s -X POST http://localhost:8005/api/runs \
+  -H 'Content-Type: application/json' \
+  -d '{"input":"hello __fail__"}' \
+  | python3 -c "import json, sys; print(json.load(sys.stdin)['id'])")
+```
+
+检查失败记录：
+
+```bash
+curl http://localhost:8005/api/runs/$FAILED_RUN_ID
+curl http://localhost:8005/api/runs/$FAILED_RUN_ID/events
+curl http://localhost:8005/api/runs/$FAILED_RUN_ID/trace
+curl http://localhost:8005/api/runs/$FAILED_RUN_ID/checkpoints
+```
+
+预期结果：
+
+- run status 为 `failed`。
+- failed step 为 `skill_node`。
+- failed step 包含 `error_type` / `error_message`。
+- events 包含 `step.failed` / `run.failed`。
+- trace 和 checkpoints 仍可查询。
+
+手动 retry：
+
+```bash
+RETRY_RUN_ID=$(curl -s -X POST http://localhost:8005/api/runs/$FAILED_RUN_ID/retry \
+  | python3 -c "import json, sys; print(json.load(sys.stdin)['id'])")
+
+curl http://localhost:8005/api/runs/$RETRY_RUN_ID
+curl http://localhost:8005/api/runs/$RETRY_RUN_ID/events
+```
+
+预期结果：
+
+- retry 生成新的 run id。
+- retry run metadata 包含 `retry_of_run_id`。
+- events 包含 `run.retry_started`。
+
 ## Common Errors 常见错误排查
 
 ### `python: command not found`

@@ -4,6 +4,9 @@ from pydantic import BaseModel, Field
 class DemoAgentNodeTrace(BaseModel):
     name: str
     output: str
+    status: str = "completed"
+    error_type: str | None = None
+    error_message: str | None = None
     state: dict = Field(default_factory=dict)
 
 

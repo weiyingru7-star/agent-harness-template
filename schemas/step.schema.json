@@ -63,6 +63,27 @@
       "type": "string",
       "description": "Error message when the step fails."
     },
+    "attempt": {
+      "type": "integer",
+      "description": "Step attempt number."
+    },
+    "max_attempts": {
+      "type": "integer",
+      "description": "Maximum attempts configured for this step."
+    },
+    "error_type": {
+      "type": "string",
+      "description": "Error type when the step fails."
+    },
+    "error_message": {
+      "type": "string",
+      "description": "Error message when the step fails."
+    },
+    "failed_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Step failure timestamp."
+    },
     "metadata": {
       "type": "object",
       "description": "Step metadata."

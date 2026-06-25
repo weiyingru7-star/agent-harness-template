@@ -31,6 +31,11 @@ class Step(BaseModel):
     ended_at: datetime | None = None
     duration_ms: int | None = None
     error: str | None = None
+    attempt: int = 1
+    max_attempts: int = 1
+    error_type: str | None = None
+    error_message: str | None = None
+    failed_at: datetime | None = None
     metadata: dict = Field(default_factory=dict)
     created_at: datetime = Field(default_factory=utc_now)
     completed_at: datetime | None = None
@@ -43,6 +48,10 @@ class Run(BaseModel):
     task: Task
     steps: list[Step] = Field(default_factory=list)
     output: str | None = None
+    error_type: str | None = None
+    error_message: str | None = None
+    failed_at: datetime | None = None
+    metadata: dict = Field(default_factory=dict)
     created_at: datetime = Field(default_factory=utc_now)
     completed_at: datetime | None = None
 

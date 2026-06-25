@@ -15,6 +15,9 @@ def execute(task_input: str, context: AgentExecutionContext) -> AgentExecutionRe
             AgentStepTrace(
                 name=node_trace.name,
                 output=node_trace.output,
+                status=node_trace.status,
+                error_type=node_trace.error_type,
+                error_message=node_trace.error_message,
                 state=node_trace.state,
             )
             for node_trace in state.node_traces

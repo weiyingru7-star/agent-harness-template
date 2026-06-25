@@ -26,6 +26,11 @@ class StepRepository:
                 ended_at=step.ended_at,
                 duration_ms=step.duration_ms,
                 error=step.error,
+                attempt=step.attempt,
+                max_attempts=step.max_attempts,
+                error_type=step.error_type,
+                error_message=step.error_message,
+                failed_at=step.failed_at,
                 metadata_=step.metadata,
                 created_at=step.created_at,
                 completed_at=step.completed_at,
@@ -42,6 +47,11 @@ class StepRepository:
             record.ended_at = step.ended_at
             record.duration_ms = step.duration_ms
             record.error = step.error
+            record.attempt = step.attempt
+            record.max_attempts = step.max_attempts
+            record.error_type = step.error_type
+            record.error_message = step.error_message
+            record.failed_at = step.failed_at
             record.metadata_ = step.metadata
             record.updated_at = step.completed_at
             record.completed_at = step.completed_at
@@ -68,6 +78,11 @@ class StepRepository:
             ended_at=record.ended_at,
             duration_ms=record.duration_ms,
             error=record.error,
+            attempt=record.attempt,
+            max_attempts=record.max_attempts,
+            error_type=record.error_type,
+            error_message=record.error_message,
+            failed_at=record.failed_at,
             metadata=record.metadata_ or {},
             created_at=record.created_at,
             completed_at=record.completed_at,

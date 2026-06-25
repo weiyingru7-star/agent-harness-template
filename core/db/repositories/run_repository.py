@@ -21,6 +21,10 @@ class RunRepository:
                 input=run.task.input,
                 output=run.output,
                 status=run.status,
+                error_type=run.error_type,
+                error_message=run.error_message,
+                failed_at=run.failed_at,
+                metadata_=run.metadata,
                 created_at=run.created_at,
                 completed_at=run.completed_at,
             )
@@ -34,6 +38,10 @@ class RunRepository:
             record.status = run.status
             record.output = run.output
             record.trace_id = run.trace_id
+            record.error_type = run.error_type
+            record.error_message = run.error_message
+            record.failed_at = run.failed_at
+            record.metadata_ = run.metadata
             record.updated_at = run.completed_at
             record.completed_at = run.completed_at
         return run
@@ -59,6 +67,10 @@ class RunRepository:
             task=task,
             steps=StepRepository(self.session).list_by_run(record.id),
             output=record.output,
+            error_type=record.error_type,
+            error_message=record.error_message,
+            failed_at=record.failed_at,
+            metadata=record.metadata_ or {},
             created_at=record.created_at,
             completed_at=record.completed_at,
         )

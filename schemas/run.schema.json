@@ -33,6 +33,23 @@
       "type": "string",
       "description": "Current run status."
     },
+    "error_type": {
+      "type": "string",
+      "description": "Error type when the run fails."
+    },
+    "error_message": {
+      "type": "string",
+      "description": "Error message when the run fails."
+    },
+    "failed_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Run failure timestamp."
+    },
+    "metadata": {
+      "type": "object",
+      "description": "Run metadata."
+    },
     "created_at": {
       "type": "string",
       "format": "date-time",

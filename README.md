@@ -205,6 +205,27 @@ curl http://localhost:8005/api/checkpoints/$CHECKPOINT_ID
 
 - [Checkpoint Runtime](docs/checkpoint-runtime.md)
 
+## V0.2.3 Failure / Retry Runtime 失败与手动重试
+
+V0.2.3 让 Run 支持最小失败记录和手动 retry。retry 会重新执行整个 run，
+生成新的 run，不覆盖旧 run，也不从 checkpoint 恢复。
+
+触发测试失败输入：
+
+```text
+__fail__
+```
+
+手动 retry：
+
+```bash
+curl -X POST http://localhost:8005/api/runs/$RUN_ID/retry
+```
+
+更多说明：
+
+- [Failure / Retry Runtime](docs/failure-retry-runtime.md)
+
 更多说明：
 
 - [Architecture 架构说明](docs/architecture.md)

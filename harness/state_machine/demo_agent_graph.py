@@ -10,6 +10,17 @@ def input_node(state: DemoAgentState) -> DemoAgentState:
 
 
 def skill_node(state: DemoAgentState) -> DemoAgentState:
+    if "__fail__" in state.input:
+        _record_node(
+            state,
+            "skill_node",
+            "",
+            status="failed",
+            error_type="DemoAgentTestFailure",
+            error_message="demo_agent test failure triggered by __fail__",
+        )
+        return state
+
     skill = get_skill("mock_summarize")
     state.skill_output = skill(state.normalized_input or state.input)
     _record_node(state, "skill_node", state.skill_output)
@@ -37,9 +48,27 @@ def run_demo_agent_graph(task_input: str) -> DemoAgentState:
     state = DemoAgentState(input=task_input)
     for node in (input_node, skill_node, tool_node, final_node):
         state = node(state)
+        if state.node_traces and state.node_traces[-1].status == "failed":
+            break
     return state
 
 
-def _record_node(state: DemoAgentState, name: str, output: str) -> None:
+def _record_node(
+    state: DemoAgentState,
+    name: str,
+    output: str,
+    status: str = "completed",
+    error_type: str | None = None,
+    error_message: str | None = None,
+) -> None:
     snapshot = state.model_dump(exclude={"node_traces"})
-    state.node_traces.append(DemoAgentNodeTrace(name=name, output=output, state=snapshot))
+    state.node_traces.append(
+        DemoAgentNodeTrace(
+            name=name,
+            output=output,
+            status=status,
+            error_type=error_type,
+            error_message=error_message,
+            state=snapshot,
+        )
+    )

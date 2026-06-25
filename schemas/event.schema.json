@@ -23,7 +23,7 @@
     },
     "event_type": {
       "type": "string",
-      "description": "Typed event identifier. Kept in sync with type for compatibility."
+      "description": "Typed event identifier. Examples include step.failed, run.failed, run.retry_started, and run.retry_completed."
     },
     "trace_id": {
       "type": "string",

@@ -34,6 +34,14 @@ V0.2.2 增强了 Checkpoint Runtime：
 - `demo_agent` 成功运行会产生 input / skill / tool / final 四个 checkpoint。
 - checkpoint 只用于 debug、后续 resume 和 eval trajectory 的基础，不实现恢复。
 
+V0.2.3 增强了 Failure / Retry Runtime：
+
+- failed run 会记录 `error_type`、`error_message`、`failed_at`。
+- failed step 会记录 attempt 和错误字段。
+- events 会记录 `step.failed` 和 `run.failed`。
+- `POST /api/runs/{run_id}/retry` 可以手动重试 failed run。
+- retry 会生成新的 run，不覆盖旧 run，也不从 checkpoint 恢复。
+
 API 保持：
 
 ```text
@@ -105,6 +113,12 @@ Checkpoint 查询接口：
 ```text
 GET /api/runs/{run_id}/checkpoints
 GET /api/checkpoints/{checkpoint_id}
+```
+
+Retry 接口：
+
+```text
+POST /api/runs/{run_id}/retry
 ```
 
 ## 当前不实现

@@ -1291,3 +1291,33 @@ python3 scripts/check_business_terms.py
 ### 文档参考
 
 - [RAG Eval](docs/rag-eval.md)
+
+## V0.4.4 Embedding Provider Interface Acceptance V0.4.4 嵌入层验收
+
+### Smoke API 验证
+
+```bash
+curl -s -X POST http://localhost:8005/api/knowledge/embeddings/smoke \
+  -H 'Content-Type: application/json' \
+  -d '{"input":"hello","provider":"mock-embedding"}' \
+  | python3 -c "
+import json,sys;r=json.load(sys.stdin)
+print(f'dimensions={r[\"dimensions\"]} model={r[\"model\"]} count={r[\"count\"]}')
+"
+```
+
+预期结果：`dimensions=8 model=mock-embedding count=1`
+
+### Full Regression 完整回归
+
+```bash
+make test-api
+python3 scripts/run_evals.py
+python3 scripts/run_rag_evals.py
+npm run build --prefix apps/web
+python3 scripts/check_business_terms.py
+```
+
+### 文档参考
+
+- [RAG Embeddings](docs/rag-embeddings.md)

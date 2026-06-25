@@ -23,6 +23,7 @@ from core.db.repositories.tool_call_repository import ToolCallRepository
 from app.registries.modules import execute_module
 from app.registries.tool_args import ToolArgsValidator
 from app.registries.tool_result import ToolResult
+from app.registries.tool_retry import execute_with_retry
 from app.registries.tool_timeout import execute_with_timeout
 from app.registries.tools import get_tool, get_tool_definition
 
@@ -237,13 +238,62 @@ class RunStore:
                     if validation.valid:
                         tool_handler = get_tool("mock_echo")
                         tool_timeout_ms = tool_definition.timeout_ms if tool_definition else None
-                        tool_result = execute_with_timeout(tool_handler, tool_arguments, tool_timeout_ms)
+
+                        tool_max_attempts = tool_definition.max_attempts if tool_definition else 1
+                        tool_retry_on = tool_definition.retry_on_error_types
+                        if node_trace.state.get("intentional_flaky_tool"):
+                            tool_max_attempts = 2
+                            tool_retry_on = ["ToolExecutionError"]
+
+                        retry_result = execute_with_retry(
+                            tool_handler,
+                            tool_arguments,
+                            timeout_ms=tool_timeout_ms,
+                            max_attempts=tool_max_attempts,
+                            retry_on_error_types=tool_retry_on,
+                        )
+
                         tool_call_ended_at = self._utc_now()
-                        result_data = tool_result.model_dump()
-                        tool_call_status = tool_result.status
-                        tool_call_error_type = tool_result.error_type
-                        tool_call_error_message = tool_result.error_message
-                        result_summary = tool_result.summary
+                        final_result = retry_result.final_result
+                        result_data = final_result.model_dump()
+                        tool_call_status = final_result.status
+                        tool_call_error_type = final_result.error_type
+                        tool_call_error_message = final_result.error_message
+                        result_summary = final_result.summary
+
+                        call_metadata: dict = {
+                            "step_name": node_trace.name,
+                            "step_type": step.type,
+                        }
+                        if retry_result.retry_count > 0:
+                            call_metadata["attempts"] = retry_result.attempts
+                            call_metadata["max_attempts"] = tool_max_attempts
+                            call_metadata["retry_count"] = retry_result.retry_count
+                            call_metadata["final_attempt_status"] = tool_call_status
+
+                            for i, att_info in enumerate(retry_result.attempts):
+                                if att_info["status"] != "failed":
+                                    continue
+                                if i >= len(retry_result.attempts) - 1:
+                                    continue
+                                event_repository.create(
+                                    run_id=run.id,
+                                    event_type="tool.call.retry_scheduled",
+                                    message=f"retry scheduled for attempt {att_info['attempt_index']}",
+                                    step_id=step.id,
+                                    trace_id=trace_id,
+                                    span_id=span_id,
+                                    sequence=sequence,
+                                    status="running",
+                                    metadata={
+                                        "attempt": att_info["attempt_index"],
+                                        "max_attempts": tool_max_attempts,
+                                        "previous_error_type": att_info["error_type"],
+                                        "previous_error_message": att_info["error_message"],
+                                        "step_name": node_trace.name,
+                                    },
+                                )
+                                sequence += 1
 
                         tool_call = ToolCall(
                             id=self._new_id("tool_call"),
@@ -261,12 +311,23 @@ class RunStore:
                             duration_ms=self._duration_ms(tool_call_started_at, tool_call_ended_at),
                             error_type=tool_call_error_type,
                             error_message=tool_call_error_message,
-                            metadata={"step_name": node_trace.name, "step_type": step.type},
+                            metadata=call_metadata,
                         )
                         tool_call_repository.create(tool_call)
                         tool_call_id = tool_call.id
 
                         if tool_call_status == "completed":
+                            completed_metadata: dict = {
+                                "step_name": node_trace.name,
+                                "tool_id": tool_call.tool_id,
+                                "tool_name": tool_call.tool_name,
+                                "tool_call_id": tool_call.id,
+                                "result_status": "completed",
+                                "summary": result_summary,
+                            }
+                            if retry_result.retry_count > 0:
+                                completed_metadata["retry_count"] = retry_result.retry_count
+                                completed_metadata["max_attempts"] = tool_max_attempts
                             event_repository.create(
                                 run_id=run.id,
                                 event_type="tool.call.completed",
@@ -279,14 +340,7 @@ class RunStore:
                                 started_at=tool_call_started_at,
                                 ended_at=tool_call_ended_at,
                                 duration_ms=tool_call.duration_ms,
-                                metadata={
-                                    "step_name": node_trace.name,
-                                    "tool_id": tool_call.tool_id,
-                                    "tool_name": tool_call.tool_name,
-                                    "tool_call_id": tool_call.id,
-                                    "result_status": "completed",
-                                    "summary": result_summary,
-                                },
+                                metadata=completed_metadata,
                             )
                         else:
                             if tool_call_error_type == "ToolTimeoutError":
@@ -295,7 +349,7 @@ class RunStore:
                                 fail_message = "mock_echo tool call failed: execution exception"
                             else:
                                 fail_message = "mock_echo tool call failed"
-                            event_metadata = {
+                            event_metadata: dict = {
                                 "step_name": node_trace.name,
                                 "tool_id": tool_call.tool_id,
                                 "tool_name": tool_call.tool_name,
@@ -306,6 +360,9 @@ class RunStore:
                             }
                             if tool_call_error_type == "ToolTimeoutError" and tool_timeout_ms is not None:
                                 event_metadata["timeout_ms"] = tool_timeout_ms
+                            if retry_result.retry_count > 0:
+                                event_metadata["retry_count"] = retry_result.retry_count
+                                event_metadata["max_attempts"] = tool_max_attempts
                             event_repository.create(
                                 run_id=run.id,
                                 event_type="tool.call.failed",
@@ -584,6 +641,8 @@ class RunStore:
             return {"input": "__TOOL_EXCEPTION__"}
         if node_trace.state.get("intentional_slow_tool"):
             return {"input": "__SLOW_TOOL__"}
+        if node_trace.state.get("intentional_flaky_tool"):
+            return {"input": "__FLAKY_TOOL__"}
         return {"input": node_trace.state.get("skill_output")}
 
     @staticmethod

@@ -342,6 +342,21 @@ curl http://localhost:8005/api/runs/$RUN_ID/tool-calls
 
 - [Tool Timeout](docs/tool-timeout.md)
 
+## V0.3.4 Tool Retry / 工具重试最小版
+
+V0.3.4 为 Tool 系统增加最小 retry 能力。工具调用失败时，可以按
+`max_attempts` 重试。每次 attempt 都被记录到 ToolCall metadata
+和 events 中。
+
+`demo_agent` 触发方式：
+
+- 正常输入：不触发 retry，`max_attempts=1` 行为不变
+- `__flaky_tool__`：第一次执行失败、第二次执行成功（retry 成功路径）
+
+更多说明：
+
+- [Tool Retry](docs/tool-retry.md)
+
 更多说明：
 
 - [Architecture 架构说明](docs/architecture.md)

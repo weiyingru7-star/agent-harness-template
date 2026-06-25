@@ -205,3 +205,46 @@ def test_timeout_is_visible_in_timeline() -> None:
     assert tool_items[0]["tool_call_id"] == tool_call["id"]
     assert tool_items[0]["duration_ms"] is not None
 
+
+def test_flaky_tool_retries_and_succeeds() -> None:
+    run = client.post("/api/runs", json={"input": "retry __flaky_tool__"}).json()
+
+    tool_calls = client.get(f"/api/runs/{run['id']}/tool-calls").json()
+    assert len(tool_calls) == 1
+    tool_call = tool_calls[0]
+    assert tool_call["status"] == "completed"
+    assert tool_call["metadata"]["retry_count"] == 1
+    assert tool_call["metadata"]["max_attempts"] == 2
+    assert tool_call["metadata"]["final_attempt_status"] == "completed"
+    assert len(tool_call["metadata"]["attempts"]) == 2
+    assert tool_call["metadata"]["attempts"][0]["status"] == "failed"
+    assert tool_call["metadata"]["attempts"][0]["error_type"] == "ToolExecutionError"
+    assert tool_call["metadata"]["attempts"][1]["status"] == "completed"
+    assert tool_call["result"]["output"].startswith("Mock tool echo")
+
+
+def test_flaky_tool_has_retry_scheduled_event() -> None:
+    run = client.post("/api/runs", json={"input": "events __flaky_tool__"}).json()
+
+    events = client.get(f"/api/runs/{run['id']}/events").json()
+    event_types = [event["event_type"] for event in events]
+
+    assert "tool.call.started" in event_types
+    assert "tool.call.retry_scheduled" in event_types
+    assert "tool.call.completed" in event_types
+    assert "tool.call.failed" not in event_types
+
+
+def test_flaky_tool_run_stays_completed() -> None:
+    run = client.post("/api/runs", json={"input": "completed __flaky_tool__"}).json()
+
+    assert run["status"] == "completed"
+
+
+def test_non_flaky_tool_does_not_retry() -> None:
+    run = client.post("/api/runs", json={"input": "no retry here"}).json()
+    tool_call = client.get(f"/api/runs/{run['id']}/tool-calls").json()[0]
+
+    assert tool_call["status"] == "completed"
+    assert tool_call["metadata"].get("retry_count") is None
+

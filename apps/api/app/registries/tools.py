@@ -13,15 +13,21 @@ class ToolDefinition(BaseModel):
     description: str
     args_schema: dict | None = None
     timeout_ms: int | None = None
+    max_attempts: int = 1
+    retry_on_error_types: list[str] | None = None
 
 
 def mock_echo(args: dict) -> ToolResult:
     input_text = args["input"]
+    attempt = args.get("__attempt_index__", 1)
+
     if input_text == "__TOOL_EXCEPTION__":
         raise RuntimeError("mock_echo intentional exception for test")
     if input_text == "__SLOW_TOOL__":
         import time
         time.sleep(10)
+    if input_text == "__FLAKY_TOOL__" and attempt == 1:
+        raise RuntimeError("flaky tool simulated failure on first attempt")
 
     output = f"Mock tool echo: {input_text}"
     return ToolResult(

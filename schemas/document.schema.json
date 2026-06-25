@@ -1,52 +1,21 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "title": "Document",
-  "description": "Minimal contract for an ingested knowledge document.",
+  "description": "Contract for an ingested knowledge document.",
   "type": "object",
   "required": ["id", "file_id", "title", "source", "created_at"],
   "properties": {
-    "id": {
-      "type": "string",
-      "description": "Unique document identifier."
-    },
-    "file_id": {
-      "type": "string",
-      "description": "File identifier associated with this document."
-    },
-    "filename": {
-      "type": "string",
-      "description": "Original display filename."
-    },
-    "collection": {
-      "type": "string",
-      "description": "Generic document collection name."
-    },
-    "title": {
-      "type": "string",
-      "description": "Document display title."
-    },
-    "source": {
-      "type": "string",
-      "description": "Generic document source."
-    },
-    "source_type": {
-      "type": "string",
-      "description": "Generic document source type."
-    },
-    "metadata": {
-      "type": "object",
-      "description": "Optional generic document metadata."
-    },
-    "created_at": {
-      "type": "string",
-      "format": "date-time",
-      "description": "Document creation timestamp."
-    },
-    "updated_at": {
-      "type": "string",
-      "format": "date-time",
-      "description": "Last document update timestamp."
-    }
+    "id": { "type": "string", "description": "Unique document identifier." },
+    "file_id": { "type": "string", "description": "File identifier associated with this document." },
+    "filename": { "type": "string", "description": "Original display filename." },
+    "source_type": { "type": "string", "description": "Generic document source type." },
+    "collection": { "type": "string", "description": "Document collection name." },
+    "title": { "type": "string", "description": "Document display title." },
+    "source": { "type": "string", "description": "Document source label." },
+    "content_type": { "type": "string", "description": "Original file content type." },
+    "metadata": { "type": "object", "description": "Optional generic document metadata." },
+    "created_at": { "type": "string", "format": "date-time", "description": "Document creation timestamp." },
+    "updated_at": { "type": "string", "format": "date-time", "description": "Last document update timestamp." }
   },
   "additionalProperties": false
 }

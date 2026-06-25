@@ -3,7 +3,7 @@ from pydantic import BaseModel, Field
 
 from app.models.file import UploadedFile
 from app.services.file_store import file_store
-from harness.rag.models import Document, IngestResponse, RetrieveResponse
+from harness.rag.models import Chunk, Document, IngestResponse, RetrieveResponse
 from harness.rag.store import knowledge_store
 
 
@@ -38,3 +38,16 @@ def retrieve(request: RetrieveRequest) -> RetrieveResponse:
         query=request.query,
         results=knowledge_store.retrieve(query=request.query, limit=request.limit),
     )
+
+
+@router.get("/documents/{document_id}", response_model=Document)
+def get_document(document_id: str) -> Document:
+    document = knowledge_store.get_document(document_id)
+    if document is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Document not found")
+    return document
+
+
+@router.get("/collections/{collection}/chunks", response_model=list[Chunk])
+def get_collection_chunks(collection: str) -> list[Chunk]:
+    return knowledge_store.get_chunks_by_collection(collection)

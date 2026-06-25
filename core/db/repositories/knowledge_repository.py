@@ -42,6 +42,9 @@ class KnowledgeRepository:
                     file_id=chunk.file_id,
                     text=chunk.text,
                     chunk_index=chunk.index,
+                    collection=chunk.collection,
+                    char_count=chunk.char_count,
+                    token_count=chunk.token_count,
                     metadata_={},
                     created_at=chunk.created_at,
                 )
@@ -65,6 +68,14 @@ class KnowledgeRepository:
             return None
         return self._document_to_model(record)
 
+    def get_chunks_by_collection(self, collection: str) -> list[Chunk]:
+        records = self.session.scalars(
+            select(ChunkRecord)
+            .where(ChunkRecord.collection == collection)
+            .order_by(ChunkRecord.created_at, ChunkRecord.chunk_index)
+        ).all()
+        return [self._chunk_to_model(record) for record in records]
+
     @staticmethod
     def _document_to_model(record: DocumentRecord) -> Document:
         return Document(
@@ -72,6 +83,10 @@ class KnowledgeRepository:
             file_id=record.file_id,
             filename=record.filename,
             source_type=record.source_type,
+            collection=record.collection,
+            title=record.title,
+            source=record.source,
+            content_type="text",
             created_at=record.created_at,
         )
 
@@ -83,5 +98,8 @@ class KnowledgeRepository:
             file_id=record.file_id,
             text=record.text,
             index=record.chunk_index,
+            collection=record.collection,
+            char_count=record.char_count or 0,
+            token_count=record.token_count or 0,
             created_at=record.created_at,
         )

@@ -1014,3 +1014,94 @@ curl http://localhost:8005/api/runs/$RUN_ID/tool-calls
 - [Tool Runtime Errors](docs/tool-runtime-errors.md)
 - [Tool Runtime Eval](docs/tool-runtime-eval.md)
 
+## V0.4.0 RAG Pipeline Acceptance V0.4.0 RAG Pipeline 验收
+
+### Unified Commands 统一命令
+
+```bash
+python3 scripts/check_business_terms.py
+make test-api
+python3 scripts/run_evals.py
+npm run build --prefix apps/web
+```
+
+### Ingest And Retrieve 文档导入与检索
+
+```bash
+FILE_ID=$(curl -s -X POST http://localhost:8005/api/files/upload \
+  -F "file=@README.md" | python3 -c "import json,sys;print(json.load(sys.stdin)['id'])")
+
+INGEST=$(curl -s -X POST http://localhost:8005/api/knowledge/ingest \
+  -H 'Content-Type: application/json' \
+  -d "{\"file_id\":\"$FILE_ID\"}")
+echo "$INGEST" | python3 -c "import json,sys;d=json.load(sys.stdin);print('doc id:',d['document']['id'],'chunks:',len(d['chunks']))"
+```
+
+预期结果：返回 document.id 和 chunks 列表。
+
+### Enhanced Fields 增强字段
+
+```bash
+FILE_ID=$(curl -s -X POST http://localhost:8005/api/files/upload \
+  -F "file=@README.md" | python3 -c "import json,sys;print(json.load(sys.stdin)['id'])")
+DOC_ID=$(curl -s -X POST http://localhost:8005/api/knowledge/ingest \
+  -H 'Content-Type: application/json' \
+  -d "{\"file_id\":\"$FILE_ID\"}" | python3 -c "import json,sys;print(json.load(sys.stdin)['document']['id'])")
+
+# Enhanced document fields
+curl -s http://localhost:8005/api/knowledge/documents/$DOC_ID | python3 -c "
+import json,sys;d=json.load(sys.stdin)
+print('collection:',d.get('collection'),'title:',d.get('title'),'source:',d.get('source'))
+"
+
+# Enhanced chunk fields
+curl -s http://localhost:8005/api/knowledge/collections/default/chunks | python3 -c "
+import json,sys;c=json.load(sys.stdin)[0]
+print('char_count:',c.get('char_count'),'token_count:',c.get('token_count'))
+"
+
+# Enhanced citation fields
+QUERY=$(curl -s -X POST http://localhost:8005/api/knowledge/retrieve \
+  -H 'Content-Type: application/json' \
+  -d '{"query":"Agent","limit":3}')
+echo "$QUERY" | python3 -c "
+import json,sys;r=json.load(sys.stdin)['results'][0]['citation']
+print('title:',r.get('title'),'score:',r.get('score'),'quote:',r.get('quote')[:30] if r.get('quote') else None)
+"
+```
+
+预期结果：
+- document 包含 `collection`、`title`、`source`
+- chunk 包含 `char_count`、`token_count`
+- citation 包含 `title`、`score`、`quote`
+
+### Document Detail API 文档详情
+
+```bash
+curl http://localhost:8005/api/knowledge/documents/doc_missing
+```
+
+预期结果：HTTP 404。
+
+### Collection Chunks API 集合分块
+
+```bash
+curl http://localhost:8005/api/knowledge/collections/default/chunks | python3 -c "
+import json,sys;chunks=json.load(sys.stdin)
+print(f'{len(chunks)} chunks found')
+if chunks: print('first chunk token_count:',chunks[0].get('token_count'))
+"
+```
+
+### Compatibility 兼容性
+
+```bash
+make test-api
+python3 scripts/run_evals.py
+```
+
+### 文档参考
+
+- [RAG Pipeline](docs/rag-pipeline.md)
+- [RAG Contracts](docs/rag-contracts.md)
+

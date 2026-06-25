@@ -433,11 +433,31 @@ tool.call.started → Permission → Sandbox → Args Validation
 - [V0 总体验收](docs/v0-acceptance.md)
 - [创建新 Agent](docs/how-to-create-new-agent.md)
 
+## V0.4.0 RAG Pipeline 增强
+
+V0.4.0 强化了最小 RAG Pipeline，建立标准化 Document / Chunk / Citation /
+Retrieval 数据契约。
+
+增强内容：
+- Document 模型：新增 `collection` / `title` / `source` / `content_type` 字段
+- Chunk 模型：新增 `collection` / `char_count` / `token_count` 字段
+- Citation 模型：新增 `title` / `source` / `quote` / `score` / `collection` 字段
+- 新增 API：`GET /api/knowledge/documents/{document_id}`、`GET /api/knowledge/collections/{collection}/chunks`
+- 新增 schema：citation.schema.json、retrieval-result.schema.json
+
+关键词检索，不接 embedding 或向量库。
+
+更多说明：
+
+- [RAG Pipeline](docs/rag-pipeline.md)
+- [RAG Contracts](docs/rag-contracts.md)
+
 ## Current Scope 当前范围
 
-当前版本（V0.3.7）已完成：
+当前版本（V0.4.0）已完成：
 - **V0.2.x Agent Runtime**：Trace / Span、Checkpoint、Failure / Retry、Timeline API 与前端视图、Eval Trajectory runner
 - **V0.3.x Tool Runtime**：Tool Call Contract、Tool Args Schema、Tool Result Contract、Tool Timeout、Tool Retry、Tool Permission、Tool Sandbox Policy、文档收口
+- **V0.4.0 RAG Pipeline**：增强 Document / Chunk / Citation / Retrieval Contract、新增文档详情与集合分块 API
 
 模板核心保持业务无关，具体业务逻辑应放在 `modules/{module_name}/` 内由使用者自行创建。详见 [Project Boundaries](PROJECT_BOUNDARIES.md)。
 

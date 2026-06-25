@@ -1,0 +1,21 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Citation",
+  "description": "Contract for a citation linking a retrieved chunk to its source.",
+  "type": "object",
+  "required": ["document_id", "chunk_id", "file_id", "chunk_index"],
+  "properties": {
+    "document_id": { "type": "string", "description": "Source document identifier." },
+    "chunk_id": { "type": "string", "description": "Source chunk identifier." },
+    "file_id": { "type": "string", "description": "Source file identifier." },
+    "filename": { "type": "string", "description": "Source display filename." },
+    "chunk_index": { "type": "integer", "minimum": 0, "description": "Chunk position within the source document." },
+    "collection": { "type": "string", "description": "Collection name inherited from document." },
+    "title": { "type": "string", "description": "Source document display title." },
+    "source": { "type": "string", "description": "Source document source label." },
+    "quote": { "type": "string", "description": "Excerpt of the matched chunk text." },
+    "score": { "type": "integer", "minimum": 0, "description": "Retrieval matching score." },
+    "metadata": { "type": "object", "description": "Optional citation metadata." }
+  },
+  "additionalProperties": false
+}

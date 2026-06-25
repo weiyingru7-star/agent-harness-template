@@ -1,0 +1,13 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "RetrievalResult",
+  "description": "Contract for a single retrieval result with chunk, score, and citation.",
+  "type": "object",
+  "required": ["chunk", "score", "citation"],
+  "properties": {
+    "chunk": { "$ref": "chunk.schema.json", "description": "Retrieved chunk." },
+    "score": { "type": "integer", "minimum": 0, "description": "Retrieval matching score." },
+    "citation": { "$ref": "citation.schema.json", "description": "Citation for the retrieved chunk." }
+  },
+  "additionalProperties": false
+}

@@ -12,6 +12,10 @@ class Document(BaseModel):
     file_id: str
     filename: str
     source_type: str = "file"
+    collection: str | None = None
+    title: str | None = None
+    source: str | None = None
+    content_type: str | None = None
     created_at: datetime = Field(default_factory=utc_now)
 
 
@@ -21,6 +25,9 @@ class Chunk(BaseModel):
     file_id: str
     text: str
     index: int
+    collection: str | None = None
+    char_count: int = 0
+    token_count: int = 0
     created_at: datetime = Field(default_factory=utc_now)
 
 
@@ -30,6 +37,11 @@ class Citation(BaseModel):
     file_id: str
     filename: str
     chunk_index: int
+    title: str | None = None
+    source: str | None = None
+    quote: str | None = None
+    score: int = 0
+    collection: str | None = None
 
 
 class RetrieveResult(BaseModel):

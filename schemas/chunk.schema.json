@@ -1,45 +1,21 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "title": "Chunk",
-  "description": "Minimal contract for a text chunk derived from a document.",
+  "description": "Contract for a text chunk derived from a document.",
   "type": "object",
   "required": ["id", "document_id", "file_id", "text", "chunk_index", "created_at"],
   "properties": {
-    "id": {
-      "type": "string",
-      "description": "Unique chunk identifier."
-    },
-    "document_id": {
-      "type": "string",
-      "description": "Document identifier associated with this chunk."
-    },
-    "file_id": {
-      "type": "string",
-      "description": "File identifier associated with this chunk."
-    },
-    "text": {
-      "type": "string",
-      "description": "Chunk text."
-    },
-    "chunk_index": {
-      "type": "integer",
-      "minimum": 0,
-      "description": "Zero-based chunk position within the document."
-    },
-    "metadata": {
-      "type": "object",
-      "description": "Optional generic chunk metadata."
-    },
-    "created_at": {
-      "type": "string",
-      "format": "date-time",
-      "description": "Chunk creation timestamp."
-    },
-    "updated_at": {
-      "type": "string",
-      "format": "date-time",
-      "description": "Last chunk update timestamp."
-    }
+    "id": { "type": "string", "description": "Unique chunk identifier." },
+    "document_id": { "type": "string", "description": "Document identifier associated with this chunk." },
+    "file_id": { "type": "string", "description": "File identifier associated with this chunk." },
+    "text": { "type": "string", "description": "Chunk text." },
+    "chunk_index": { "type": "integer", "minimum": 0, "description": "Zero-based chunk position within the document." },
+    "collection": { "type": "string", "description": "Collection name inherited from document." },
+    "char_count": { "type": "integer", "minimum": 0, "description": "Character count of the chunk text." },
+    "token_count": { "type": "integer", "minimum": 0, "description": "Approximate token count (space-split) of the chunk text." },
+    "metadata": { "type": "object", "description": "Optional generic chunk metadata." },
+    "created_at": { "type": "string", "format": "date-time", "description": "Chunk creation timestamp." },
+    "updated_at": { "type": "string", "format": "date-time", "description": "Last chunk update timestamp." }
   },
   "additionalProperties": false
 }

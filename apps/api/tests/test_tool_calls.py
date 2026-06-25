@@ -248,3 +248,53 @@ def test_non_flaky_tool_does_not_retry() -> None:
     assert tool_call["status"] == "completed"
     assert tool_call["metadata"].get("retry_count") is None
 
+
+def test_safe_tool_executes_normally() -> None:
+    run = client.post("/api/runs", json={"input": "safe tool call"}).json()
+    tool_call = client.get(f"/api/runs/{run['id']}/tool-calls").json()[0]
+
+    assert tool_call["status"] == "completed"
+    assert tool_call["result"]["output"].startswith("Mock tool echo")
+
+
+def test_restricted_tool_is_denied() -> None:
+    run = client.post("/api/runs", json={"input": "try __restricted_tool__"}).json()
+
+    tool_calls = client.get(f"/api/runs/{run['id']}/tool-calls").json()
+    assert len(tool_calls) == 1
+    tool_call = tool_calls[0]
+    assert tool_call["status"] == "failed"
+    assert tool_call["error_type"] == "ToolPermissionDenied"
+    assert tool_call["result"]["status"] == "failed"
+    assert tool_call["result"]["error_type"] == "ToolPermissionDenied"
+
+    events = client.get(f"/api/runs/{run['id']}/events").json()
+    event_types = [event["event_type"] for event in events]
+    assert "tool.call.started" in event_types
+    assert "tool.call.failed" in event_types
+    assert "tool.call.completed" not in event_types
+
+    assert run["status"] == "completed"
+
+
+def test_blocked_tool_is_denied() -> None:
+    run = client.post("/api/runs", json={"input": "try __blocked_tool__"}).json()
+
+    tool_calls = client.get(f"/api/runs/{run['id']}/tool-calls").json()
+    assert len(tool_calls) == 1
+    tool_call = tool_calls[0]
+    assert tool_call["status"] == "failed"
+    assert tool_call["error_type"] == "ToolPermissionDenied"
+    assert "blocked" in tool_call["error_message"].lower()
+
+    assert run["status"] == "completed"
+
+
+def test_permission_denied_does_not_trigger_retry() -> None:
+    run = client.post("/api/runs", json={"input": "perm __restricted_tool__"}).json()
+    tool_call = client.get(f"/api/runs/{run['id']}/tool-calls").json()[0]
+
+    assert tool_call["status"] == "failed"
+    assert tool_call["metadata"].get("retry_count") is None
+    assert tool_call["metadata"].get("attempts") is None
+

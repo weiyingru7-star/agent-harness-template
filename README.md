@@ -357,6 +357,26 @@ V0.3.4 为 Tool 系统增加最小 retry 能力。工具调用失败时，可以
 
 - [Tool Retry](docs/tool-retry.md)
 
+## V0.3.5 Tool Permission / 工具权限最小版
+
+V0.3.5 为 Tool 系统增加最小权限校验能力。工具执行前检查权限，
+拒绝时记录 `ToolPermissionDenied` 和 `tool.call.failed` event。
+
+三个权限级别：
+- `safe`：默认允许
+- `restricted`：需要 context 显式允许
+- `blocked`：永远拒绝
+
+demo_agent 触发方式：
+
+- 正常输入：safe 级别，正常执行
+- `__restricted_tool__`：权限拒绝，tool 不执行
+- `__blocked_tool__`：权限拒绝，tool 不执行
+
+更多说明：
+
+- [Tool Permission](docs/tool-permission.md)
+
 更多说明：
 
 - [Architecture 架构说明](docs/architecture.md)

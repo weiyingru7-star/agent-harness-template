@@ -71,6 +71,28 @@ def tool_node(state: DemoAgentState) -> DemoAgentState:
         )
         return state
 
+    if "__restricted_tool__" in (state.normalized_input or ""):
+        state.tool_output = ""
+        _record_node(
+            state,
+            "tool_node",
+            "",
+            status="completed",
+            state_snapshot_extras={"intentional_restricted_tool": True},
+        )
+        return state
+
+    if "__blocked_tool__" in (state.normalized_input or ""):
+        state.tool_output = ""
+        _record_node(
+            state,
+            "tool_node",
+            "",
+            status="completed",
+            state_snapshot_extras={"intentional_blocked_tool": True},
+        )
+        return state
+
     state.tool_output = "tool pending execution"
     _record_node(state, "tool_node", state.tool_output)
     return state

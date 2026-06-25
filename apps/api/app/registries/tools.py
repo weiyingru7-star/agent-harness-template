@@ -15,6 +15,9 @@ class ToolDefinition(BaseModel):
     timeout_ms: int | None = None
     max_attempts: int = 1
     retry_on_error_types: list[str] | None = None
+    permission_level: str = "safe"
+    allowed_contexts: list[str] | None = None
+    requires_approval: bool = False
 
 
 def mock_echo(args: dict) -> ToolResult:

@@ -69,18 +69,3 @@ def test_embedding_model_name_in_result() -> None:
     assert result.model == "mock-embedding"
 
 
-def test_smoke_api_returns_200() -> None:
-    from fastapi.testclient import TestClient
-    from app.main import app
-
-    client = TestClient(app)
-    response = client.post(
-        "/api/knowledge/embeddings/smoke",
-        json={"input": "test", "provider": "mock-embedding"},
-    )
-
-    assert response.status_code == 200
-    data = response.json()
-    assert data["dimensions"] == 8
-    assert data["model"] == "mock-embedding"
-    assert data["count"] == 1

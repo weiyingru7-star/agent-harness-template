@@ -7,7 +7,6 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.core.config import settings
 from app.routes.artifacts import router as artifacts_router
 from app.routes.checkpoints import router as checkpoints_router
-from app.routes.embeddings import router as embeddings_router
 from app.routes.files import router as files_router
 from app.routes.health import router as health_router
 from app.routes.knowledge import router as knowledge_router
@@ -43,7 +42,6 @@ app.include_router(llm_router)
 app.include_router(files_router)
 app.include_router(artifacts_router)
 app.include_router(knowledge_router)
-app.include_router(embeddings_router)
 
 
 @app.get("/")

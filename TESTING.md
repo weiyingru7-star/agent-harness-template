@@ -1294,19 +1294,23 @@ python3 scripts/check_business_terms.py
 
 ## V0.4.4 Embedding Provider Interface Acceptance V0.4.4 嵌入层验收
 
-### Smoke API 验证
+V0.4.4 不暴露 embedding HTTP API。EmbeddingProvider contract 通过测试验收。
+
+### 功能验证
+
+- MockEmbeddingProvider 返回 8 维向量
+- 相同输入返回相同 embedding
+- 不同输入返回不同 embedding
+- 批量 input 可用
+- 可通过 Registry 获取 provider
+
+验证命令：
 
 ```bash
-curl -s -X POST http://localhost:8005/api/knowledge/embeddings/smoke \
-  -H 'Content-Type: application/json' \
-  -d '{"input":"hello","provider":"mock-embedding"}' \
-  | python3 -c "
-import json,sys;r=json.load(sys.stdin)
-print(f'dimensions={r[\"dimensions\"]} model={r[\"model\"]} count={r[\"count\"]}')
-"
+make test-api
 ```
 
-预期结果：`dimensions=8 model=mock-embedding count=1`
+（`tests/test_rag_embeddings.py` 覆盖上述全部功能。）
 
 ### Full Regression 完整回归
 

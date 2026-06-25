@@ -70,16 +70,20 @@ providers = EmbeddingRegistry.list_providers()  # ["mock-embedding"]
 
 MockEmbeddingProvider 在 `harness/rag/__init__.py` 导入时自动注册。
 
-## Smoke API
+## 验收方式
 
-`POST /api/knowledge/embeddings/smoke`
+V0.4.4 **不暴露 embedding HTTP API**。EmbeddingProvider contract 通过测试验收：
 
-```json
-{"input": "hello", "provider": "mock-embedding"}
-→ {"dimensions": 8, "model": "mock-embedding", "count": 1, "usage": {}}
+```bash
+make test-api
 ```
 
-仅用于验证 provider 正常工作。
+`tests/test_rag_embeddings.py` 覆盖：
+- MockEmbeddingProvider 返回固定维度
+- 相同输入结果稳定
+- 不同输入结果不同
+- 批量 input 可用
+- Registry 能获取 mock provider
 
 ## 与现有 RAG Pipeline 的关系
 

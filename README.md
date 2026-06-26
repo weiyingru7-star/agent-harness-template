@@ -642,13 +642,27 @@ V0.5.4 为 Provider Runtime 增加 provider 调用级 timeout / retry 能力。
 
 - [Provider Timeout / Retry](docs/provider-timeout-retry.md)
 
+## V0.5.5 Provider Config / Env Management / 配置管理最小版
+
+V0.5.5 为 Provider Runtime 增加最小配置管理能力。
+
+新增内容：
+- `ProviderConfig` 模型：provider_name / model / timeout_ms / max_attempts / fallback_provider / api_key_configured
+- `GET /api/llm/config`：安全暴露配置（API key 不出现，仅显示是否已配置）
+- Settings 新增 `ai_max_attempts` / `ai_fallback_provider` / `ai_streaming_enabled`
+- Smoke metadata 追加 `configured_provider` / `configured_model` / `config_source`
+
+更多说明：
+
+- [Provider Config](docs/provider-config.md)
+
 ## Current Scope 当前范围
 
-当前版本（V0.5.4）已完成：
+当前版本（V0.5.5）已完成：
 - **V0.2.x Agent Runtime**：Trace / Span、Checkpoint、Failure / Retry、Timeline API 与前端视图、Eval Trajectory runner
 - **V0.3.x Tool Runtime**：Tool Call Contract、Tool Args Schema、Tool Result Contract、Tool Timeout、Tool Retry、Tool Permission、Tool Sandbox Policy、文档收口
 - **V0.4.x RAG Runtime**：数据合同、切分策略、直接文本创建、检索评估、嵌入层、向量存储、检索模式、文档收口
-- **V0.5.x Provider Runtime**：ProviderRequest / Response / Error 合同、call_provider、fallback、smoke 响应合同对齐、streaming contract、error/fallback 路径、timeout/retry
+- **V0.5.x Provider Runtime**：ProviderRequest / Response / Error 合同、call_provider、fallback、smoke 响应合同对齐、streaming contract、error/fallback 路径、timeout/retry、config/env 管理
 
 模板核心保持业务无关，具体业务逻辑应放在 `modules/{module_name}/` 内由使用者自行创建。详见 [Project Boundaries](PROJECT_BOUNDARIES.md)。
 

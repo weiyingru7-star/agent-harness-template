@@ -1630,3 +1630,31 @@ python3 scripts/check_business_terms.py
 ### 文档参考
 
 - [Provider Timeout / Retry](docs/provider-timeout-retry.md)
+
+## V0.5.5 Provider Config / Env Management Acceptance V0.5.5 配置管理验收
+
+### Config Endpoint
+
+```bash
+curl -s http://localhost:8005/api/llm/config | python3 -m json.tool
+```
+
+预期结果：返回 JSON，含 provider_name / model / timeout_ms / max_attempts / fallback_provider / api_key_configured / streaming_enabled。不包含 `api_key` 或 `AI_API_KEY`。
+
+### Smoke Metadata
+
+`POST /api/llm/smoke` 响应的 metadata 包含 `configured_provider` / `configured_model` / `config_source`。
+
+### Full Regression 完整回归
+
+```bash
+make test-api
+python3 scripts/run_evals.py
+python3 scripts/run_rag_evals.py
+npm run build --prefix apps/web
+python3 scripts/check_business_terms.py
+```
+
+### 文档参考
+
+- [Provider Config](docs/provider-config.md)

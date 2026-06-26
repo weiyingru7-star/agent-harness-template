@@ -10,6 +10,9 @@ class Settings(BaseSettings):
     ai_api_key: str = ""
     ai_model: str = "gpt-4o-mini"
     ai_timeout: float = 30
+    ai_max_attempts: int = 1
+    ai_fallback_provider: str = "mock"
+    ai_streaming_enabled: bool = True
     openai_compatible_base_url: str = ""
     openai_compatible_api_key: str = ""
     openai_compatible_model: str = "gpt-4o-mini"

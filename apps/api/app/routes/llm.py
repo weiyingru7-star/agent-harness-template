@@ -7,6 +7,7 @@ from app.ai_runtime.providers import ProviderConfigurationError, ProviderRequest
 from app.ai_runtime.router import ProviderRouter
 from app.ai_runtime.structured_output import StructuredOutputError, parse_structured_output_or_raise
 from app.core.config import settings
+from app.provider_runtime.contracts import ProviderConfig
 from app.provider_runtime.router import call_provider_with_fallback, call_provider_with_timeout_retry
 
 
@@ -50,6 +51,9 @@ def smoke(request: LLMSmokeRequest) -> LLMResponse:
         meta = dict(result.metadata)
         meta.setdefault("provider_runtime_version", "v0.5.1")
         meta.setdefault("contract", "ProviderResponse")
+        meta["configured_provider"] = settings.ai_provider or "mock"
+        meta["configured_model"] = settings.ai_model
+        meta["config_source"] = "env"
         if "mock" not in meta:
             meta["mock"] = result.provider == "mock"
         parsed_output = None
@@ -99,3 +103,17 @@ def stream(request: LLMStreamRequest) -> StreamingResponse:
             yield f"data: {event.model_dump_json()}\n\n"
 
     return StreamingResponse(event_stream(), media_type="text/event-stream")
+
+
+@router.get("/config", response_model=ProviderConfig)
+def get_config() -> ProviderConfig:
+    return ProviderConfig(
+        provider_name=settings.ai_provider or "mock",
+        base_url=settings.ai_base_url or None,
+        api_key_configured=bool(settings.ai_api_key),
+        model=settings.ai_model,
+        timeout_ms=int(settings.ai_timeout * 1000),
+        max_attempts=settings.ai_max_attempts,
+        fallback_provider=settings.ai_fallback_provider,
+        streaming_enabled=settings.ai_streaming_enabled,
+    )

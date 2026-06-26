@@ -30,3 +30,15 @@ class ProviderError(BaseModel):
     model: str = "unknown"
     retryable: bool = False
     metadata: dict = Field(default_factory=dict)
+
+
+class ProviderConfig(BaseModel):
+    provider_name: str = "mock"
+    base_url: str | None = None
+    api_key_configured: bool = False
+    model: str = ""
+    timeout_ms: int | None = None
+    max_attempts: int = 1
+    fallback_provider: str = "mock"
+    streaming_enabled: bool = True
+    metadata: dict = Field(default_factory=dict)

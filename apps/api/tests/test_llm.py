@@ -237,3 +237,38 @@ def test_smoke_mock_flaky_retry_metadata() -> None:
     assert meta["max_attempts"] == 2
     assert meta["final_attempt_status"] == "completed"
     assert len(meta["attempts"]) == 2
+
+
+def test_config_endpoint_returns_200() -> None:
+    response = client.get("/api/llm/config")
+    assert response.status_code == 200
+
+
+def test_config_endpoint_fields() -> None:
+    response = client.get("/api/llm/config")
+    data = response.json()
+    assert "provider_name" in data
+    assert "model" in data
+    assert "timeout_ms" in data
+    assert "max_attempts" in data
+    assert "fallback_provider" in data
+    assert "api_key_configured" in data
+    assert data["provider_name"] == "mock"
+    assert data["max_attempts"] == 1
+    assert data["streaming_enabled"] is True
+
+
+def test_config_endpoint_key_not_exposed() -> None:
+    response = client.get("/api/llm/config")
+    data = response.json()
+    assert "api_key" not in data
+    assert "AI_API_KEY" not in str(data)
+
+
+def test_smoke_metadata_includes_config_info() -> None:
+    response = client.post("/api/llm/smoke", json={"prompt": "hello"})
+    assert response.status_code == 200
+    meta = response.json()["metadata"]
+    assert meta["configured_provider"] == "mock"
+    assert meta["configured_model"] == "gpt-4o-mini"
+    assert meta["config_source"] == "env"

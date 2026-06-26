@@ -266,3 +266,22 @@ def test_call_provider_timeout_ms_sets_usage() -> None:
     assert "prompt_tokens" in response.usage
     assert response.usage["prompt_tokens"] == 1
 
+
+def test_provider_config_defaults() -> None:
+    from app.provider_runtime.contracts import ProviderConfig
+
+    cfg = ProviderConfig()
+    assert cfg.provider_name == "mock"
+    assert cfg.api_key_configured is False
+    assert cfg.model == ""
+    assert cfg.max_attempts == 1
+    assert cfg.fallback_provider == "mock"
+    assert cfg.streaming_enabled is True
+
+
+def test_provider_config_no_key_exposed() -> None:
+    from app.provider_runtime.contracts import ProviderConfig
+
+    cfg = ProviderConfig(api_key_configured=True)
+    assert cfg.api_key_configured is True
+    assert not hasattr(cfg, "api_key")

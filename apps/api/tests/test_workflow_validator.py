@@ -174,3 +174,43 @@ def test_missing_expected_output_warns() -> None:
     node = {"id": "n1", "type": "provider", "outputs": ["output"]}
     warnings = WorkflowValidator.validate_contract(node)
     assert any("usage" in w for w in warnings)
+
+
+def test_validation_error_item_creation() -> None:
+    from app.registries.workflow_validator import ValidationErrorItem
+
+    item = ValidationErrorItem(code="TEST_CODE", message="test message", path="node.n1", severity="error")
+    assert item.code == "TEST_CODE"
+    assert item.path == "node.n1"
+    assert item.severity == "error"
+
+
+def test_workflow_result_has_error_items() -> None:
+    config = WorkflowConfig(entrypoint="start", nodes=["start", "end"], edges=[["start", "end"]])
+    result = WorkflowValidator.validate(config)
+    assert result.valid is True
+    assert isinstance(result.error_items, list)
+    assert len(result.error_items) == 0
+
+
+def test_invalid_workflow_has_structured_error_items() -> None:
+    config = WorkflowConfig(entrypoint="missing", nodes=["a"], edges=[["a", "b"]])
+    result = WorkflowValidator.validate(config)
+    assert result.valid is False
+    assert len(result.error_items) >= 2
+
+    codes = {item.code for item in result.error_items if item.severity == "error"}
+    assert "WORKFLOW_ENTRYPOINT_MISSING" in codes
+    assert "WORKFLOW_EDGE_TARGET_NOT_FOUND" in codes
+
+    for item in result.error_items:
+        assert item.code
+        assert item.message
+        assert item.severity in ("error", "warning")
+
+
+def test_error_items_have_path() -> None:
+    config = WorkflowConfig(entrypoint="missing", nodes=["x", "x"], edges=[["x", "a"]])
+    result = WorkflowValidator.validate(config)
+    items_with_path = [i for i in result.error_items if i.path]
+    assert items_with_path

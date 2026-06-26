@@ -1916,3 +1916,51 @@ python3 scripts/check_business_terms.py
 ### 文档参考
 
 - [Built-in Workflow Nodes](docs/workflow-built-in-nodes.md)
+
+## V0.7.3 Workflow Validation / Eval Acceptance V0.7.3 校验与评估验收
+
+### Workflow Eval
+
+```bash
+python3 scripts/run_workflow_evals.py
+```
+
+预期结果：
+
+```
+PASS valid_workflow
+Summary: 1 passed, 0 failed, 1 total
+```
+
+### Error Codes
+
+Workflow 校验错误现在包含结构化 error_items：
+
+| Code | Severity |
+|---|---|
+| WORKFLOW_ENTRYPOINT_MISSING | error |
+| WORKFLOW_NODE_DUPLICATE | error |
+| WORKFLOW_EDGE_TARGET_NOT_FOUND | error |
+| WORKFLOW_NODE_TYPE_UNSUPPORTED | error |
+| WORKFLOW_SELF_LOOP | error |
+| WORKFLOW_TERMINAL_NODE_NOT_FOUND | error |
+| WORKFLOW_RAG_RETRIEVAL_MODE_INVALID | warning |
+| WORKFLOW_CONDITION_TYPE_UNSUPPORTED | warning |
+| WORKFLOW_CONFIG_KEY_UNKNOWN | warning |
+| WORKFLOW_EXPECTED_OUTPUT_MISSING | warning |
+| WORKFLOW_DECISION_ROUTE_NOT_FOUND | warning |
+
+### Full Regression 完整回归
+
+```bash
+make test-api
+python3 scripts/run_evals.py
+python3 scripts/run_rag_evals.py
+python3 scripts/run_workflow_evals.py
+npm run build --prefix apps/web
+python3 scripts/check_business_terms.py
+```
+
+### 文档参考
+
+- [Workflow Validation](docs/workflow-validation.md)

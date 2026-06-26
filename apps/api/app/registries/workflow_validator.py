@@ -77,10 +77,34 @@ class WorkflowEdge(BaseModel):
     metadata: dict = Field(default_factory=dict)
 
 
+ERROR_CODES: dict[str, str] = {
+    "entrypoint_missing": "WORKFLOW_ENTRYPOINT_MISSING",
+    "node_duplicate": "WORKFLOW_NODE_DUPLICATE",
+    "edge_target_not_found": "WORKFLOW_EDGE_TARGET_NOT_FOUND",
+    "node_type_unsupported": "WORKFLOW_NODE_TYPE_UNSUPPORTED",
+    "condition_type_unsupported": "WORKFLOW_CONDITION_TYPE_UNSUPPORTED",
+    "self_loop": "WORKFLOW_SELF_LOOP",
+    "terminal_node_not_found": "WORKFLOW_TERMINAL_NODE_NOT_FOUND",
+    "config_key_unknown": "WORKFLOW_CONFIG_KEY_UNKNOWN",
+    "retrieval_mode_invalid": "WORKFLOW_RAG_RETRIEVAL_MODE_INVALID",
+    "expected_output_missing": "WORKFLOW_EXPECTED_OUTPUT_MISSING",
+    "decision_route_not_found": "WORKFLOW_DECISION_ROUTE_NOT_FOUND",
+}
+
+
+class ValidationErrorItem(BaseModel):
+    code: str
+    message: str
+    path: str | None = None
+    severity: str = "error"
+    metadata: dict = Field(default_factory=dict)
+
+
 class WorkflowValidationResult(BaseModel):
     valid: bool
     errors: list[str] = Field(default_factory=list)
     warnings: list[str] = Field(default_factory=list)
+    error_items: list[ValidationErrorItem] = Field(default_factory=list)
 
 
 def _collect_node_ids(nodes: list) -> set[str]:
@@ -104,6 +128,17 @@ class WorkflowValidator:
     def validate(config: WorkflowConfig) -> WorkflowValidationResult:
         errors: list[str] = []
         warnings: list[str] = []
+        items: list[ValidationErrorItem] = []
+
+        def _err(code: str, msg: str, path: str | None = None) -> None:
+            errors.append(msg)
+            items.append(ValidationErrorItem(
+                code=ERROR_CODES.get(code, code), message=msg, path=path))
+
+        def _warn(code: str, msg: str, path: str | None = None) -> None:
+            warnings.append(msg)
+            items.append(ValidationErrorItem(
+                code=ERROR_CODES.get(code, code), message=msg, path=path, severity="warning"))
 
         node_ids = _collect_node_ids(config.nodes)
         node_dicts = _collect_node_dicts(config.nodes)
@@ -111,14 +146,16 @@ class WorkflowValidator:
         # entrypoint check (skip module paths)
         if config.entrypoint and "." not in config.entrypoint and ":" not in config.entrypoint:
             if config.entrypoint not in node_ids:
-                errors.append(f"entrypoint '{config.entrypoint}' not found in nodes")
+                _err("entrypoint_missing",
+                     f"entrypoint '{config.entrypoint}' not found in nodes",
+                     path="entrypoint")
 
         # node id uniqueness
         seen: set[str] = set()
         for node in config.nodes:
             nid = node if isinstance(node, str) else (node.get("id") if isinstance(node, dict) else None)
             if nid and nid in seen:
-                errors.append(f"duplicate node id '{nid}'")
+                _err("node_duplicate", f"duplicate node id '{nid}'", path=f"node.{nid}")
             if nid:
                 seen.add(nid)
 
@@ -127,7 +164,9 @@ class WorkflowValidator:
             nid = node.get("id", "")
             ntype = node.get("type", "")
             if ntype and ntype not in _WORKFLOW_NODE_TYPES:
-                errors.append(f"unsupported node type '{ntype}' for node '{nid}'")
+                _err("node_type_unsupported",
+                     f"unsupported node type '{ntype}' for node '{nid}'",
+                     path=f"node.{nid}")
 
         # node config key whitelist
         for node in node_dicts:
@@ -138,7 +177,9 @@ class WorkflowValidator:
             if allowed is not None:
                 for key in node_cfg:
                     if key not in allowed:
-                        warnings.append(f"node '{nid}' (type '{ntype}'): unrecognized config key '{key}'")
+                        _warn("config_key_unknown",
+                              f"node '{nid}' (type '{ntype}'): unrecognized config key '{key}'",
+                              path=f"node.{nid}")
 
         # node type-specific validation + contract validation
         for node in node_dicts:
@@ -149,59 +190,89 @@ class WorkflowValidator:
             if ntype == "rag":
                 mode = node_cfg.get("retrieval_mode")
                 if mode and mode not in _RAG_RETRIEVAL_MODES:
-                    warnings.append(f"node '{nid}': rag retrieval_mode '{mode}' not in {sorted(_RAG_RETRIEVAL_MODES)}")
+                    _warn("retrieval_mode_invalid",
+                          f"node '{nid}': rag retrieval_mode '{mode}' not in {sorted(_RAG_RETRIEVAL_MODES)}",
+                          path=f"node.{nid}")
 
             if ntype == "tool":
                 tool_name = node_cfg.get("tool_name")
                 if tool_name is not None and not isinstance(tool_name, str):
-                    warnings.append(f"node '{nid}': tool_name should be a string")
+                    _warn("invalid_tool_name",
+                          f"node '{nid}': tool_name should be a string",
+                          path=f"node.{nid}")
 
             if ntype == "provider":
                 pn = node_cfg.get("provider_name")
                 if pn is not None and not isinstance(pn, str):
-                    warnings.append(f"node '{nid}': provider_name should be a string")
+                    _warn("invalid_provider_name",
+                          f"node '{nid}': provider_name should be a string",
+                          path=f"node.{nid}")
 
             if ntype == "decision":
                 routes = node_cfg.get("routes", [])
                 if isinstance(routes, list):
-                    for route in routes:
+                    for ri, route in enumerate(routes):
                         route_to = route if isinstance(route, str) else (route.get("to") if isinstance(route, dict) else None)
                         if route_to and route_to not in node_ids:
-                            warnings.append(f"node '{nid}': decision route to '{route_to}' not found in nodes")
+                            _warn("decision_route_not_found",
+                                  f"node '{nid}': decision route to '{route_to}' not found in nodes",
+                                  path=f"node.{nid}.routes[{ri}]")
 
-        # built-in contract validation (expected inputs/outputs)
+        # built-in contract validation
         for node in node_dicts:
-            contract_warnings = WorkflowValidator.validate_contract(node)
-            warnings.extend(contract_warnings)
+            nid = node.get("id", "")
+            ntype = node.get("type", "")
+            contract = BUILTIN_NODE_CONTRACTS.get(ntype)
+            if contract:
+                outputs = node.get("outputs", [])
+                for exp_out in contract["expected_outputs"]:
+                    if exp_out not in outputs:
+                        _warn("expected_output_missing",
+                              f"node '{nid}' (type '{ntype}'): expected output '{exp_out}' not declared",
+                              path=f"node.{nid}.outputs")
 
         # edge validation
-        for edge in config.edges:
+        for ei, edge in enumerate(config.edges):
             if isinstance(edge, list) and len(edge) >= 2:
                 from_id, to_id = edge[0], edge[1]
                 if from_id not in node_ids:
-                    errors.append(f"edge references unknown node '{from_id}'")
+                    _err("edge_target_not_found",
+                         f"edge references unknown node '{from_id}'",
+                         path=f"edge[{ei}].from")
                 if to_id not in node_ids:
-                    errors.append(f"edge references unknown node '{to_id}'")
+                    _err("edge_target_not_found",
+                         f"edge references unknown node '{to_id}'",
+                         path=f"edge[{ei}].to")
                 if from_id == to_id:
-                    errors.append(f"edge from '{from_id}' to '{to_id}' is a self-loop")
+                    _err("self_loop",
+                         f"edge from '{from_id}' to '{to_id}' is a self-loop",
+                         path=f"edge[{ei}]")
             elif isinstance(edge, dict):
                 from_id = edge.get("from", "")
                 to_id = edge.get("to", "")
                 if from_id not in node_ids:
-                    errors.append(f"edge references unknown node '{from_id}'")
+                    _err("edge_target_not_found",
+                         f"edge references unknown node '{from_id}'",
+                         path=f"edge[{ei}].from")
                 if to_id not in node_ids:
-                    errors.append(f"edge references unknown node '{to_id}'")
+                    _err("edge_target_not_found",
+                         f"edge references unknown node '{to_id}'",
+                         path=f"edge[{ei}].to")
                 cond = edge.get("condition", {})
                 if cond and cond.get("type") not in _WORKFLOW_CONDITION_TYPES:
-                    warnings.append(f"edge '{from_id}'→'{to_id}': unsupported condition type '{cond.get('type')}'")
+                    _warn("condition_type_unsupported",
+                          f"edge '{from_id}'→'{to_id}': unsupported condition type '{cond.get('type')}'",
+                          path=f"edge[{ei}].condition")
 
         # terminal_nodes check
         if config.terminal_nodes:
             for tn in config.terminal_nodes:
                 if tn not in node_ids:
-                    errors.append(f"terminal_nodes includes unknown node '{tn}'")
+                    _err("terminal_node_not_found",
+                         f"terminal_nodes includes unknown node '{tn}'",
+                         path="terminal_nodes")
 
-        return WorkflowValidationResult(valid=len(errors) == 0, errors=errors, warnings=warnings)
+        return WorkflowValidationResult(valid=len(errors) == 0, errors=errors, warnings=warnings, error_items=items)
 
     @staticmethod
     def validate_contract(node: dict) -> list[str]:

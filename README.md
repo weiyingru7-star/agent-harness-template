@@ -718,21 +718,28 @@ workflow / eval 配置。
 
 - [Agent YAML Config](docs/agent-yaml-config.md)
 
+## V0.6.2 Agent Template Registry API / 注册表 API 增强
+
+V0.6.2 增强 Agent Template Registry 的 API 响应结构，提供结构化
+校验结果和摘要视图。
+
+新增内容：
+- `TemplateSummary`：列表视图含 `tools_count` / `rag_enabled` / `nodes_count` / `runtime_version`
+- `ValidateResult`：结构化校验结果含 `template_id` / `valid` / `warnings` / `checked_at`
+- `GET /api/agent-templates/{id}/validate` 返回 `ValidateResult`
+
+更多说明：
+
+- [Agent Template Registry API](docs/agent-template-registry-api.md)
+
 ## Current Scope 当前范围
 
-当前版本（V0.6.1）已完成：
+当前版本（V0.6.2）已完成：
 - **V0.2.x Agent Runtime**：Trace / Span、Checkpoint、Failure / Retry、Timeline API 与前端视图、Eval Trajectory runner
 - **V0.3.x Tool Runtime**：Tool Call Contract、Tool Args Schema、Tool Result Contract、Tool Timeout、Tool Retry、Tool Permission、Tool Sandbox Policy、文档收口
 - **V0.4.x RAG Runtime**：数据合同、切分策略、直接文本创建、检索评估、嵌入层、向量存储、检索模式、文档收口
 - **V0.5.x Provider Runtime**：ProviderRequest / Response / Error 合同、call_provider、fallback、smoke 响应合同对齐、streaming contract、error/fallback 路径、timeout/retry、config/env 管理、真实 OpenAI-compatible 适配
-- **V0.6.x Agent Template**：AgentTemplate contract、JSON Schema、loader、Registry、list/get API、嵌套配置、validate
-
-当前版本（V0.6.0）已完成：
-- **V0.2.x Agent Runtime**：Trace / Span、Checkpoint、Failure / Retry、Timeline API 与前端视图、Eval Trajectory runner
-- **V0.3.x Tool Runtime**：Tool Call Contract、Tool Args Schema、Tool Result Contract、Tool Timeout、Tool Retry、Tool Permission、Tool Sandbox Policy、文档收口
-- **V0.4.x RAG Runtime**：数据合同、切分策略、直接文本创建、检索评估、嵌入层、向量存储、检索模式、文档收口
-- **V0.5.x Provider Runtime**：ProviderRequest / Response / Error 合同、call_provider、fallback、smoke 响应合同对齐、streaming contract、error/fallback 路径、timeout/retry、config/env 管理、真实 OpenAI-compatible 适配
-- **V0.6.0 Agent Template**：AgentTemplate contract、JSON Schema、loader、Registry、list/get API
+- **V0.6.x Agent Template**：AgentTemplate contract、嵌套配置、Registry API、TemplateSummary、ValidateResult
 
 模板核心保持业务无关，具体业务逻辑应放在 `modules/{module_name}/` 内由使用者自行创建。详见 [Project Boundaries](PROJECT_BOUNDARIES.md)。
 

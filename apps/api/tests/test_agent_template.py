@@ -82,6 +82,12 @@ def test_api_list_templates() -> None:
     assert isinstance(data, list)
     ids = [t["id"] for t in data]
     assert "generic_agent" in ids
+    t = next(item for item in data if item["id"] == "generic_agent")
+    assert "provider_name" in t
+    assert "tools_count" in t
+    assert "rag_enabled" in t
+    assert "nodes_count" in t
+    assert "runtime_version" in t
 
 
 def test_api_get_template() -> None:
@@ -169,16 +175,18 @@ def test_loader_validate_existing() -> None:
     from app.registries.agent_template import AgentTemplateRegistry
 
     loader = AgentTemplateRegistry()
-    errors = loader.validate_template("generic_agent")
-    assert errors == []
+    result = loader.validate_template("generic_agent")
+    assert result.valid is True
+    assert result.errors == []
 
 
 def test_loader_validate_missing() -> None:
     from app.registries.agent_template import AgentTemplateRegistry
 
     loader = AgentTemplateRegistry()
-    errors = loader.validate_template("nonexistent")
-    assert len(errors) >= 1
+    result = loader.validate_template("nonexistent")
+    assert result.valid is False
+    assert len(result.errors) >= 1
 
 
 def test_api_get_config() -> None:
@@ -213,7 +221,36 @@ def test_api_validate_existing() -> None:
     client = TestClient(app)
     response = client.get("/api/agent-templates/generic_agent/validate")
     assert response.status_code == 200
-    assert response.json() == []
+    data = response.json()
+    assert data["template_id"] == "generic_agent"
+    assert data["valid"] is True
+    assert data["errors"] == []
+    assert "checked_at" in data
+    assert "warnings" in data
+    assert "metadata" in data
+
+
+def test_api_validate_missing_returns_valid_false() -> None:
+    from fastapi.testclient import TestClient
+    from app.main import app
+
+    client = TestClient(app)
+    response = client.get("/api/agent-templates/unknown/validate")
+    assert response.status_code == 200
+    data = response.json()
+    assert data["valid"] is False
+    assert len(data["errors"]) >= 1
+
+
+def test_template_summary_fields() -> None:
+    from app.registries.agent_template import TemplateSummary
+
+    s = TemplateSummary(id="test", name="Test")
+    assert s.tools_count == 0
+    assert s.rag_enabled is False
+    assert s.nodes_count == 0
+    assert s.eval_cases_path is None
+    assert s.runtime_version == ""
 
 
 def test_v060_template_still_loads() -> None:

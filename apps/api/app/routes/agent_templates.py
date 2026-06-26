@@ -1,7 +1,12 @@
 from fastapi import APIRouter, HTTPException, status
 
 from app.registries.agent_config import AgentConfig
-from app.registries.agent_template import AgentTemplate, AgentTemplateRegistry
+from app.registries.agent_template import (
+    AgentTemplate,
+    AgentTemplateRegistry,
+    TemplateSummary,
+    ValidateResult,
+)
 
 
 router = APIRouter(prefix="/api/agent-templates", tags=["agent-templates"])
@@ -9,9 +14,9 @@ router = APIRouter(prefix="/api/agent-templates", tags=["agent-templates"])
 _loader = AgentTemplateRegistry()
 
 
-@router.get("", response_model=list[AgentTemplate])
-def list_agent_templates() -> list[AgentTemplate]:
-    return _loader.list_templates()
+@router.get("", response_model=list[TemplateSummary])
+def list_agent_templates() -> list[TemplateSummary]:
+    return _loader.list_summaries()
 
 
 @router.get("/{template_id}", response_model=AgentTemplate)
@@ -30,6 +35,6 @@ def get_agent_config(template_id: str) -> AgentConfig:
     return config
 
 
-@router.get("/{template_id}/validate", response_model=list[str])
-def validate_agent_template(template_id: str) -> list[str]:
+@router.get("/{template_id}/validate", response_model=ValidateResult)
+def validate_agent_template(template_id: str) -> ValidateResult:
     return _loader.validate_template(template_id)

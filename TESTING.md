@@ -1762,3 +1762,35 @@ python3 scripts/check_business_terms.py
 ### 文档参考
 
 - [Agent YAML Config](docs/agent-yaml-config.md)
+
+## V0.6.2 Agent Template Registry API Acceptance V0.6.2 注册表 API 验收
+
+### List / Validate
+
+```bash
+# 列表（含摘要字段）
+curl -s http://localhost:8005/api/agent-templates | python3 -c "
+import json,sys;ts=json.load(sys.stdin)
+for t in ts: print(t['id'], t['provider_name'], 'tools:', t['tools_count'], 'rag:', t['rag_enabled'])
+"
+
+# 校验（结构化结果）
+curl -s http://localhost:8005/api/agent-templates/generic_agent/validate | python3 -c "
+import json,sys;r=json.load(sys.stdin)
+print('valid:', r['valid'], 'errors:', len(r['errors']), 'warnings:', len(r['warnings']))
+"
+```
+
+### Full Regression 完整回归
+
+```bash
+make test-api
+python3 scripts/run_evals.py
+python3 scripts/run_rag_evals.py
+npm run build --prefix apps/web
+python3 scripts/check_business_terms.py
+```
+
+### 文档参考
+
+- [Agent Template Registry API](docs/agent-template-registry-api.md)

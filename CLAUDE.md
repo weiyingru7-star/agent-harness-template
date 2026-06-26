@@ -18,14 +18,15 @@
 
 ## Current Stage 当前阶段
 
-当前阶段：V0.4.6 Retrieval Mode Contract。
+当前阶段：V0.5.6 OpenAI-compatible Provider Adapter。
 
 已完成的通用底座能力：
 - Agent Runtime（V0.2.x）：模块注册、执行契约、Trace / Span、Checkpoint、Failure / Retry、Timeline、Eval Trajectory
 - Tool Runtime（V0.3.x）：Tool Call Contract、参数校验、结果标准化、超时控制、重试、权限校验、沙箱策略、文档收口
 - RAG Runtime（V0.4.x）：Document/Chunk/Citation/RetrievalResult 合同、切分策略、直接文本创建、检索评估、嵌入层、向量存储、三种检索模式
+- Provider Runtime（V0.5.x）：ProviderRequest/Response/Error 合同、smoke 对齐、streaming、fallback、timeout/retry、配置管理、真实模型适配
 
-下一阶段规划：V0.5.x Memory / Advanced RAG。
+下一阶段规划：V0.6.x Agent Memory / Advanced Features。
 
 ## Current Scope Constraints 当前修改约束
 

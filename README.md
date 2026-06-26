@@ -673,6 +673,22 @@ Chat Completions 格式的模型。
 
 - [OpenAI-Compatible Provider](docs/openai-compatible-provider.md)
 
+## V0.5.x Provider Runtime 总结
+
+V0.5.0–V0.5.6 构建了一个完整的 Provider Runtime 栈，共 7 个模块：
+
+| 模块 | 版本 | 说明 | 文档 |
+|---|---|---|---|
+| 基础合同 | V0.5.0 | ProviderRequest / Response / Error | [Provider Runtime](docs/provider-runtime.md) |
+| 响应合同对齐 | V0.5.1 | smoke 返回对齐 ProviderResponse | [Provider Runtime](docs/provider-runtime.md) |
+| 流式输出 | V0.5.2 | ProviderStreamEvent + SSE endpoint | [Provider Streaming](docs/provider-streaming.md) |
+| 错误与回退 | V0.5.3 | MockFailingLLMProvider + fallback | [Provider Errors](docs/provider-errors.md) |
+| 超时与重试 | V0.5.4 | MockSlow / MockFlaky + timeout / retry | [Provider Timeout Retry](docs/provider-timeout-retry.md) |
+| 配置管理 | V0.5.5 | ProviderConfig + GET /api/llm/config | [Provider Config](docs/provider-config.md) |
+| 真实模型适配 | V0.5.6 | OpenAI-compatible adapter | [OpenAI Provider](docs/openai-compatible-provider.md) |
+
+详细说明：[Provider Runtime 文档](docs/provider-runtime.md)
+
 ## Current Scope 当前范围
 
 当前版本（V0.5.6）已完成：

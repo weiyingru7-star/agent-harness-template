@@ -61,6 +61,7 @@ ALLOWED_CONTEXT_MARKERS = [
 ALLOWED_FILES = {
     Path("scripts/check_business_terms.py"),
     Path("apps/api/tests/test_schema_contracts.py"),
+    Path("apps/api/tests/test_agent_template.py"),
 }
 
 

@@ -1,0 +1,20 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "AgentTemplate",
+  "description": "Contract for a standalone agent template definition.",
+  "type": "object",
+  "required": ["id", "name"],
+  "properties": {
+    "id": { "type": "string", "description": "Unique agent template identifier." },
+    "name": { "type": "string", "description": "Human-readable agent template name." },
+    "description": { "type": "string", "description": "Agent template purpose and boundary." },
+    "version": { "type": "string", "description": "Template version." },
+    "provider": { "type": "string", "description": "Default provider id." },
+    "tools": { "type": "array", "items": { "type": "string" }, "description": "Tool ids used by this agent." },
+    "rag_collection": { "type": "string", "description": "Default RAG collection name." },
+    "workflow": { "type": "string", "description": "Workflow type for execution." },
+    "eval_cases": { "type": "array", "items": { "type": "string" }, "description": "Eval case ids for this agent." },
+    "metadata": { "type": "object", "description": "Optional template metadata." }
+  },
+  "additionalProperties": false
+}

@@ -1700,3 +1700,35 @@ python3 scripts/check_business_terms.py
 ### 文档参考
 
 - [OpenAI-Compatible Provider](docs/openai-compatible-provider.md)
+
+## V0.6.0 Agent Template Contract Acceptance V0.6.0 智能体模板合同验收
+
+### API 验证
+
+```bash
+# 列出模板
+curl -s http://localhost:8005/api/agent-templates | python3 -m json.tool
+
+# 查询单个模板
+curl -s http://localhost:8005/api/agent-templates/generic_agent | python3 -c "
+import json,sys;t=json.load(sys.stdin)
+print('id:',t['id'],'provider:',t['provider'],'tools:',t['tools'])
+"
+
+# 不存在的模板返回 404
+curl -s -o /dev/null -w '%{http_code}' http://localhost:8005/api/agent-templates/unknown
+```
+
+### Full Regression 完整回归
+
+```bash
+make test-api
+python3 scripts/run_evals.py
+python3 scripts/run_rag_evals.py
+npm run build --prefix apps/web
+python3 scripts/check_business_terms.py
+```
+
+### 文档参考
+
+- [Agent Template Contract](docs/agent-template-contract.md)

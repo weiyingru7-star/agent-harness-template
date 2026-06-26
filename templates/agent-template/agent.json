@@ -1,0 +1,15 @@
+{
+  "id": "generic_agent",
+  "name": "Generic Agent",
+  "description": "Business-agnostic agent template for quick scaffolding.",
+  "version": "0.1.0",
+  "provider": "mock",
+  "tools": ["mock_echo"],
+  "rag_collection": "default",
+  "workflow": "state_machine",
+  "eval_cases": [
+    "demo_agent_success",
+    "demo_agent_invalid_tool_args"
+  ],
+  "metadata": {}
+}

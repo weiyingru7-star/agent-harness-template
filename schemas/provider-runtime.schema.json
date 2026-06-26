@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "ProviderResponse",
+  "description": "Contract for a provider runtime response.",
+  "type": "object",
+  "required": ["output", "model", "provider"],
+  "properties": {
+    "output": { "type": "string", "description": "Model output text." },
+    "model": { "type": "string", "description": "Model name." },
+    "provider": { "type": "string", "description": "Provider name." },
+    "latency_ms": { "type": "integer", "description": "Call latency in milliseconds." },
+    "usage": { "type": "object", "description": "Token usage information." },
+    "finish_reason": { "type": "string", "description": "Finish reason (stop, length, etc)." },
+    "metadata": { "type": "object", "description": "Extended metadata." }
+  },
+  "additionalProperties": false
+}

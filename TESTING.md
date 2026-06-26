@@ -1480,3 +1480,47 @@ python3 scripts/run_rag_evals.py
 - [RAG Runtime Architecture](docs/rag-runtime-architecture.md)
 - [RAG Runtime Contracts](docs/rag-runtime-contracts.md)
 - [RAG Runtime Eval](docs/rag-runtime-eval.md)
+
+## V0.5.0 Provider Runtime Acceptance V0.5.0 模型调用验收
+
+### Smoke API 兼容性
+
+```bash
+# keyword mode — unchanged
+curl -s -X POST http://localhost:8005/api/llm/smoke \
+  -H 'Content-Type: application/json' \
+  -d '{"prompt":"hello"}' \
+  | python3 -c "import json,sys;r=json.load(sys.stdin);print('provider:',r['provider'],'output:',r['output'][:30])"
+```
+
+预期结果：`provider: mock output: Mock LLM response for: hello`
+
+### call_provider
+
+ProviderResponse 包含 provider / model / latency_ms / usage：
+
+```bash
+# Through test suite
+make test-api
+```
+
+（`tests/test_provider_runtime.py` 覆盖 call_provider / fallback / metadata。）
+
+### Fallback
+
+当 primary provider 未知时自动 fallback 到 mock，metadata 记录 fallback 信息。
+
+### Full Regression 完整回归
+
+```bash
+make test-api
+python3 scripts/run_evals.py
+python3 scripts/run_rag_evals.py
+npm run build --prefix apps/web
+python3 scripts/check_business_terms.py
+```
+
+### 文档参考
+
+- [Provider Runtime](docs/provider-runtime.md)
+- [Provider Runtime Contracts](docs/provider-runtime-contracts.md)

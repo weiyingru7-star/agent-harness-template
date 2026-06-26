@@ -570,16 +570,33 @@ V0.4.0–V0.4.6 构建了一个完整的 RAG Runtime 栈，共 7 个模块：
 
 详细说明：[RAG Runtime 文档](docs/rag-runtime.md)
 
+## V0.5.0 Provider Runtime / 模型调用增强最小版
+
+V0.5.0 系统化整理 LLM Provider 层，建立结构化合同和 fallback 策略。
+
+三个核心组件：
+- `ProviderRequest` / `ProviderResponse` / `ProviderError`：结构化调用合同
+- `call_provider()`：统一调用入口，返回 ProviderResponse（含 latency_ms / usage）
+- `call_provider_with_fallback()`：主 provider 失败时自动 fallback 到 mock
+
+不改已有 `POST /api/llm/smoke`、`MockLLMProvider`、`ProviderRouter`。
+
+更多说明：
+
+- [Provider Runtime](docs/provider-runtime.md)
+- [Provider Runtime Contracts](docs/provider-runtime-contracts.md)
+
 ## Current Scope 当前范围
 
-当前版本（V0.4.7）已完成：
+当前版本（V0.5.0）已完成：
 - **V0.2.x Agent Runtime**：Trace / Span、Checkpoint、Failure / Retry、Timeline API 与前端视图、Eval Trajectory runner
 - **V0.3.x Tool Runtime**：Tool Call Contract、Tool Args Schema、Tool Result Contract、Tool Timeout、Tool Retry、Tool Permission、Tool Sandbox Policy、文档收口
 - **V0.4.x RAG Runtime**：数据合同、切分策略、直接文本创建、检索评估、嵌入层、向量存储、检索模式、文档收口
+- **V0.5.0 Provider Runtime**：ProviderRequest / Response / Error 合同、call_provider、fallback 策略
 
 模板核心保持业务无关，具体业务逻辑应放在 `modules/{module_name}/` 内由使用者自行创建。详见 [Project Boundaries](PROJECT_BOUNDARIES.md)。
 
-下一阶段规划：V0.5.x Memory / Advanced RAG。
+下一阶段规划：V0.5.x Provider Runtime / Eval / Multi-Provider。
 
 ## Requirements 环境要求
 

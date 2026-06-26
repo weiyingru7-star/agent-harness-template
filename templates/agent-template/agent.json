@@ -1,15 +1,34 @@
 {
   "id": "generic_agent",
   "name": "Generic Agent",
-  "description": "Business-agnostic agent template for quick scaffolding.",
+  "description": "Business-agnostic agent template with enhanced config.",
   "version": "0.1.0",
-  "provider": "mock",
-  "tools": ["mock_echo"],
-  "rag_collection": "default",
-  "workflow": "state_machine",
-  "eval_cases": [
-    "demo_agent_success",
-    "demo_agent_invalid_tool_args"
-  ],
+  "runtime_version": "v0.6.1",
+  "provider": {
+    "provider_name": "mock",
+    "model": "mock"
+  },
+  "tools": {
+    "allowed_tools": ["mock_echo"],
+    "required_tools": ["mock_echo"]
+  },
+  "rag": {
+    "enabled": false,
+    "collection": "default",
+    "retrieval_mode": "keyword"
+  },
+  "workflow": {
+    "entrypoint": "modules.demo_agent.agent:execute",
+    "nodes": ["input_node", "skill_node", "tool_node", "final_node"],
+    "edges": [
+      ["input_node", "skill_node"],
+      ["skill_node", "tool_node"],
+      ["tool_node", "final_node"]
+    ]
+  },
+  "eval": {
+    "cases_path": "evals/cases/",
+    "required_checks": ["agent_template_schema"]
+  },
   "metadata": {}
 }

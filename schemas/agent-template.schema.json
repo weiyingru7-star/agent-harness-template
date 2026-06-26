@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "title": "AgentTemplate",
-  "description": "Contract for a standalone agent template definition.",
+  "description": "Contract for a standalone agent template definition with nested config.",
   "type": "object",
   "required": ["id", "name"],
   "properties": {
@@ -9,11 +9,51 @@
     "name": { "type": "string", "description": "Human-readable agent template name." },
     "description": { "type": "string", "description": "Agent template purpose and boundary." },
     "version": { "type": "string", "description": "Template version." },
-    "provider": { "type": "string", "description": "Default provider id." },
-    "tools": { "type": "array", "items": { "type": "string" }, "description": "Tool ids used by this agent." },
-    "rag_collection": { "type": "string", "description": "Default RAG collection name." },
-    "workflow": { "type": "string", "description": "Workflow type for execution." },
-    "eval_cases": { "type": "array", "items": { "type": "string" }, "description": "Eval case ids for this agent." },
+    "runtime_version": { "type": "string", "description": "Expected runtime version." },
+    "provider": {
+      "oneOf": [
+        { "type": "string", "description": "Shorthand provider id." },
+        { "type": "object", "description": "Full provider config.",
+          "properties": {
+            "provider_name": { "type": "string" },
+            "model": { "type": "string" },
+            "config_ref": { "type": "string" }
+          },
+          "required": ["provider_name"]
+        }
+      ]
+    },
+    "tools": {
+      "oneOf": [
+        { "type": "array", "items": { "type": "string" }, "description": "Shorthand tool ids." },
+        { "type": "object", "description": "Full tools config.",
+          "properties": {
+            "allowed_tools": { "type": "array", "items": { "type": "string" } },
+            "required_tools": { "type": "array", "items": { "type": "string" } }
+          }
+        }
+      ]
+    },
+    "rag": { "type": "object", "description": "RAG configuration.",
+      "properties": {
+        "enabled": { "type": "boolean" },
+        "collection": { "type": "string" },
+        "retrieval_mode": { "type": "string" }
+      }
+    },
+    "workflow": { "type": "object", "description": "Workflow configuration.",
+      "properties": {
+        "entrypoint": { "type": "string" },
+        "nodes": { "type": "array", "items": { "type": "string" } },
+        "edges": { "type": "array", "items": { "type": "array", "items": { "type": "string" } } }
+      }
+    },
+    "eval": { "type": "object", "description": "Evaluation configuration.",
+      "properties": {
+        "cases_path": { "type": "string" },
+        "required_checks": { "type": "array", "items": { "type": "string" } }
+      }
+    },
     "metadata": { "type": "object", "description": "Optional template metadata." }
   },
   "additionalProperties": false

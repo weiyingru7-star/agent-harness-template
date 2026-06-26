@@ -1732,3 +1732,33 @@ python3 scripts/check_business_terms.py
 ### 文档参考
 
 - [Agent Template Contract](docs/agent-template-contract.md)
+
+## V0.6.1 Agent YAML Config Loader Acceptance V0.6.1 配置加载验收
+
+### Config / Validate API
+
+```bash
+# 完整配置（嵌套 provider/tools/rag/workflow/eval）
+curl -s http://localhost:8005/api/agent-templates/generic_agent/config | python3 -c "
+import json,sys;c=json.load(sys.stdin)
+print('provider:',c['provider'],'tools:',c['tools'],'rag:',c['rag']['enabled'])
+"
+
+# 校验
+curl -s http://localhost:8005/api/agent-templates/generic_agent/validate
+# 预期: []
+```
+
+### Full Regression 完整回归
+
+```bash
+make test-api
+python3 scripts/run_evals.py
+python3 scripts/run_rag_evals.py
+npm run build --prefix apps/web
+python3 scripts/check_business_terms.py
+```
+
+### 文档参考
+
+- [Agent YAML Config](docs/agent-yaml-config.md)

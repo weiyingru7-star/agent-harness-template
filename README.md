@@ -704,7 +704,28 @@ eval 配置。
 
 - [Agent Template Contract](docs/agent-template-contract.md)
 
+## V0.6.1 Agent YAML Config Loader / 配置加载增强
+
+V0.6.1 增强 agent 配置的字段能力，支持嵌套 provider / tools / rag /
+workflow / eval 配置。
+
+新增内容：
+- `AgentConfig`：嵌套 ProviderRef / ToolsConfig / RagConfig / WorkflowConfig / EvalConfig
+- 简写兼容：`"provider": "mock"` 和 `{"provider_name": "..."}` 均可
+- `GET /api/agent-templates/{id}/config` 和 `GET /api/agent-templates/{id}/validate`
+
+更多说明：
+
+- [Agent YAML Config](docs/agent-yaml-config.md)
+
 ## Current Scope 当前范围
+
+当前版本（V0.6.1）已完成：
+- **V0.2.x Agent Runtime**：Trace / Span、Checkpoint、Failure / Retry、Timeline API 与前端视图、Eval Trajectory runner
+- **V0.3.x Tool Runtime**：Tool Call Contract、Tool Args Schema、Tool Result Contract、Tool Timeout、Tool Retry、Tool Permission、Tool Sandbox Policy、文档收口
+- **V0.4.x RAG Runtime**：数据合同、切分策略、直接文本创建、检索评估、嵌入层、向量存储、检索模式、文档收口
+- **V0.5.x Provider Runtime**：ProviderRequest / Response / Error 合同、call_provider、fallback、smoke 响应合同对齐、streaming contract、error/fallback 路径、timeout/retry、config/env 管理、真实 OpenAI-compatible 适配
+- **V0.6.x Agent Template**：AgentTemplate contract、JSON Schema、loader、Registry、list/get API、嵌套配置、validate
 
 当前版本（V0.6.0）已完成：
 - **V0.2.x Agent Runtime**：Trace / Span、Checkpoint、Failure / Retry、Timeline API 与前端视图、Eval Trajectory runner

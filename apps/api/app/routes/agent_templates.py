@@ -1,5 +1,6 @@
 from fastapi import APIRouter, HTTPException, status
 
+from app.registries.agent_config import AgentConfig
 from app.registries.agent_template import AgentTemplate, AgentTemplateRegistry
 
 
@@ -19,3 +20,16 @@ def get_agent_template(template_id: str) -> AgentTemplate:
     if template is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Agent template not found")
     return template
+
+
+@router.get("/{template_id}/config", response_model=AgentConfig)
+def get_agent_config(template_id: str) -> AgentConfig:
+    config = _loader.get_config(template_id)
+    if config is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Agent template not found")
+    return config
+
+
+@router.get("/{template_id}/validate", response_model=list[str])
+def validate_agent_template(template_id: str) -> list[str]:
+    return _loader.validate_template(template_id)

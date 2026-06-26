@@ -110,3 +110,116 @@ def test_template_fields_no_business_terms() -> None:
     for field_value in [t.id, t.name, t.description]:
         for term in ["电商", "客服", "服装", "CAD", "商品", "订单", "售后", "自媒体", "竞品", "灯具", "报价"]:
             assert term not in (field_value or "")
+
+
+def test_agent_config_creation() -> None:
+    from app.registries.agent_config import AgentConfig, ProviderRef, ToolsConfig, RagConfig
+
+    cfg = AgentConfig(id="test", name="Test")
+    assert isinstance(cfg.provider, str)
+    assert cfg.provider == "mock"
+    assert isinstance(cfg.tools, list)
+    assert cfg.rag.enabled is False
+    assert cfg.workflow.entrypoint is None
+
+
+def test_agent_config_shorthand_provider() -> None:
+    from app.registries.agent_config import AgentConfig, ProviderRef
+
+    cfg = AgentConfig(id="t1", name="T1", provider="openai_compatible")
+    assert cfg.provider == "openai_compatible"
+
+
+def test_agent_config_nested_provider() -> None:
+    from app.registries.agent_config import AgentConfig, ProviderRef
+
+    cfg = AgentConfig(id="t2", name="T2", provider={"provider_name": "openai_compatible", "model": "gpt-4"})
+    assert isinstance(cfg.provider, ProviderRef)
+    assert cfg.provider.provider_name == "openai_compatible"
+    assert cfg.provider.model == "gpt-4"
+
+
+def test_agent_config_shorthand_tools() -> None:
+    from app.registries.agent_config import AgentConfig, ToolsConfig
+
+    cfg = AgentConfig(id="t3", name="T3", tools=["mock_echo", "mock_tool"])
+    assert isinstance(cfg.tools, list)
+    assert "mock_echo" in cfg.tools
+
+
+def test_agent_config_nested_tools() -> None:
+    from app.registries.agent_config import AgentConfig, ToolsConfig
+
+    cfg = AgentConfig(id="t4", name="T4", tools={"allowed_tools": ["mock_echo"], "required_tools": ["mock_echo"]})
+    assert isinstance(cfg.tools, ToolsConfig)
+    assert "mock_echo" in cfg.tools.allowed_tools
+    assert "mock_echo" in cfg.tools.required_tools
+
+
+def test_loader_get_config() -> None:
+    from app.registries.agent_template import AgentTemplateRegistry
+
+    loader = AgentTemplateRegistry()
+    config = loader.get_config("generic_agent")
+    assert config is not None
+    assert config.id == "generic_agent"
+
+
+def test_loader_validate_existing() -> None:
+    from app.registries.agent_template import AgentTemplateRegistry
+
+    loader = AgentTemplateRegistry()
+    errors = loader.validate_template("generic_agent")
+    assert errors == []
+
+
+def test_loader_validate_missing() -> None:
+    from app.registries.agent_template import AgentTemplateRegistry
+
+    loader = AgentTemplateRegistry()
+    errors = loader.validate_template("nonexistent")
+    assert len(errors) >= 1
+
+
+def test_api_get_config() -> None:
+    from fastapi.testclient import TestClient
+    from app.main import app
+
+    client = TestClient(app)
+    response = client.get("/api/agent-templates/generic_agent/config")
+    assert response.status_code == 200
+    data = response.json()
+    assert data["id"] == "generic_agent"
+    assert "provider" in data
+    assert "tools" in data
+    assert "rag" in data
+    assert "workflow" in data
+    assert "eval" in data
+
+
+def test_api_get_config_missing() -> None:
+    from fastapi.testclient import TestClient
+    from app.main import app
+
+    client = TestClient(app)
+    response = client.get("/api/agent-templates/unknown/config")
+    assert response.status_code == 404
+
+
+def test_api_validate_existing() -> None:
+    from fastapi.testclient import TestClient
+    from app.main import app
+
+    client = TestClient(app)
+    response = client.get("/api/agent-templates/generic_agent/validate")
+    assert response.status_code == 200
+    assert response.json() == []
+
+
+def test_v060_template_still_loads() -> None:
+    """AgentTemplate with flat fields (V0.6.0 style) still works."""
+    from app.registries.agent_template import AgentTemplate
+
+    t = AgentTemplate(id="legacy", name="Legacy", provider="mock", tools=["mock_echo"])
+    assert t.provider == "mock"
+    assert t.tools == ["mock_echo"]

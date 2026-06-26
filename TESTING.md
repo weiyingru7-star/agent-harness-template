@@ -1541,25 +1541,35 @@ python3 scripts/check_business_terms.py
 
 ### Fallback smoke
 
+`POST /api/llm/smoke` 默认启用 fallback。primary provider 失败时自动
+fallback 到 `"mock"` provider，HTTP status 200。
+
 ```bash
-# fallback 成功路径
+# mock_failing 自动 fallback 到 mock（不传 fallback 也可以）
 curl -s -X POST http://localhost:8005/api/llm/smoke \
   -H 'Content-Type: application/json' \
-  -d '{"prompt":"hello","provider":"mock_failing","fallback":"mock"}' \
+  -d '{"prompt":"hello","provider":"mock_failing"}' \
   | python3 -c "
 import json,sys;r=json.load(sys.stdin)
 print('provider:',r['provider'],'fallback:',r['metadata'].get('fallback_used'),'error:',r['metadata'].get('primary_error_type'))
 "
 
-# 无 fallback 时 mock_failing 返回 400
-curl -s -w '\nHTTP %{http_code}' -X POST http://localhost:8005/api/llm/smoke \
+# openai_compatible 未配置时自动 fallback 到 mock
+curl -s -X POST http://localhost:8005/api/llm/smoke \
   -H 'Content-Type: application/json' \
-  -d '{"prompt":"hello","provider":"mock_failing"}' | tail -1
+  -d '{"prompt":"hello","provider":"openai_compatible"}' \
+  | python3 -c "
+import json,sys;r=json.load(sys.stdin)
+print('provider:',r['provider'],'fallback:',r['metadata'].get('fallback_used'),'error:',r['metadata'].get('primary_error_type'))
+"
 ```
+
+预期结果：provider=mock，fallback_used=true，metadata 含 fallback_from / fallback_to / fallback_reason / primary_error_type。
 
 ### Compatibility 兼容性
 
-不传 `fallback` 时行为与 V0.5.2 一致。
+不传 `fallback` 时默认 fallback 到 `"mock"`。正常 provider（如 `"mock"`）
+不受影响（无错误时不触发 fallback）。
 
 ### Full Regression 完整回归
 

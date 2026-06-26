@@ -16,7 +16,7 @@ class LLMSmokeRequest(BaseModel):
     prompt: str
     provider: str | None = None
     structured: bool = False
-    fallback: str | None = None
+    fallback: str = "mock"
 
 
 class LLMStreamRequest(BaseModel):
@@ -36,39 +36,26 @@ _FALLBACK_ERRORS = (
 @router.post("/smoke", response_model=LLMResponse)
 def smoke(request: LLMSmokeRequest) -> LLMResponse:
     primary = request.provider or "mock"
-
-    if request.fallback:
-        try:
-            provider = ProviderRouter(settings).resolve(primary)
-            return LLMClient(provider).generate(
-                prompt=request.prompt, structured=request.structured,
-            )
-        except _FALLBACK_ERRORS as exc:
-            provider = ProviderRouter(settings).resolve(request.fallback)
-            response = LLMClient(provider).generate(
-                prompt=request.prompt, structured=request.structured,
-            )
-            response.metadata.update({
-                "fallback_used": True,
-                "fallback_from": primary,
-                "fallback_to": request.fallback,
-                "fallback_reason": f"{type(exc).__name__}: {exc}",
-                "primary_error_type": type(exc).__name__,
-            })
-            return response
-
     try:
         provider = ProviderRouter(settings).resolve(primary)
         return LLMClient(provider).generate(
             prompt=request.prompt,
             structured=request.structured,
         )
-    except (
-        ProviderConfigurationError,
-        ProviderRequestError,
-        StructuredOutputError,
-        ValueError,
-    ) as exc:
+    except _FALLBACK_ERRORS as exc:
+        provider = ProviderRouter(settings).resolve(request.fallback)
+        response = LLMClient(provider).generate(
+            prompt=request.prompt, structured=request.structured,
+        )
+        response.metadata.update({
+            "fallback_used": True,
+            "fallback_from": primary,
+            "fallback_to": request.fallback,
+            "fallback_reason": f"{type(exc).__name__}: {exc}",
+            "primary_error_type": type(exc).__name__,
+        })
+        return response
+    except StructuredOutputError as exc:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=str(exc),

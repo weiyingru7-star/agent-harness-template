@@ -48,24 +48,34 @@ def test_mock_llm_structured_smoke() -> None:
     assert body["metadata"]["mock"] is True
 
 
-def test_unconfigured_openai_compatible_smoke_returns_400() -> None:
+def test_unconfigured_openai_compatible_smoke_fallback_to_mock() -> None:
     response = client.post(
         "/api/llm/smoke",
         json={"prompt": "hello", "provider": "openai_compatible"},
     )
 
-    assert response.status_code == 400
-    assert "not configured" in response.json()["detail"]
+    assert response.status_code == 200
+    data = response.json()
+    assert data["provider"] == "mock"
+    assert data["output"].startswith("Mock LLM response")
+    assert data["metadata"]["fallback_used"] is True
+    assert data["metadata"]["fallback_from"] == "openai_compatible"
+    assert data["metadata"]["primary_error_type"] == "ProviderConfigurationError"
 
 
-def test_unknown_provider_smoke_returns_400() -> None:
+def test_unknown_provider_smoke_fallback_to_mock() -> None:
     response = client.post(
         "/api/llm/smoke",
         json={"prompt": "hello", "provider": "unknown"},
     )
 
-    assert response.status_code == 400
-    assert response.json()["detail"] == "Unsupported LLM provider: unknown"
+    assert response.status_code == 200
+    data = response.json()
+    assert data["provider"] == "mock"
+    assert data["output"].startswith("Mock LLM response")
+    assert data["metadata"]["fallback_used"] is True
+    assert data["metadata"]["fallback_from"] == "unknown"
+    assert data["metadata"]["primary_error_type"] == "ValueError"
 
 
 def test_parse_structured_output_rejects_non_json() -> None:
@@ -154,12 +164,19 @@ def _parse_stream_response(test_client, body: dict) -> list[dict]:
     return result
 
 
-def test_mock_failing_smoke_returns_400() -> None:
+def test_mock_failing_smoke_fallback_to_mock() -> None:
     response = client.post(
         "/api/llm/smoke",
         json={"prompt": "hello", "provider": "mock_failing"},
     )
-    assert response.status_code == 400
+    assert response.status_code == 200
+    data = response.json()
+    assert data["provider"] == "mock"
+    assert data["output"].startswith("Mock LLM response")
+    assert data["metadata"]["fallback_used"] is True
+    assert data["metadata"]["fallback_from"] == "mock_failing"
+    assert data["metadata"]["fallback_to"] == "mock"
+    assert data["metadata"]["primary_error_type"] == "ProviderRequestError"
 
 
 def test_smoke_fallback_success() -> None:

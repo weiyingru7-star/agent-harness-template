@@ -1490,10 +1490,10 @@ python3 scripts/run_rag_evals.py
 curl -s -X POST http://localhost:8005/api/llm/smoke \
   -H 'Content-Type: application/json' \
   -d '{"prompt":"hello"}' \
-  | python3 -c "import json,sys;r=json.load(sys.stdin);print('provider:',r['provider'],'output:',r['output'][:30])"
+  | python3 -c "import json,sys;r=json.load(sys.stdin);print('provider:',r['provider'],'model:',r['model'],'latency_ms:',r['latency_ms'],'output:',r['output'][:30])"
 ```
 
-预期结果：`provider: mock output: Mock LLM response for: hello`
+预期结果：`provider: mock model: mock latency_ms: ... output: Mock LLM response for: hello`
 
 ### call_provider
 

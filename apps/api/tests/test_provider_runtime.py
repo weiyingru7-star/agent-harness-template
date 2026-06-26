@@ -84,11 +84,15 @@ def test_existing_llm_smoke_unchanged() -> None:
     client = TestClient(app)
     response = client.post("/api/llm/smoke", json={"prompt": "hello"})
     assert response.status_code == 200
-    assert response.json() == {
-        "provider": "mock",
-        "output": "Mock LLM response for: hello",
-        "structured_output": None,
-    }
+    data = response.json()
+    assert data["provider"] == "mock"
+    assert data["output"] == "Mock LLM response for: hello"
+    assert data["structured_output"] is None
+    assert data["model"] == "mock"
+    assert data["latency_ms"] is not None
+    assert "prompt_tokens" in data["usage"]
+    assert data["finish_reason"] == "stop"
+    assert data["metadata"]["contract"] == "ProviderResponse"
 
 
 def test_existing_structured_smoke_unchanged() -> None:
@@ -101,5 +105,10 @@ def test_existing_structured_smoke_unchanged() -> None:
         json={"prompt": "hello", "structured": True},
     )
     assert response.status_code == 200
-    assert response.json()["provider"] == "mock"
-    assert response.json()["structured_output"]["ok"] is True
+    data = response.json()
+    assert data["provider"] == "mock"
+    assert data["structured_output"]["ok"] is True
+    assert data["model"] == "mock"
+    assert data["latency_ms"] is not None
+    assert "completion_tokens" in data["usage"]
+    assert data["finish_reason"] == "stop"

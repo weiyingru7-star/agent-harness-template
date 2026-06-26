@@ -7,7 +7,8 @@ V0.5.0 系统化整理 LLM Provider 层，建立 ProviderRequest / ProviderRespo
 - 统一 ProviderRequest / ProviderResponse / ProviderError 结构化合同。
 - `call_provider()` 封装现有 ProviderRouter + provider.generate()，返回 ProviderResponse。
 - `call_provider_with_fallback()` 提供主 provider 失败时的 fallback 策略。
-- 不改已有 `POST /api/llm/smoke`、`LLMResponse`、`ProviderRouter`、`MockLLMProvider`。
+- 不改已有 `LLMResponse` 核心字段（`provider`、`output`、`structured_output`）。
+- `POST /api/llm/smoke` 响应扩展为包含 `model` / `latency_ms` / `usage` / `finish_reason` / `metadata`。
 
 ## ProviderRequest
 
@@ -70,9 +71,9 @@ def call_provider_with_fallback(prompt, primary="mock", fallback="mock", setting
 | `MockLLMProvider` | 不改 |
 | `OpenAICompatibleProvider` | 不改 |
 | `ProviderRouter` | 不改 |
-| `LLMClient` / `LLMResponse` | 不改 |
-| `POST /api/llm/smoke` | 不改 |
-| `test_llm.py` (5 tests) | 全部通过 |
+| `LLMResponse` | 新增可选字段（model / latency_ms / usage / finish_reason / metadata） |
+| `POST /api/llm/smoke` | 响应扩展，路径和请求不变 |
+| `test_llm.py` | 更新断言适配新字段 |
 
 ## 验收
 
@@ -80,4 +81,23 @@ def call_provider_with_fallback(prompt, primary="mock", fallback="mock", setting
 make test-api
 python3 scripts/run_evals.py
 python3 scripts/run_rag_evals.py
+```
+
+### /api/llm/smoke 响应示例
+
+```json
+{
+  "provider": "mock",
+  "output": "Mock LLM response for: hello",
+  "structured_output": null,
+  "model": "mock",
+  "latency_ms": 0,
+  "usage": {"prompt_tokens": 1, "completion_tokens": 6, "total_tokens": 7},
+  "finish_reason": "stop",
+  "metadata": {
+    "provider_runtime_version": "v0.5.1",
+    "contract": "ProviderResponse",
+    "mock": true
+  }
+}
 ```

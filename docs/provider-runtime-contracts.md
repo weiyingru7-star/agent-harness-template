@@ -20,6 +20,21 @@ V0.5.0 定义的结构化 Provider 合同。
 | `fallback_to` | 备用 provider 名称 |
 | `fallback_reason` | 失败原因 |
 
+## LLMResponse（smoke API）
+
+V0.5.1 开始，`POST /api/llm/smoke` 的响应对齐 ProviderResponse contract：
+
+| 字段 | 类型 | 来源 |
+|---|---|---|
+| `provider` | str | provider.id |
+| `output` | str | provider.generate() 结果 |
+| `structured_output` | dict \| null | JSON 解析结果 |
+| `model` | str | provider.model 或 provider.id |
+| `latency_ms` | int | 调用耗时 |
+| `usage` | dict | prompt_tokens / completion_tokens / total_tokens（估算） |
+| `finish_reason` | str | 固定 "stop" |
+| `metadata` | dict | provider_runtime_version / contract / mock 标记 |
+
 ## Future Capabilities（V0.5.x）
 
 - **Timeout**：`ProviderRequest.timeout_ms` 字段已预留，尚未在 runtime 中实现

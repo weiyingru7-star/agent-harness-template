@@ -39,7 +39,7 @@ _FALLBACK_ERRORS = (
 
 @router.post("/smoke", response_model=LLMResponse)
 def smoke(request: LLMSmokeRequest) -> LLMResponse:
-    primary = request.provider or "mock"
+    primary = request.provider or settings.ai_provider or "mock"
     try:
         result = call_provider_with_timeout_retry(
             prompt=request.prompt,

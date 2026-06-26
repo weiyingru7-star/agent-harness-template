@@ -1866,3 +1866,26 @@ python3 scripts/check_business_terms.py
 ### 文档参考
 
 - [Workflow Contract](docs/workflow-contract.md)
+
+## V0.7.1 Node / Edge / Condition Schema Enhancement V0.7.1 Node/Edge/Condition Schema 增强
+
+本节覆盖 WorkflowNode / WorkflowEdge / WorkflowCondition 的增强校验。
+
+### Validate
+
+```bash
+curl -s http://localhost:8005/api/agent-templates/generic_agent/validate | python3 -c "
+import json,sys;r=json.load(sys.stdin)
+print('valid:', r['valid'], 'errors:', len(r['errors']), 'warnings:', len(r['warnings']))
+"
+```
+
+### Full Regression 完整回归
+
+```bash
+make test-api
+python3 scripts/run_evals.py
+python3 scripts/run_rag_evals.py
+npm run build --prefix apps/web
+python3 scripts/check_business_terms.py
+```

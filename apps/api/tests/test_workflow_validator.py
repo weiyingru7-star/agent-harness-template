@@ -28,54 +28,34 @@ def test_workflow_condition_creation() -> None:
 
 
 def test_valid_workflow_passes() -> None:
-    config = WorkflowConfig(
-        entrypoint="start",
-        nodes=["start", "end"],
-        edges=[["start", "end"]],
-    )
+    config = WorkflowConfig(entrypoint="start", nodes=["start", "end"], edges=[["start", "end"]])
     result = WorkflowValidator.validate(config)
     assert result.valid is True
 
 
 def test_entrypoint_missing_fails() -> None:
-    config = WorkflowConfig(
-        entrypoint="missing",
-        nodes=["start", "end"],
-        edges=[["start", "end"]],
-    )
+    config = WorkflowConfig(entrypoint="missing", nodes=["start", "end"], edges=[["start", "end"]])
     result = WorkflowValidator.validate(config)
     assert result.valid is False
     assert any("entrypoint" in e and "missing" in e for e in result.errors)
 
 
 def test_node_id_duplicate_fails() -> None:
-    config = WorkflowConfig(
-        entrypoint="x",
-        nodes=["x", "x"],
-        edges=[["x", "y"]],
-    )
+    config = WorkflowConfig(entrypoint="x", nodes=["x", "x"], edges=[["x", "y"]])
     result = WorkflowValidator.validate(config)
     assert result.valid is False
     assert any("duplicate" in e for e in result.errors)
 
 
 def test_edge_unknown_node_fails() -> None:
-    config = WorkflowConfig(
-        entrypoint="a",
-        nodes=["a"],
-        edges=[["a", "b"]],
-    )
+    config = WorkflowConfig(entrypoint="a", nodes=["a"], edges=[["a", "b"]])
     result = WorkflowValidator.validate(config)
     assert result.valid is False
     assert any("unknown" in e and "'b'" in e for e in result.errors)
 
 
 def test_self_loop_edge_fails() -> None:
-    config = WorkflowConfig(
-        entrypoint="a",
-        nodes=["a"],
-        edges=[["a", "a"]],
-    )
+    config = WorkflowConfig(entrypoint="a", nodes=["a"], edges=[["a", "a"]])
     result = WorkflowValidator.validate(config)
     assert result.valid is False
     assert any("self-loop" in e for e in result.errors)
@@ -87,23 +67,14 @@ def test_unsupported_node_type_check() -> None:
 
 
 def test_terminal_nodes_unknown_fails() -> None:
-    config = WorkflowConfig(
-        entrypoint="a",
-        nodes=["a"],
-        edges=[],
-        terminal_nodes=["unknown"],
-    )
+    config = WorkflowConfig(entrypoint="a", nodes=["a"], edges=[], terminal_nodes=["unknown"])
     result = WorkflowValidator.validate(config)
     assert result.valid is False
     assert any("terminal_nodes" in e for e in result.errors)
 
 
 def test_dict_format_nodes_supported() -> None:
-    config = WorkflowConfig(
-        entrypoint="start",
-        nodes=["start", "end"],
-        edges=[["start", "end"]],
-    )
+    config = WorkflowConfig(entrypoint="start", nodes=["start", "end"], edges=[["start", "end"]])
     result = WorkflowValidator.validate(config)
     assert result.valid is True
     edge = WorkflowEdge(**{"from": "start", "to": "end"})
@@ -116,3 +87,27 @@ def test_generic_agent_workflow_validates() -> None:
     registry = AgentTemplateRegistry()
     result = registry.validate_template("generic_agent")
     assert result.valid is True
+
+
+def test_node_with_description_inputs_outputs() -> None:
+    n = WorkflowNode(id="n1", type="input", name="Input Node",
+                     description="Receives user input",
+                     inputs=["raw_text"], outputs=["normalized_text"])
+    assert n.description == "Receives user input"
+    assert n.inputs == ["raw_text"]
+
+
+def test_edge_with_id() -> None:
+    e = WorkflowEdge(id="e1", **{"from": "a", "to": "b"})
+    assert e.id == "e1"
+    assert e.from_node == "a"
+
+
+def test_condition_on_success() -> None:
+    c = WorkflowCondition(type="on_success")
+    assert c.type == "on_success"
+
+
+def test_condition_on_failure() -> None:
+    c = WorkflowCondition(type="on_failure", expected_value="error")
+    assert c.expected_value == "error"

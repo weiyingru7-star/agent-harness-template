@@ -240,14 +240,23 @@ class OpenAICompatibleProvider:
         try:
             with request.urlopen(http_request, timeout=self.timeout) as response:
                 response_body = response.read().decode("utf-8")
+        except error.HTTPError as exc:
+            detail = self._parse_http_error_body(exc)
+            raise ProviderRequestError(
+                f"OpenAI API error ({exc.code}): {detail}"
+            ) from exc
         except error.URLError as exc:
             raise ProviderRequestError(
-                "OpenAI-compatible provider request failed"
+                "OpenAI-compatible provider request failed: network error"
             ) from exc
 
         try:
             parsed = json.loads(response_body)
-            content = parsed["choices"][0]["message"]["content"]
+            choice = parsed["choices"][0]
+            content = choice["message"]["content"]
+            finish_reason = choice.get("finish_reason")
+            api_model = parsed.get("model", self.model)
+            usage = parsed.get("usage", {})
         except (KeyError, IndexError, TypeError, json.JSONDecodeError) as exc:
             raise ProviderRequestError(
                 "OpenAI-compatible provider returned an invalid response"
@@ -255,5 +264,19 @@ class OpenAICompatibleProvider:
 
         return ProviderResult(
             output=content,
-            metadata={"provider": self.id, "model": self.model},
+            metadata={
+                "provider": self.id,
+                "model": api_model,
+                "finish_reason": finish_reason,
+                "usage": usage,
+            },
         )
+
+    @staticmethod
+    def _parse_http_error_body(exc: error.HTTPError) -> str:
+        try:
+            body = exc.read().decode("utf-8")
+            parsed = json.loads(body)
+            return parsed.get("error", {}).get("message", str(exc))
+        except Exception:
+            return str(exc)

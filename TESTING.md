@@ -1658,3 +1658,45 @@ python3 scripts/check_business_terms.py
 ### 文档参考
 
 - [Provider Config](docs/provider-config.md)
+
+## V0.5.6 OpenAI-Compatible Provider Adapter Acceptance V0.5.6 真实模型适配验收
+
+### Config 检查（不暴露 key）
+
+```bash
+# 查看当前 provider 配置
+curl -s http://localhost:8005/api/llm/config | python3 -m json.tool
+```
+
+预期结果：`api_key_configured` 反映是否配置了 API key，响应中不包含 `api_key` 字段。
+
+### Real Provider 手动测试（需设置 .env）
+
+```bash
+# .env 中设置
+# AI_PROVIDER=openai_compatible
+# AI_BASE_URL=<your-api-endpoint>
+# AI_API_KEY=<your-key>
+# AI_MODEL=<model-name>
+
+curl -s -X POST http://localhost:8005/api/llm/smoke \
+  -H 'Content-Type: application/json' \
+  -d '{"prompt":"Hello"}' | python3 -c "
+import json,sys;r=json.load(sys.stdin)
+print('provider:',r['provider'],'model:',r['model'],'usage:',r['usage'],'finish_reason:',r['finish_reason'])
+"
+```
+
+### Full Regression 完整回归
+
+```bash
+make test-api
+python3 scripts/run_evals.py
+python3 scripts/run_rag_evals.py
+npm run build --prefix apps/web
+python3 scripts/check_business_terms.py
+```
+
+### 文档参考
+
+- [OpenAI-Compatible Provider](docs/openai-compatible-provider.md)

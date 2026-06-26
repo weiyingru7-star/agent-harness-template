@@ -1,16 +1,17 @@
 {
   "id": "generic_agent",
   "name": "Generic Agent",
-  "description": "Business-agnostic agent template with enhanced config.",
+  "description": "Business-neutral example agent template for quick scaffolding. Use as a reference starting point for creating new agents.",
   "version": "0.1.0",
-  "runtime_version": "v0.6.1",
+  "runtime_version": "v0.6.3",
   "provider": {
     "provider_name": "mock",
-    "model": "mock"
+    "model": "mock",
+    "config_ref": "default"
   },
   "tools": {
     "allowed_tools": ["mock_echo"],
-    "required_tools": ["mock_echo"]
+    "required_tools": []
   },
   "rag": {
     "enabled": false,
@@ -19,16 +20,21 @@
   },
   "workflow": {
     "entrypoint": "modules.demo_agent.agent:execute",
-    "nodes": ["input_node", "skill_node", "tool_node", "final_node"],
+    "nodes": ["input_node", "provider_node", "tool_node", "final_node"],
     "edges": [
-      ["input_node", "skill_node"],
-      ["skill_node", "tool_node"],
+      ["input_node", "provider_node"],
+      ["provider_node", "tool_node"],
       ["tool_node", "final_node"]
     ]
   },
   "eval": {
     "cases_path": "evals/cases/",
-    "required_checks": ["agent_template_schema"]
+    "required_checks": ["status", "events", "timeline"]
   },
-  "metadata": {}
+  "metadata": {
+    "author": "Agent Harness Template",
+    "repository": "https://github.com/weiyingru7-star/agent-harness-template",
+    "tags": ["business-neutral", "reference", "scaffold"],
+    "purpose": "Developer reference example — not a business agent"
+  }
 }

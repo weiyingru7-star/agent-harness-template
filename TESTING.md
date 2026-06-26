@@ -1794,3 +1794,38 @@ python3 scripts/check_business_terms.py
 ### 文档参考
 
 - [Agent Template Registry API](docs/agent-template-registry-api.md)
+
+## V0.6.3 Example Agent Template Acceptance V0.6.3 示例模板验收
+
+### API 验证
+
+```bash
+# 查看 generic_agent 详情
+curl -s http://localhost:8005/api/agent-templates/generic_agent | python3 -c "
+import json,sys;t=json.load(sys.stdin)
+print('id:',t['id'],'provider:',t['provider'],'tools:',len(t['tools']))
+"
+
+# 校验
+curl -s http://localhost:8005/api/agent-templates/generic_agent/validate | python3 -c "
+import json,sys;r=json.load(sys.stdin)
+print('valid:',r['valid'])
+"
+
+# 查看模板目录 README
+cat templates/agent-template/README.md
+```
+
+### Full Regression 完整回归
+
+```bash
+make test-api
+python3 scripts/run_evals.py
+python3 scripts/run_rag_evals.py
+npm run build --prefix apps/web
+python3 scripts/check_business_terms.py
+```
+
+### 文档参考
+
+- [Example Agent Template](docs/example-agent-template.md)

@@ -1829,3 +1829,40 @@ python3 scripts/check_business_terms.py
 ### 文档参考
 
 - [Example Agent Template](docs/example-agent-template.md)
+
+## V0.7.0 Workflow Contract Acceptance V0.7.0 工作流合同验收
+
+### Validate 校验规则
+
+`GET /api/agent-templates/generic_agent/validate` 返回 workflow 校验结果。
+目前 `valid=true` 说明 workflow 结构正确。
+
+```bash
+curl -s http://localhost:8005/api/agent-templates/generic_agent/validate | python3 -c "
+import json,sys;r=json.load(sys.stdin)
+print('valid:', r['valid'], 'errors:', len(r['errors']))
+"
+```
+
+### Workflow 校验规则
+
+- entrypoint 必须引用已有 node id
+- node id 不能重复
+- edge from/to 必须引用已有 node id
+- 不允许自环
+- terminal_nodes 必须引用已有 node id
+- node type 必须在允许列表中
+
+### Full Regression 完整回归
+
+```bash
+make test-api
+python3 scripts/run_evals.py
+python3 scripts/run_rag_evals.py
+npm run build --prefix apps/web
+python3 scripts/check_business_terms.py
+```
+
+### 文档参考
+
+- [Workflow Contract](docs/workflow-contract.md)

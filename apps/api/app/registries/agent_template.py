@@ -9,6 +9,7 @@ from typing import Any
 from pydantic import BaseModel, Field, ValidationError
 
 from app.registries.agent_config import AgentConfig
+from app.registries.workflow_validator import WorkflowValidator
 
 
 class AgentTemplate(BaseModel):
@@ -126,9 +127,12 @@ class AgentTemplateRegistry:
                 valid=False,
                 errors=[f"Template not found: {template_id}"],
             )
+        wf_result = WorkflowValidator.validate(config.workflow)
         return ValidateResult(
             template_id=template_id,
-            valid=True,
+            valid=wf_result.valid,
+            errors=wf_result.errors,
+            warnings=wf_result.warnings,
         )
 
     @staticmethod

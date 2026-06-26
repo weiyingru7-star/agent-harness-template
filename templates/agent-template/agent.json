@@ -25,7 +25,8 @@
       ["input_node", "provider_node"],
       ["provider_node", "tool_node"],
       ["tool_node", "final_node"]
-    ]
+    ],
+    "terminal_nodes": ["final_node"]
   },
   "eval": {
     "cases_path": "evals/cases/",

@@ -1,46 +1,71 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "title": "Workflow",
-  "description": "Minimal contract for a workflow definition.",
+  "description": "Contract for a workflow definition with structured nodes and edges.",
   "type": "object",
   "required": ["id", "name", "nodes", "edges"],
   "properties": {
-    "id": {
-      "type": "string",
-      "description": "Unique workflow identifier."
-    },
-    "name": {
-      "type": "string",
-      "description": "Human-readable workflow name."
-    },
-    "description": {
-      "type": "string",
-      "description": "Workflow purpose and boundary."
+    "id": { "type": "string", "description": "Unique workflow identifier." },
+    "name": { "type": "string", "description": "Human-readable workflow name." },
+    "description": { "type": "string", "description": "Workflow purpose and boundary." },
+    "version": { "type": "string", "description": "Workflow version." },
+    "entrypoint": { "type": "string", "description": "Starting node id or module path." },
+    "terminal_nodes": { "type": "array", "items": { "type": "string" }, "description": "Node ids that can end execution." },
+    "node_types": {
+      "type": "array",
+      "items": { "type": "string", "enum": ["input", "provider", "tool", "rag", "decision", "final"] },
+      "description": "Allowed node types."
     },
     "nodes": {
       "type": "array",
       "description": "Workflow node definitions.",
       "items": {
-        "type": "object"
+        "oneOf": [
+          { "type": "string", "description": "Shorthand node id." },
+          {
+            "type": "object",
+            "required": ["id"],
+            "properties": {
+              "id": { "type": "string" },
+              "type": { "type": "string" },
+              "name": { "type": "string" },
+              "config": { "type": "object" },
+              "next": { "type": "array", "items": { "type": "string" } },
+              "metadata": { "type": "object" }
+            }
+          }
+        ]
       }
     },
     "edges": {
       "type": "array",
       "description": "Workflow edge definitions.",
       "items": {
-        "type": "object"
+        "oneOf": [
+          { "type": "array", "items": { "type": "string" }, "minItems": 2, "maxItems": 2 },
+          {
+            "type": "object",
+            "required": ["from", "to"],
+            "properties": {
+              "from": { "type": "string" },
+              "to": { "type": "string" },
+              "condition": {
+                "type": "object",
+                "properties": {
+                  "type": { "type": "string", "enum": ["always", "expression", "route"] },
+                  "expression": { "type": "string" },
+                  "route_key": { "type": "string" }
+                }
+              },
+              "metadata": { "type": "object" }
+            }
+          }
+        ]
       }
     },
-    "created_at": {
-      "type": "string",
-      "format": "date-time",
-      "description": "Workflow creation timestamp."
-    },
-    "updated_at": {
-      "type": "string",
-      "format": "date-time",
-      "description": "Last workflow update timestamp."
-    }
+    "metadata": { "type": "object", "description": "Optional workflow metadata." },
+    "created_at": { "type": "string", "format": "date-time" },
+    "updated_at": { "type": "string", "format": "date-time" }
   },
   "additionalProperties": false
 }

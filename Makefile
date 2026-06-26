@@ -4,7 +4,10 @@ API_PYTHON := $(API_VENV)/bin/python
 NPM_CACHE := ../../.npm-cache
 DOCKER_CONFIG_DIR := .docker
 
-.PHONY: install-api install-web install dev-api dev-web test-api prepare-docker-config up down
+.PHONY: install-api install-web install dev-api dev-web test-api prepare-docker-config prepare-env up down
+
+prepare-env:
+	if [ -f ".env" ] && [ ! -f "apps/api/.env" ]; then cp ".env" "apps/api/.env"; fi
 
 install-api:
 	$(PYTHON) -m venv --clear $(API_VENV)
@@ -16,7 +19,7 @@ install-web:
 
 install: install-api install-web
 
-dev-api:
+dev-api: prepare-env
 	cd apps/api && PYTHONPATH=../..:. ../../$(API_PYTHON) -m uvicorn app.main:app --host $${API_HOST:-127.0.0.1} --port $${API_PORT:-8005}
 
 dev-web:

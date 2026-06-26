@@ -1510,6 +1510,18 @@ make test-api
 
 当 primary provider 未知时自动 fallback 到 mock，metadata 记录 fallback 信息。
 
+## V0.5.2 Provider Streaming Acceptance V0.5.2 流式输出验收
+
+### Stream Endpoint
+
+```bash
+curl -s -N -X POST http://localhost:8005/api/llm/stream \
+  -H 'Content-Type: application/json' \
+  -d '{"prompt":"hello","provider":"mock"}' 2>&1 | head -10
+```
+
+预期结果：SSE 格式，`data: {"event_type":"stream_start"..."}...data: {"event_type":"stream_end"...}`。
+
 ### Full Regression 完整回归
 
 ```bash

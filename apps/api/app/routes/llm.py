@@ -1,4 +1,5 @@
 from fastapi import APIRouter, HTTPException, status
+from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 
 from app.ai_runtime.client import LLMClient, LLMResponse
@@ -15,6 +16,13 @@ class LLMSmokeRequest(BaseModel):
     prompt: str
     provider: str | None = None
     structured: bool = False
+
+
+class LLMStreamRequest(BaseModel):
+    prompt: str
+    provider: str = "mock"
+    model: str = "mock"
+    metadata: dict = {}
 
 
 @router.post("/smoke", response_model=LLMResponse)
@@ -35,3 +43,19 @@ def smoke(request: LLMSmokeRequest) -> LLMResponse:
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=str(exc),
         ) from exc
+
+
+@router.post("/stream")
+def stream(request: LLMStreamRequest) -> StreamingResponse:
+    try:
+        provider = ProviderRouter(settings).resolve(request.provider)
+    except ValueError as exc:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc)) from exc
+
+    client = LLMClient(provider)
+
+    def event_stream():
+        for event in client.generate_stream(request.prompt):
+            yield f"data: {event.model_dump_json()}\n\n"
+
+    return StreamingResponse(event_stream(), media_type="text/event-stream")

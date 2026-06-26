@@ -85,3 +85,70 @@ def test_smoke_response_has_all_provider_response_fields() -> None:
     assert "usage" in data
     assert "finish_reason" in data
     assert "metadata" in data
+
+
+def test_stream_endpoint_returns_200() -> None:
+    response = client.post("/api/llm/stream", json={"prompt": "hello"})
+
+    assert response.status_code == 200
+
+
+def test_stream_content_type_is_event_stream() -> None:
+    response = client.post("/api/llm/stream", json={"prompt": "hello"})
+
+    ct = response.headers.get("content-type", "")
+    assert "text/event-stream" in ct
+
+
+def test_stream_first_event_is_stream_start() -> None:
+    events = _parse_stream_response(client, {"prompt": "hello"})
+
+    assert events[0]["event_type"] == "stream_start"
+    assert events[0]["index"] == 0
+
+
+def test_stream_has_delta_events() -> None:
+    events = _parse_stream_response(client, {"prompt": "hello"})
+
+    deltas = [e for e in events if e["event_type"] == "stream_delta"]
+    assert len(deltas) >= 1
+
+
+def test_stream_last_event_is_stream_end() -> None:
+    events = _parse_stream_response(client, {"prompt": "hello"})
+
+    assert events[-1]["event_type"] == "stream_end"
+
+
+def test_stream_delta_order_match_full_output() -> None:
+    events = _parse_stream_response(client, {"prompt": "hello"})
+
+    deltas = [e["delta"] for e in events if e["event_type"] == "stream_delta"]
+    combined = "".join(deltas)
+    assert combined == "Mock LLM response for: hello"
+
+
+def test_stream_index_continuous() -> None:
+    events = _parse_stream_response(client, {"prompt": "test"})
+
+    for i, event in enumerate(events):
+        assert event["index"] == i
+
+
+def test_stream_event_has_provider_and_model() -> None:
+    events = _parse_stream_response(client, {"prompt": "hello", "provider": "mock"})
+
+    for event in events:
+        assert event["provider"] == "mock"
+        assert event["model"] == "mock"
+
+
+def _parse_stream_response(test_client, body: dict) -> list[dict]:
+    import json
+
+    resp = test_client.post("/api/llm/stream", json=body)
+    result = []
+    for line in resp.text.strip().split("\n\n"):
+        if line.startswith("data: "):
+            result.append(json.loads(line[6:]))
+    return result

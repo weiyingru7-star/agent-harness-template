@@ -1,4 +1,5 @@
 import time
+from collections.abc import Iterator
 from dataclasses import dataclass
 from typing import Any
 
@@ -16,6 +17,15 @@ class LLMResponse(BaseModel):
     latency_ms: int | None = None
     usage: dict = Field(default_factory=dict)
     finish_reason: str | None = None
+    metadata: dict = Field(default_factory=dict)
+
+
+class ProviderStreamEvent(BaseModel):
+    event_type: str  # "stream_start" | "stream_delta" | "stream_end" | "stream_error"
+    delta: str | None = None
+    index: int = 0
+    provider: str = ""
+    model: str = ""
     metadata: dict = Field(default_factory=dict)
 
 
@@ -54,3 +64,28 @@ class LLMClient:
                 "mock": self.provider.id == "mock",
             },
         )
+
+    def generate_stream(self, prompt: str) -> Iterator[ProviderStreamEvent]:
+        model = getattr(self.provider, "model", self.provider.id)
+        yield ProviderStreamEvent(
+            event_type="stream_start", index=0,
+            provider=self.provider.id, model=model,
+        )
+
+        index = 1
+        try:
+            for delta in self.provider.stream_text(prompt):
+                yield ProviderStreamEvent(
+                    event_type="stream_delta", delta=delta, index=index,
+                    provider=self.provider.id, model=model,
+                )
+                index += 1
+            yield ProviderStreamEvent(
+                event_type="stream_end", index=index,
+                provider=self.provider.id, model=model,
+            )
+        except Exception as exc:
+            yield ProviderStreamEvent(
+                event_type="stream_error", delta=str(exc), index=index,
+                provider=self.provider.id, model=model,
+            )

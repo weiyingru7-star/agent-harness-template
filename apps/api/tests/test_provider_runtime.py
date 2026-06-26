@@ -112,3 +112,38 @@ def test_existing_structured_smoke_unchanged() -> None:
     assert data["latency_ms"] is not None
     assert "completion_tokens" in data["usage"]
     assert data["finish_reason"] == "stop"
+
+
+def test_mock_provider_stream_text_yields_words() -> None:
+    from app.ai_runtime.providers import MockLLMProvider
+
+    provider = MockLLMProvider()
+    deltas = list(provider.stream_text("hello world"))
+    assert len(deltas) >= 1
+    combined = "".join(deltas)
+    assert combined == "Mock LLM response for: hello world"
+
+
+def test_generate_stream_events_order() -> None:
+    from app.ai_runtime.client import LLMClient
+    from app.ai_runtime.providers import MockLLMProvider
+
+    provider = MockLLMProvider()
+    client = LLMClient(provider)
+    events = list(client.generate_stream("hello"))
+
+    assert events[0].event_type == "stream_start"
+    assert any(e.event_type == "stream_delta" for e in events)
+    assert events[-1].event_type == "stream_end"
+
+
+def test_generate_stream_index_continuous() -> None:
+    from app.ai_runtime.client import LLMClient
+    from app.ai_runtime.providers import MockLLMProvider
+
+    provider = MockLLMProvider()
+    client = LLMClient(provider)
+    events = list(client.generate_stream("hello"))
+
+    for i, event in enumerate(events):
+        assert event.index == i

@@ -68,12 +68,14 @@ def call_provider_with_fallback(prompt, primary="mock", fallback="mock", setting
 
 | 组件 | 是否修改 |
 |---|---|
-| `MockLLMProvider` | 不改 |
+| `MockLLMProvider` | 新增 `stream_text()` 方法 |
 | `OpenAICompatibleProvider` | 不改 |
 | `ProviderRouter` | 不改 |
 | `LLMResponse` | 新增可选字段（model / latency_ms / usage / finish_reason / metadata） |
+| `ProviderStreamEvent` | 新增模型（V0.5.2） |
 | `POST /api/llm/smoke` | 响应扩展，路径和请求不变 |
-| `test_llm.py` | 更新断言适配新字段 |
+| `POST /api/llm/stream` | 新增 SSE streaming endpoint |
+| `test_llm.py` | 更新断言适配新字段 + 新增 streaming 测试 |
 
 ## 验收
 
@@ -81,6 +83,9 @@ def call_provider_with_fallback(prompt, primary="mock", fallback="mock", setting
 make test-api
 python3 scripts/run_evals.py
 python3 scripts/run_rag_evals.py
+```
+
+### /api/llm/stream 响应示例
 ```
 
 ### /api/llm/smoke 响应示例

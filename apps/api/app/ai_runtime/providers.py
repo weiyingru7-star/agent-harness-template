@@ -1,4 +1,5 @@
 import json
+from collections.abc import Iterator
 from dataclasses import dataclass
 from typing import Any, Protocol
 from urllib import error, request
@@ -33,6 +34,9 @@ class LLMProvider(Protocol):
     def generate(self, prompt: str, structured: bool = False) -> ProviderResult:
         ...
 
+    def stream_text(self, prompt: str) -> Iterator[str]:
+        ...
+
 
 class MockLLMProvider:
     id = "mock"
@@ -64,6 +68,14 @@ class MockLLMProvider:
         if structured:
             return self.generate_json(prompt)
         return self.generate_text(prompt)
+
+    def stream_text(self, prompt: str) -> Iterator[str]:
+        cleaned_prompt = " ".join(prompt.split())
+        output = f"Mock LLM response for: {cleaned_prompt}"
+        words = output.split(" ")
+        for i, word in enumerate(words):
+            suffix = " " if i < len(words) - 1 else ""
+            yield word + suffix
 
 
 class OpenAICompatibleProvider:

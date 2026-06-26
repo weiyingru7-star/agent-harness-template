@@ -19,6 +19,10 @@ class ProviderRequestError(RuntimeError):
     pass
 
 
+class ProviderTimeoutError(ProviderRequestError):
+    pass
+
+
 class LLMProvider(Protocol):
     id: str
 
@@ -95,6 +99,79 @@ class MockFailingLLMProvider:
 
     def stream_text(self, prompt: str) -> Iterator[str]:
         raise ProviderRequestError("mock failing provider simulated failure")
+
+
+class MockSlowLLMProvider:
+    id = "mock_slow"
+
+    def __init__(self, delay_ms: int = 3000) -> None:
+        self.delay_ms = delay_ms
+
+    def generate_text(self, prompt: str) -> ProviderResult:
+        import time
+        time.sleep(self.delay_ms / 1000.0)
+        cleaned_prompt = " ".join(prompt.split())
+        return ProviderResult(
+            output=f"Mock LLM slow response for: {cleaned_prompt}",
+            metadata={"provider": self.id, "delay_ms": self.delay_ms},
+        )
+
+    def generate_json(self, prompt: str) -> ProviderResult:
+        import json, time
+        time.sleep(self.delay_ms / 1000.0)
+        cleaned_prompt = " ".join(prompt.split())
+        return ProviderResult(output=json.dumps({"ok": True, "echo": cleaned_prompt}))
+
+    def smoke_test(self) -> ProviderResult:
+        return self.generate_text("smoke")
+
+    def generate(self, prompt: str, structured: bool = False) -> ProviderResult:
+        if structured:
+            return self.generate_json(prompt)
+        return self.generate_text(prompt)
+
+    def stream_text(self, prompt: str) -> Iterator[str]:
+        import time
+        time.sleep(self.delay_ms / 1000.0)
+        cleaned_prompt = " ".join(prompt.split())
+        output = f"Mock LLM slow response for: {cleaned_prompt}"
+        words = output.split(" ")
+        for i, word in enumerate(words):
+            suffix = " " if i < len(words) - 1 else ""
+            yield word + suffix
+
+
+class MockFlakyLLMProvider:
+    id = "mock_flaky"
+
+    def __init__(self) -> None:
+        self._call_count = 0
+
+    def generate_text(self, prompt: str) -> ProviderResult:
+        self._call_count += 1
+        if self._call_count == 1:
+            raise ProviderRequestError("mock flaky provider simulated failure on first attempt")
+        cleaned_prompt = " ".join(prompt.split())
+        return ProviderResult(
+            output=f"Mock LLM flaky response for: {cleaned_prompt}",
+            metadata={"provider": self.id},
+        )
+
+    def generate_json(self, prompt: str) -> ProviderResult:
+        self._call_count += 1
+        if self._call_count == 1:
+            raise ProviderRequestError("mock flaky provider simulated failure on first attempt")
+        import json
+        cleaned_prompt = " ".join(prompt.split())
+        return ProviderResult(output=json.dumps({"ok": True, "echo": cleaned_prompt}))
+
+    def smoke_test(self) -> ProviderResult:
+        return self.generate_text("smoke")
+
+    def generate(self, prompt: str, structured: bool = False) -> ProviderResult:
+        if structured:
+            return self.generate_json(prompt)
+        return self.generate_text(prompt)
 
 
 class OpenAICompatibleProvider:

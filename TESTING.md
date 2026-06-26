@@ -1584,3 +1584,49 @@ python3 scripts/check_business_terms.py
 ### 文档参考
 
 - [Provider Errors](docs/provider-errors.md)
+
+## V0.5.4 Provider Timeout / Retry Acceptance V0.5.4 超时与重试验收
+
+### Flaky Provider Retry
+
+```bash
+curl -s -X POST http://localhost:8005/api/llm/smoke \
+  -H 'Content-Type: application/json' \
+  -d '{"prompt":"hello","provider":"mock_flaky","max_attempts":2}' \
+  | python3 -c "
+import json,sys;r=json.load(sys.stdin)
+print('provider:',r['provider'],'retried:',r['metadata'].get('retried'),'retry_count:',r['metadata'].get('retry_count'))
+"
+```
+
+预期结果：provider=mock_flaky，retried=true，retry_count=1，attempts 含 2 条记录。
+
+### Timeout + Fallback
+
+```bash
+# slow provider 超时后自动 fallback 到 mock
+# (mock_slow 默认延迟 3000ms，timeout_ms=100 触发超时)
+curl -s -X POST http://localhost:8005/api/llm/smoke \
+  -H 'Content-Type: application/json' \
+  -d '{"prompt":"hello","provider":"mock_slow","timeout_ms":100}' \
+  | python3 -c "
+import json,sys;r=json.load(sys.stdin)
+print('provider:',r['provider'],'fallback:',r['metadata'].get('fallback_used'))
+"
+```
+
+预期结果：provider=mock，fallback_used=true（超时后 fallback 到 mock）。
+
+### Full Regression 完整回归
+
+```bash
+make test-api
+python3 scripts/run_evals.py
+python3 scripts/run_rag_evals.py
+npm run build --prefix apps/web
+python3 scripts/check_business_terms.py
+```
+
+### 文档参考
+
+- [Provider Timeout / Retry](docs/provider-timeout-retry.md)

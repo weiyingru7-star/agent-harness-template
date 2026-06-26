@@ -211,3 +211,29 @@ def test_smoke_fallback_unknown_primary() -> None:
     assert data["provider"] == "mock"
     assert data["metadata"]["fallback_from"] == "unknown"
     assert data["metadata"]["primary_error_type"] == "ValueError"
+
+
+def test_smoke_mock_flaky_auto_retry() -> None:
+    response = client.post(
+        "/api/llm/smoke",
+        json={"prompt": "hello", "provider": "mock_flaky", "max_attempts": 2},
+    )
+    assert response.status_code == 200
+    data = response.json()
+    assert data["provider"] == "mock_flaky"
+    assert data["output"].startswith("Mock LLM flaky response")
+    assert data["metadata"]["retried"] is True
+    assert data["metadata"]["retry_count"] == 1
+
+
+def test_smoke_mock_flaky_retry_metadata() -> None:
+    response = client.post(
+        "/api/llm/smoke",
+        json={"prompt": "hello", "provider": "mock_flaky", "max_attempts": 2},
+    )
+    assert response.status_code == 200
+    meta = response.json()["metadata"]
+    assert "attempts" in meta
+    assert meta["max_attempts"] == 2
+    assert meta["final_attempt_status"] == "completed"
+    assert len(meta["attempts"]) == 2

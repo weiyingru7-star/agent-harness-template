@@ -5,8 +5,9 @@ from pydantic import BaseModel
 from app.ai_runtime.client import LLMClient, LLMResponse
 from app.ai_runtime.providers import ProviderConfigurationError, ProviderRequestError
 from app.ai_runtime.router import ProviderRouter
-from app.ai_runtime.structured_output import StructuredOutputError
+from app.ai_runtime.structured_output import StructuredOutputError, parse_structured_output_or_raise
 from app.core.config import settings
+from app.provider_runtime.router import call_provider_with_fallback, call_provider_with_timeout_retry
 
 
 router = APIRouter(prefix="/api/llm", tags=["llm"])
@@ -17,6 +18,8 @@ class LLMSmokeRequest(BaseModel):
     provider: str | None = None
     structured: bool = False
     fallback: str = "mock"
+    timeout_ms: int | None = None
+    max_attempts: int = 1
 
 
 class LLMStreamRequest(BaseModel):
@@ -37,10 +40,30 @@ _FALLBACK_ERRORS = (
 def smoke(request: LLMSmokeRequest) -> LLMResponse:
     primary = request.provider or "mock"
     try:
-        provider = ProviderRouter(settings).resolve(primary)
-        return LLMClient(provider).generate(
+        result = call_provider_with_timeout_retry(
             prompt=request.prompt,
+            provider_name=primary,
+            max_attempts=request.max_attempts,
+            timeout_ms=request.timeout_ms,
             structured=request.structured,
+        )
+        meta = dict(result.metadata)
+        meta.setdefault("provider_runtime_version", "v0.5.1")
+        meta.setdefault("contract", "ProviderResponse")
+        if "mock" not in meta:
+            meta["mock"] = result.provider == "mock"
+        parsed_output = None
+        if request.structured and result.output:
+            parsed_output = parse_structured_output_or_raise(result.output)
+        return LLMResponse(
+            provider=result.provider,
+            output=result.output,
+            structured_output=parsed_output,
+            model=result.model,
+            latency_ms=result.latency_ms,
+            usage=result.usage,
+            finish_reason=result.finish_reason,
+            metadata=meta,
         )
     except _FALLBACK_ERRORS as exc:
         provider = ProviderRouter(settings).resolve(request.fallback)

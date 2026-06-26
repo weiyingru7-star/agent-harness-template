@@ -206,3 +206,63 @@ def test_fallback_metadata_has_all_fields() -> None:
     assert meta["primary_error_type"] == "ProviderRequestError"
     assert "fallback_used" in meta
 
+
+def test_mock_slow_provider_returns_normally_without_timeout() -> None:
+    from app.ai_runtime.providers import MockSlowLLMProvider
+
+    provider = MockSlowLLMProvider(delay_ms=1)
+    result = provider.generate("hello")
+    assert result.output.startswith("Mock LLM slow response")
+
+
+def test_mock_slow_provider_times_out() -> None:
+    from app.ai_runtime.providers import MockSlowLLMProvider, ProviderTimeoutError
+    from app.provider_runtime.router import _run_with_timeout
+
+    provider = MockSlowLLMProvider(delay_ms=500)
+    with pytest.raises(ProviderTimeoutError):
+        _run_with_timeout(provider.generate, ("hello",), timeout_ms=50)
+
+
+def test_mock_flaky_provider_fails_first_then_succeeds() -> None:
+    from app.provider_runtime.router import call_provider_with_timeout_retry
+
+    response = call_provider_with_timeout_retry(
+        "hello", provider_name="mock_flaky", max_attempts=2,
+    )
+    assert response.output.startswith("Mock LLM flaky response")
+
+
+def test_retry_metadata_includes_attempts() -> None:
+    from app.provider_runtime.router import call_provider_with_timeout_retry
+
+    response = call_provider_with_timeout_retry(
+        "hello", provider_name="mock_flaky", max_attempts=2,
+    )
+    meta = response.metadata
+    assert meta["retried"] is True
+    assert meta["retry_count"] == 1
+    assert meta["max_attempts"] == 2
+    assert meta["final_attempt_status"] == "completed"
+    assert len(meta["attempts"]) == 2
+    assert meta["attempts"][0]["status"] == "failed"
+    assert meta["attempts"][0]["error_type"] == "ProviderRequestError"
+    assert meta["attempts"][1]["status"] == "completed"
+
+
+def test_no_retry_on_non_retryable_error() -> None:
+    from app.provider_runtime.router import call_provider_with_timeout_retry
+
+    with pytest.raises(ValueError):
+        call_provider_with_timeout_retry(
+            "hello", provider_name="unknown", max_attempts=2,
+        )
+
+
+def test_call_provider_timeout_ms_sets_usage() -> None:
+    from app.provider_runtime.router import call_provider_with_timeout_retry
+
+    response = call_provider_with_timeout_retry("hello", provider_name="mock")
+    assert "prompt_tokens" in response.usage
+    assert response.usage["prompt_tokens"] == 1
+

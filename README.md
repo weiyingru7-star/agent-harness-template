@@ -811,15 +811,26 @@ V0.7.3 为 workflow 增加结构化 validation result 和最小 eval 能力。
 
 - [Workflow Validation](docs/workflow-validation.md)
 
+## V0.7.x Workflow Contract 总结
+
+V0.7.0–V0.7.4 构建了 Workflow Contract 系统，共 4 个模块：
+
+| 模块 | 版本 | 说明 | 文档 |
+|---|---|---|---|
+| Workflow Contract | V0.7.0 | WorkflowNode / Edge / Condition / Validator | [Contract](docs/workflow-contract.md) |
+| Schema 增强 | V0.7.1 | description / inputs / outputs / condition types | [Contract](docs/workflow-contract.md) |
+| Built-in Nodes | V0.7.2 | 6 种 node types + contract validation | [Built-in Nodes](docs/workflow-built-in-nodes.md) |
+| Validation / Eval | V0.7.3 | error codes + structured result + eval runner | [Validation](docs/workflow-validation.md) |
+
 ## Current Scope 当前范围
 
-当前版本（V0.7.3）已完成：
+当前版本（V0.7.4）已完成：
 - **V0.2.x Agent Runtime**：Trace / Span、Checkpoint、Failure / Retry、Timeline API 与前端视图、Eval Trajectory runner
 - **V0.3.x Tool Runtime**：Tool Call Contract、Tool Args Schema、Tool Result Contract、Tool Timeout、Tool Retry、Tool Permission、Tool Sandbox Policy、文档收口
 - **V0.4.x RAG Runtime**：数据合同、切分策略、直接文本创建、检索评估、嵌入层、向量存储、检索模式、文档收口
 - **V0.5.x Provider Runtime**：ProviderRequest / Response / Error 合同、call_provider、fallback、smoke 响应合同对齐、streaming contract、error/fallback 路径、timeout/retry、config/env 管理、真实 OpenAI-compatible 适配
 - **V0.6.x Agent Template**：AgentTemplate contract、嵌套配置、Registry API、TemplateSummary、ValidateResult、Example Agent Template
-- **V0.7.x Workflow Contract**：Node/Edge/Condition schema、WorkflowValidator、校验规则、schema 增强、built-in node contracts、validation error codes、eval runner
+- **V0.7.x Workflow Contract**：Node/Edge/Condition schema、WorkflowValidator、校验规则、schema 增强、built-in node contracts、validation error codes、eval runner、文档收口
 
 模板核心保持业务无关，具体业务逻辑应放在 `modules/{module_name}/` 内由使用者自行创建。详见 [Project Boundaries](PROJECT_BOUNDARIES.md)。
 

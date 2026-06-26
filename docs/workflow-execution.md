@@ -1,4 +1,8 @@
-# Workflow Execution
+# Workflow Execution（Historical / Legacy）
+
+> ⚠️ **本文档为 V0.1.0 历史记录，已不反映当前状态。**
+> 当前 V0.7.x Workflow Contract 只声明和校验结构，不执行 workflow engine。
+> 见 [Workflow Contract](workflow-contract.md)、[Built-in Workflow Nodes](workflow-built-in-nodes.md)、[Workflow Validation](workflow-validation.md)。
 
 本文档说明 V0.1.0 的最小状态机能力，以及 V0.1.1 对 workflow 目录的定位。
 

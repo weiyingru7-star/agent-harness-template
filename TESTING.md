@@ -1964,3 +1964,56 @@ python3 scripts/check_business_terms.py
 ### 文档参考
 
 - [Workflow Validation](docs/workflow-validation.md)
+
+## V0.7.x Workflow Contract Summary V0.7.x Workflow 验收总结
+
+### Unified Acceptance Commands 统一验收命令
+
+```bash
+# 全量后端测试
+make test-api
+
+# Agent trajectory eval
+python3 scripts/run_evals.py
+
+# RAG retrieval eval
+python3 scripts/run_rag_evals.py
+
+# Workflow validation eval
+python3 scripts/run_workflow_evals.py
+
+# 业务词污染检查
+python3 scripts/check_business_terms.py
+
+# 前端构建
+npm run build --prefix apps/web
+```
+
+### Validate API
+
+```bash
+# 验证 generic_agent workflow 结构
+curl -s http://localhost:8005/api/agent-templates/generic_agent/validate | python3 -c "
+import json,sys;r=json.load(sys.stdin)
+print('valid:', r['valid'], 'errors:', len(r['errors']), 'warnings:', len(r['warnings']))
+"
+```
+
+### Eval Runner
+
+```bash
+python3 scripts/run_workflow_evals.py
+```
+
+预期输出：
+
+```
+PASS valid_workflow
+Summary: 1 passed, 0 failed, 1 total
+```
+
+### 文档参考
+
+- [Workflow Contract](docs/workflow-contract.md)
+- [Built-in Workflow Nodes](docs/workflow-built-in-nodes.md)
+- [Workflow Validation](docs/workflow-validation.md)

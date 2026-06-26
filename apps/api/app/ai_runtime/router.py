@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 
-from app.ai_runtime.providers import MockLLMProvider, OpenAICompatibleProvider
+from app.ai_runtime.providers import MockFailingLLMProvider, MockLLMProvider, OpenAICompatibleProvider
 from app.core.config import Settings
 
 
@@ -12,6 +12,8 @@ class ProviderRouter:
         provider_id = (requested_provider or self.settings.ai_provider or "mock").strip()
         if provider_id == "mock":
             return MockLLMProvider()
+        if provider_id == "mock_failing":
+            return MockFailingLLMProvider()
         if provider_id == "openai_compatible":
             return OpenAICompatibleProvider(
                 base_url=self.settings.ai_base_url,

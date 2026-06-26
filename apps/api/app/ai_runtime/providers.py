@@ -78,6 +78,25 @@ class MockLLMProvider:
             yield word + suffix
 
 
+class MockFailingLLMProvider:
+    id = "mock_failing"
+
+    def generate_text(self, prompt: str) -> ProviderResult:
+        raise ProviderRequestError("mock failing provider simulated failure")
+
+    def generate_json(self, prompt: str) -> ProviderResult:
+        raise ProviderRequestError("mock failing provider simulated failure")
+
+    def smoke_test(self) -> ProviderResult:
+        raise ProviderRequestError("mock failing provider simulated failure")
+
+    def generate(self, prompt: str, structured: bool = False) -> ProviderResult:
+        raise ProviderRequestError("mock failing provider simulated failure")
+
+    def stream_text(self, prompt: str) -> Iterator[str]:
+        raise ProviderRequestError("mock failing provider simulated failure")
+
+
 class OpenAICompatibleProvider:
     id = "openai_compatible"
 

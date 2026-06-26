@@ -147,3 +147,62 @@ def test_generate_stream_index_continuous() -> None:
 
     for i, event in enumerate(events):
         assert event.index == i
+
+
+def test_mock_failing_provider_raises() -> None:
+    from app.ai_runtime.providers import MockFailingLLMProvider, ProviderRequestError
+
+    provider = MockFailingLLMProvider()
+    with pytest.raises(ProviderRequestError):
+        provider.generate("hello")
+
+
+def test_provider_error_fields() -> None:
+    err = ProviderError(
+        error_type="ProviderExecutionError",
+        error_message="something broke",
+        provider="mock_failing",
+        model="mock",
+        retryable=True,
+    )
+    assert err.error_type == "ProviderExecutionError"
+    assert err.retryable is True
+    assert err.model == "mock"
+
+
+def test_smoke_fallback_unknown_primary() -> None:
+    from fastapi.testclient import TestClient
+    from app.main import app
+
+    client = TestClient(app)
+    resp = client.post(
+        "/api/llm/smoke",
+        json={"prompt": "hello", "provider": "unknown", "fallback": "mock"},
+    )
+    assert resp.status_code == 200
+    data = resp.json()
+    assert data["provider"] == "mock"
+    assert data["output"].startswith("Mock LLM response")
+    assert data["metadata"]["fallback_used"] is True
+    assert data["metadata"]["fallback_from"] == "unknown"
+    assert data["metadata"]["primary_error_type"] == "ValueError"
+
+
+def test_fallback_metadata_has_all_fields() -> None:
+    from fastapi.testclient import TestClient
+    from app.main import app
+
+    client = TestClient(app)
+    resp = client.post(
+        "/api/llm/smoke",
+        json={"prompt": "hello", "provider": "mock_failing", "fallback": "mock"},
+    )
+    assert resp.status_code == 200
+    meta = resp.json()["metadata"]
+    assert meta["fallback_used"] is True
+    assert meta["fallback_from"] == "mock_failing"
+    assert meta["fallback_to"] == "mock"
+    assert "fallback_reason" in meta
+    assert meta["primary_error_type"] == "ProviderRequestError"
+    assert "fallback_used" in meta
+

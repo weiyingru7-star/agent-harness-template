@@ -152,3 +152,45 @@ def _parse_stream_response(test_client, body: dict) -> list[dict]:
         if line.startswith("data: "):
             result.append(json.loads(line[6:]))
     return result
+
+
+def test_mock_failing_smoke_returns_400() -> None:
+    response = client.post(
+        "/api/llm/smoke",
+        json={"prompt": "hello", "provider": "mock_failing"},
+    )
+    assert response.status_code == 400
+
+
+def test_smoke_fallback_success() -> None:
+    response = client.post(
+        "/api/llm/smoke",
+        json={"prompt": "hello", "provider": "mock_failing", "fallback": "mock"},
+    )
+    assert response.status_code == 200
+    data = response.json()
+    assert data["provider"] == "mock"
+    assert data["output"].startswith("Mock LLM response")
+    assert data["metadata"]["fallback_used"] is True
+    assert data["metadata"]["fallback_from"] == "mock_failing"
+    assert data["metadata"]["primary_error_type"] == "ProviderRequestError"
+
+
+def test_smoke_no_fallback_unchanged() -> None:
+    response = client.post("/api/llm/smoke", json={"prompt": "hello"})
+    assert response.status_code == 200
+    data = response.json()
+    assert data["provider"] == "mock"
+    assert "fallback_used" not in data["metadata"]
+
+
+def test_smoke_fallback_unknown_primary() -> None:
+    response = client.post(
+        "/api/llm/smoke",
+        json={"prompt": "hello", "provider": "unknown", "fallback": "mock"},
+    )
+    assert response.status_code == 200
+    data = response.json()
+    assert data["provider"] == "mock"
+    assert data["metadata"]["fallback_from"] == "unknown"
+    assert data["metadata"]["primary_error_type"] == "ValueError"

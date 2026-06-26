@@ -1536,3 +1536,41 @@ python3 scripts/check_business_terms.py
 
 - [Provider Runtime](docs/provider-runtime.md)
 - [Provider Runtime Contracts](docs/provider-runtime-contracts.md)
+
+## V0.5.3 Provider Error / Fallback Acceptance V0.5.3 错误与回退验收
+
+### Fallback smoke
+
+```bash
+# fallback 成功路径
+curl -s -X POST http://localhost:8005/api/llm/smoke \
+  -H 'Content-Type: application/json' \
+  -d '{"prompt":"hello","provider":"mock_failing","fallback":"mock"}' \
+  | python3 -c "
+import json,sys;r=json.load(sys.stdin)
+print('provider:',r['provider'],'fallback:',r['metadata'].get('fallback_used'),'error:',r['metadata'].get('primary_error_type'))
+"
+
+# 无 fallback 时 mock_failing 返回 400
+curl -s -w '\nHTTP %{http_code}' -X POST http://localhost:8005/api/llm/smoke \
+  -H 'Content-Type: application/json' \
+  -d '{"prompt":"hello","provider":"mock_failing"}' | tail -1
+```
+
+### Compatibility 兼容性
+
+不传 `fallback` 时行为与 V0.5.2 一致。
+
+### Full Regression 完整回归
+
+```bash
+make test-api
+python3 scripts/run_evals.py
+python3 scripts/run_rag_evals.py
+npm run build --prefix apps/web
+python3 scripts/check_business_terms.py
+```
+
+### 文档参考
+
+- [Provider Errors](docs/provider-errors.md)

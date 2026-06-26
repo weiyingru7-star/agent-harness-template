@@ -41,9 +41,11 @@ def call_provider_with_fallback(
         return call_provider(prompt, primary, settings)
     except Exception as exc:
         meta: dict[str, Any] = {
+            "fallback_used": True,
             "fallback_from": primary,
             "fallback_to": fallback,
             "fallback_reason": f"{type(exc).__name__}: {exc}",
+            "primary_error_type": type(exc).__name__,
         }
         response = call_provider(prompt, fallback, settings)
         response.metadata.update(meta)

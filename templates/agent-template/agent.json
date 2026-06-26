@@ -19,12 +19,17 @@
     "retrieval_mode": "keyword"
   },
   "workflow": {
-    "entrypoint": "modules.demo_agent.agent:execute",
-    "nodes": ["input_node", "provider_node", "tool_node", "final_node"],
+    "entrypoint": "input_node",
+    "nodes": [
+      {"id": "input_node", "type": "input", "config": {}, "inputs": [], "outputs": ["payload"]},
+      {"id": "provider_node", "type": "provider", "config": {"provider_name": "mock", "model": "mock"}, "inputs": ["prompt"], "outputs": ["output", "usage"]},
+      {"id": "tool_node", "type": "tool", "config": {"tool_name": "mock_echo"}, "inputs": ["input"], "outputs": ["result", "status"]},
+      {"id": "final_node", "type": "final", "config": {}, "inputs": ["input"], "outputs": ["final_output"]}
+    ],
     "edges": [
-      ["input_node", "provider_node"],
-      ["provider_node", "tool_node"],
-      ["tool_node", "final_node"]
+      {"from": "input_node", "to": "provider_node"},
+      {"from": "provider_node", "to": "tool_node"},
+      {"from": "tool_node", "to": "final_node"}
     ],
     "terminal_nodes": ["final_node"]
   },

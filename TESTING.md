@@ -1889,3 +1889,30 @@ python3 scripts/run_rag_evals.py
 npm run build --prefix apps/web
 python3 scripts/check_business_terms.py
 ```
+
+## V0.7.2 Built-in Workflow Nodes Acceptance V0.7.2 内置工作流节点验收
+
+### Contract 校验
+
+`generic_agent` 的 workflow 节点已更新为 dict 格式，展示完整 contract 用法。
+
+```bash
+curl -s http://localhost:8005/api/agent-templates/generic_agent/validate | python3 -c "
+import json,sys;r=json.load(sys.stdin)
+print('valid:', r['valid'], 'errors:', len(r['errors']), 'warnings:', len(r['warnings']))
+"
+```
+
+### Full Regression 完整回归
+
+```bash
+make test-api
+python3 scripts/run_evals.py
+python3 scripts/run_rag_evals.py
+npm run build --prefix apps/web
+python3 scripts/check_business_terms.py
+```
+
+### 文档参考
+
+- [Built-in Workflow Nodes](docs/workflow-built-in-nodes.md)

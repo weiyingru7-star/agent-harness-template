@@ -11,13 +11,41 @@ _WORKFLOW_NODE_TYPES = frozenset({"input", "provider", "tool", "rag", "decision"
 _WORKFLOW_CONDITION_TYPES = frozenset({"always", "expression", "route", "on_success", "on_failure"})
 _RAG_RETRIEVAL_MODES = frozenset({"keyword", "vector", "hybrid"})
 
+BUILTIN_NODE_CONTRACTS: dict[str, dict[str, Any]] = {
+    "input": {
+        "allowed_config_keys": {"input_schema", "default"},
+        "expected_inputs": [],
+        "expected_outputs": ["payload"],
+    },
+    "provider": {
+        "allowed_config_keys": {"provider_name", "model", "prompt_template", "temperature"},
+        "expected_inputs": ["prompt"],
+        "expected_outputs": ["output", "usage"],
+    },
+    "tool": {
+        "allowed_config_keys": {"tool_name", "args_template"},
+        "expected_inputs": ["input"],
+        "expected_outputs": ["result", "status"],
+    },
+    "rag": {
+        "allowed_config_keys": {"collection", "retrieval_mode", "query_template", "limit"},
+        "expected_inputs": ["query"],
+        "expected_outputs": ["results", "citations"],
+    },
+    "decision": {
+        "allowed_config_keys": {"routes", "default_route"},
+        "expected_inputs": ["input"],
+        "expected_outputs": ["selected_route"],
+    },
+    "final": {
+        "allowed_config_keys": {"output_template"},
+        "expected_inputs": ["input"],
+        "expected_outputs": ["final_output"],
+    },
+}
+
 _NODE_CONFIG_ALLOWED_KEYS: dict[str, set[str]] = {
-    "input": {"input_schema", "default"},
-    "provider": {"provider_name", "model", "prompt_template"},
-    "tool": {"tool_name", "args_template"},
-    "rag": {"collection", "retrieval_mode", "query_template"},
-    "decision": {"routes", "default_route"},
-    "final": {"output_template"},
+    k: v["allowed_config_keys"] for k, v in BUILTIN_NODE_CONTRACTS.items()
 }
 
 
@@ -105,41 +133,46 @@ class WorkflowValidator:
         for node in node_dicts:
             nid = node.get("id", "")
             ntype = node.get("type", "")
-            config = node.get("config", {})
+            node_cfg = node.get("config", {})
             allowed = _NODE_CONFIG_ALLOWED_KEYS.get(ntype)
             if allowed is not None:
-                for key in config:
+                for key in node_cfg:
                     if key not in allowed:
                         warnings.append(f"node '{nid}' (type '{ntype}'): unrecognized config key '{key}'")
 
-        # node type-specific validation
+        # node type-specific validation + contract validation
         for node in node_dicts:
             nid = node.get("id", "")
             ntype = node.get("type", "")
-            config = node.get("config", {})
+            node_cfg = node.get("config", {})
 
             if ntype == "rag":
-                mode = config.get("retrieval_mode")
+                mode = node_cfg.get("retrieval_mode")
                 if mode and mode not in _RAG_RETRIEVAL_MODES:
                     warnings.append(f"node '{nid}': rag retrieval_mode '{mode}' not in {sorted(_RAG_RETRIEVAL_MODES)}")
 
             if ntype == "tool":
-                tool_name = config.get("tool_name")
+                tool_name = node_cfg.get("tool_name")
                 if tool_name is not None and not isinstance(tool_name, str):
                     warnings.append(f"node '{nid}': tool_name should be a string")
 
             if ntype == "provider":
-                pn = config.get("provider_name")
+                pn = node_cfg.get("provider_name")
                 if pn is not None and not isinstance(pn, str):
                     warnings.append(f"node '{nid}': provider_name should be a string")
 
             if ntype == "decision":
-                routes = config.get("routes", [])
+                routes = node_cfg.get("routes", [])
                 if isinstance(routes, list):
                     for route in routes:
                         route_to = route if isinstance(route, str) else (route.get("to") if isinstance(route, dict) else None)
                         if route_to and route_to not in node_ids:
                             warnings.append(f"node '{nid}': decision route to '{route_to}' not found in nodes")
+
+        # built-in contract validation (expected inputs/outputs)
+        for node in node_dicts:
+            contract_warnings = WorkflowValidator.validate_contract(node)
+            warnings.extend(contract_warnings)
 
         # edge validation
         for edge in config.edges:
@@ -169,3 +202,18 @@ class WorkflowValidator:
                     errors.append(f"terminal_nodes includes unknown node '{tn}'")
 
         return WorkflowValidationResult(valid=len(errors) == 0, errors=errors, warnings=warnings)
+
+    @staticmethod
+    def validate_contract(node: dict) -> list[str]:
+        """Validate a node against its built-in contract. Returns warnings."""
+        warnings: list[str] = []
+        nid = node.get("id", "")
+        ntype = node.get("type", "")
+        contract = BUILTIN_NODE_CONTRACTS.get(ntype)
+        if contract is None:
+            return warnings
+        outputs = node.get("outputs", [])
+        for exp_out in contract["expected_outputs"]:
+            if exp_out not in outputs:
+                warnings.append(f"node '{nid}' (type '{ntype}'): expected output '{exp_out}' not declared")
+        return warnings

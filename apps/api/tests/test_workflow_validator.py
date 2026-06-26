@@ -111,3 +111,66 @@ def test_condition_on_success() -> None:
 def test_condition_on_failure() -> None:
     c = WorkflowCondition(type="on_failure", expected_value="error")
     assert c.expected_value == "error"
+
+
+def test_input_node_contract_valid() -> None:
+    """input node declaring payload output should pass contract."""
+    from app.registries.workflow_validator import WorkflowValidator
+
+    node = {"id": "n1", "type": "input", "outputs": ["payload"]}
+    warnings = WorkflowValidator.validate_contract(node)
+    assert warnings == []
+
+
+def test_provider_node_contract_valid() -> None:
+    """provider node declaring output/usage should pass contract."""
+    from app.registries.workflow_validator import WorkflowValidator
+
+    node = {"id": "n1", "type": "provider", "outputs": ["output", "usage"]}
+    warnings = WorkflowValidator.validate_contract(node)
+    assert warnings == []
+
+
+def test_rag_node_contract_valid() -> None:
+    """rag node declaring results/citations should pass contract."""
+    from app.registries.workflow_validator import WorkflowValidator
+
+    node = {"id": "n1", "type": "rag", "outputs": ["results", "citations"]}
+    warnings = WorkflowValidator.validate_contract(node)
+    assert warnings == []
+
+
+def test_tool_node_contract_valid() -> None:
+    """tool node declaring result/status should pass contract."""
+    from app.registries.workflow_validator import WorkflowValidator
+
+    node = {"id": "n1", "type": "tool", "outputs": ["result", "status"]}
+    warnings = WorkflowValidator.validate_contract(node)
+    assert warnings == []
+
+
+def test_decision_node_contract_valid() -> None:
+    """decision node declaring selected_route should pass contract."""
+    from app.registries.workflow_validator import WorkflowValidator
+
+    node = {"id": "n1", "type": "decision", "outputs": ["selected_route"]}
+    warnings = WorkflowValidator.validate_contract(node)
+    assert warnings == []
+
+
+def test_final_node_contract_valid() -> None:
+    """final node declaring final_output should pass contract."""
+    from app.registries.workflow_validator import WorkflowValidator
+
+    node = {"id": "n1", "type": "final", "outputs": ["final_output"]}
+    warnings = WorkflowValidator.validate_contract(node)
+    assert warnings == []
+
+
+def test_missing_expected_output_warns() -> None:
+    """provider node missing 'usage' output should warn."""
+    from app.registries.workflow_validator import WorkflowValidator
+
+    node = {"id": "n1", "type": "provider", "outputs": ["output"]}
+    warnings = WorkflowValidator.validate_contract(node)
+    assert any("usage" in w for w in warnings)

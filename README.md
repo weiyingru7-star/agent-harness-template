@@ -777,15 +777,34 @@ V0.7.1 增强 Workflow Contract 的 Node / Edge / Condition schema。
 
 - [Workflow Contract](docs/workflow-contract.md)
 
+## V0.7.2 Built-in Workflow Nodes / 内置工作流节点合同
+
+V0.7.2 定义 6 种业务无关的 built-in workflow node contracts。
+
+| 类型 | config key | 预期输出 |
+|---|---|---|
+| `input` | input_schema, default | payload |
+| `provider` | provider_name, model, prompt_template, temperature | output, usage |
+| `tool` | tool_name, args_template | result, status |
+| `rag` | collection, retrieval_mode, query_template, limit | results, citations |
+| `decision` | routes, default_route | selected_route |
+| `final` | output_template | final_output |
+
+`generic_agent` workflow 已更新为 dict 格式节点，展示完整 contract 用法。
+
+更多说明：
+
+- [Built-in Workflow Nodes](docs/workflow-built-in-nodes.md)
+
 ## Current Scope 当前范围
 
-当前版本（V0.7.1）已完成：
+当前版本（V0.7.2）已完成：
 - **V0.2.x Agent Runtime**：Trace / Span、Checkpoint、Failure / Retry、Timeline API 与前端视图、Eval Trajectory runner
 - **V0.3.x Tool Runtime**：Tool Call Contract、Tool Args Schema、Tool Result Contract、Tool Timeout、Tool Retry、Tool Permission、Tool Sandbox Policy、文档收口
 - **V0.4.x RAG Runtime**：数据合同、切分策略、直接文本创建、检索评估、嵌入层、向量存储、检索模式、文档收口
 - **V0.5.x Provider Runtime**：ProviderRequest / Response / Error 合同、call_provider、fallback、smoke 响应合同对齐、streaming contract、error/fallback 路径、timeout/retry、config/env 管理、真实 OpenAI-compatible 适配
 - **V0.6.x Agent Template**：AgentTemplate contract、嵌套配置、Registry API、TemplateSummary、ValidateResult、Example Agent Template
-- **V0.7.x Workflow Contract**：Node/Edge/Condition schema、WorkflowValidator、校验规则、schema 增强
+- **V0.7.x Workflow Contract**：Node/Edge/Condition schema、WorkflowValidator、校验规则、schema 增强、built-in node contracts
 
 模板核心保持业务无关，具体业务逻辑应放在 `modules/{module_name}/` 内由使用者自行创建。详见 [Project Boundaries](PROJECT_BOUNDARIES.md)。
 

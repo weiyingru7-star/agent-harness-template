@@ -24,8 +24,8 @@ class RagConfig(BaseModel):
 
 class WorkflowConfig(BaseModel):
     entrypoint: str | None = None
-    nodes: list[str] = Field(default_factory=list)
-    edges: list[list[str]] = Field(default_factory=list)
+    nodes: list[Any] = Field(default_factory=list)
+    edges: list[Any] = Field(default_factory=list)
     terminal_nodes: list[str] | None = None
 
 

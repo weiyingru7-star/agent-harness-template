@@ -1216,6 +1216,51 @@ git diff --check
 
 - [Policy Guardrail Contract](docs/policy-guardrail-contract.md)
 
+## V0.8.9 Docs Consolidation Acceptance V0.8.9 文档收口验收
+
+V0.8.9 只做文档收口，不修改任何代码，不改测试，不改 runtime。
+
+### V0.8 Supported / Not Supported
+
+当前支持：
+- Policy / Guardrail / Rule / Condition 合同及 JSON Schema
+- PolicyValidator 结构校验及 22 个 eval case
+- GuardrailDecision / DecisionResult / EvaluationContext 合同
+- PolicyDryRunEvaluator（always / match / route / expression 安全拒绝）
+- Input guardrail dry-run hook（接入 RunStore）
+- Tool guardrail dry-run hook（接入 ToolExecutionPipeline）
+- Provider / RAG guardrail dry-run helpers（helper-level）
+
+当前不支持：
+- Enforcement — 不拦截请求
+- Blocking — block 仅作为 decision 记录
+- Human review routing
+- Modifying output
+- Changing run status / tool / provider / RAG results
+
+### Unified Acceptance Commands 统一验收命令
+
+```bash
+# 全量后端测试（当前预期 324 passed）
+make test-api
+
+# 所有 eval runner
+python3 scripts/run_evals.py
+python3 scripts/run_rag_evals.py
+python3 scripts/run_workflow_evals.py
+python3 scripts/run_policy_evals.py
+
+# 业务词污染检查和前端构建
+python3 scripts/check_business_terms.py
+npm run build --prefix apps/web
+git diff --check
+```
+
+### 文档参考
+
+- [Policy Guardrail Contract](docs/policy-guardrail-contract.md)
+- [Guardrail Runtime Integration Plan](docs/guardrail-runtime-integration-plan.md)
+
 ## Common Errors 常见错误排查
 
 ### `python: command not found`

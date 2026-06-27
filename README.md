@@ -824,7 +824,7 @@ V0.7.0–V0.7.4 构建了 Workflow Contract 系统，共 4 个模块：
 
 ## Current Scope 当前范围
 
-当前版本（V0.8.8）已完成：
+当前版本（V0.8.9）已完成：
 - **V0.2.x Agent Runtime**：Trace / Span、Checkpoint、Failure / Retry、Timeline API 与前端视图、Eval Trajectory runner
 - **V0.3.x Tool Runtime**：Tool Call Contract、Tool Args Schema、Tool Result Contract、Tool Timeout、Tool Retry、Tool Permission、Tool Sandbox Policy、文档收口
 - **V0.4.x RAG Runtime**：数据合同、切分策略、直接文本创建、检索评估、嵌入层、向量存储、检索模式、文档收口
@@ -842,15 +842,32 @@ V0.7.0–V0.7.4 构建了 Workflow Contract 系统，共 4 个模块：
 - **V0.8.6 Input Guardrail Dry-Run Hook**：新增 `run_input_guardrail()` 在 `RunStore._create_run` 中插入 input dry-run hook。构造 input-scope EvaluationContext，调用 PolicyDryRunEvaluator，记录 `guardrail.dry_run.completed` event。纯 dry-run，不拦截请求，不改变 API response。详见 [Policy Guardrail Contract](docs/policy-guardrail-contract.md)。
 - **V0.8.7 Tool Guardrail Dry-Run Hook**：`run_tool_guardrail()` 在 `ToolExecutionPipeline._execute_tool` 中插入 tool dry-run hook。构造 tool-scope EvaluationContext，记录 `guardrail.dry_run.completed` event。纯 dry-run，不阻止 tool 执行，不改变 ToolCall contract。详见 [Policy Guardrail Contract](docs/policy-guardrail-contract.md)。
 - **V0.8.8 Provider / RAG Guardrail Dry-Run Helpers**：`run_provider_guardrail()` / `run_rag_guardrail()` dry-run helper 已实现。返回 DecisionResult dict。当前不做 runtime wiring——provider_runtime / rag runtime 没有 run_id / trace_id / event_repository 上下文。纯 helper，不接入运行链路。详见 [Policy Guardrail Contract](docs/policy-guardrail-contract.md)。
+- **V0.8.9 Docs Consolidation**：V0.8 全阶段文档收口。整理 README / policy-guardrail-contract.md / integration plan / TESTING，补充 support/not-supported 说明。不修改代码。
 
 模板核心保持业务无关，具体业务逻辑应放在 `modules/{module_name}/` 内由使用者自行创建。详见 [Project Boundaries](PROJECT_BOUNDARIES.md)。
 
-下一阶段规划：V0.8.9 Guardrail Runtime Docs Consolidation。
+下一阶段规划：V0.9.x CLI / Scaffold。
 
-> 当前阶段 V0.8.8 为 Provider / RAG Guardrail Dry-Run Helpers。provider/rag
-> runtime 当前没有 run_id / trace_id / event_repository 上下文，因此只做
-> helper-level 实现和测试。未来 runtime 调用链携带 run context 时再接入
-> event recording。
+### V0.8 能力总结
+
+当前支持：
+- Policy / Guardrail / Rule / Condition 合同及 JSON Schema
+- PolicyValidator 结构校验及 validation eval runner（22 eval cases）
+- GuardrailDecision / DecisionResult / EvaluationContext 合同
+- PolicyDryRunEvaluator（always / match / route / expression 安全拒绝）
+- Input guardrail dry-run hook（接入 RunStore）
+- Tool guardrail dry-run hook（接入 ToolExecutionPipeline）
+- Provider / RAG guardrail dry-run helpers（helper-level，runtime wiring deferred）
+
+当前不支持：
+- **Enforcement** — 不拦截请求，不阻止运行
+- **Blocking** — block action 仅作为 decision 记录，不影响实际执行
+- **Human review routing** — require_review 仅记录，不被路由
+- **Modifying output** — 不修改 tool / provider / RAG result
+- **Changing run status** — dry-run hook 不改变 run.status
+
+> 当前阶段 V0.8.9 为 Policy / Guardrail Runtime Docs Consolidation。所有 V0.8
+> Policy / Guardrail 功能和文档已收口。下一阶段（V0.9.x）将开始 CLI / Scaffold 设计。
 
 ### Provider Layer 分层说明
 

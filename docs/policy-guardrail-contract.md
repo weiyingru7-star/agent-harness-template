@@ -551,6 +551,36 @@ guardrail = Guardrail(
 )
 ```
 
+## V0.8 Summary V0.8 总结
+
+### Completed（V0.8.0–V0.8.8）
+
+| 版本 | 内容 |
+|---|---|
+| V0.8.0 | Policy / Guardrail / Rule / Condition 合同、PolicyValidator、JSON Schema、AgentTemplate 集成 |
+| V0.8.1 | Policy validation eval runner（22 eval cases） |
+| V0.8.2 | GuardrailDecision / DecisionResult 合同及结构校验 |
+| V0.8.3 | EvaluationContext / EvaluationSubject 合同及结构校验 |
+| V0.8.4 | PolicyDryRunEvaluator（always / match / route / expression 安全拒绝） |
+| V0.8.5 | Guardrail Runtime Integration Plan 文档 |
+| V0.8.6 | Input guardrail dry-run hook（接入 RunStore） |
+| V0.8.7 | Tool guardrail dry-run hook（接入 ToolExecutionPipeline） |
+| V0.8.8 | Provider / RAG guardrail dry-run helpers（helper-level，runtime wiring deferred） |
+
+### Not Supported（V0.8 均不实现）
+
+- Enforcement — 不拦截请求，不阻止运行
+- Blocking — block action 仅作为 decision 记录
+- Human review routing — require_review 仅记录
+- Modifying output — 不修改 tool / provider / RAG result
+- Changing run status — dry-run hook 不改变 run.status
+
+### 设计原则
+
+- 所有功能**业务无关**，不绑定任何行业或领域
+- 所有 V0.8 功能是 **dry-run only**，不改变系统行为
+- **Enforcement** 需要的条件：expression 引擎、request interception、human review 集成，均在 V0.8 之后实现
+
 ## 相关文档
 
 - [Agent YAML Config](agent-yaml-config.md)

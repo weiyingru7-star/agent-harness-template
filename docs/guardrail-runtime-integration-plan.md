@@ -1,8 +1,7 @@
 # Guardrail Runtime Integration Plan 护栏运行时集成计划
 
 本文档规划 Policy / Guardrail Runtime 的集成路径，明确从 contract 到
-dry-run 再到 future enforcement 的各个阶段。当前 V0.8.6 已完成 input
-guardrail dry-run hook，后续将继续实现 tool / provider / RAG 等 hook。
+dry-run 再到 future enforcement 的各个阶段。当前 V0.8.9 已完成 V0.8 全阶段文档收口。
 **不修改任何运行时模块**。
 
 ## 1. Current State 当前状态
@@ -20,6 +19,7 @@ V0.8.0–V0.8.4 已完成所有基础合同和 dry-run 能力：
 | **V0.8.6** | **Input Guardrail Dry-Run Hook——在 RunStore._create_run 中插入 input dry-run helper** | ✅ 已完成 |
 | **V0.8.7** | **Tool Guardrail Dry-Run Hook——在 ToolExecutionPipeline._execute_tool 中插入 tool dry-run helper** | ✅ 已完成 |
 | **V0.8.8** | **Provider / RAG Guardrail Dry-Run Helpers——helper 已实现，返回 DecisionResult dict。当前不做 runtime wiring（provider/rag runtime 没有 run_id/trace_id/event_repository）** | ✅ helper 已完成，runtime wiring deferred |
+| **V0.8.9** | **Docs Consolidation——V0.8 全阶段文档收口，不修改代码** | 📄 已完成 |
 
 **当前不存在的（明确未来实现）**：
 

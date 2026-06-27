@@ -99,3 +99,22 @@ class DecisionResult(BaseModel):
     warnings: list[str] = Field(default_factory=list)
     error_items: list[PolicyValidationErrorItem] = Field(default_factory=list)
     metadata: dict = Field(default_factory=dict)
+
+
+# ── Evaluation Context (V0.8.3) ─────────────────────────────────────
+
+
+class EvaluationSubject(BaseModel):
+    type: str
+    id: str | None = None
+    content: str | None = None
+    payload: dict | None = None
+    metadata: dict = Field(default_factory=dict)
+
+
+class EvaluationContext(BaseModel):
+    context_id: str
+    scope: str  # from POLICY_SCOPES
+    subject: EvaluationSubject
+    attributes: dict = Field(default_factory=dict)
+    metadata: dict = Field(default_factory=dict)

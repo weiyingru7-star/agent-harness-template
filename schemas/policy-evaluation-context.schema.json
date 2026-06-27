@@ -1,0 +1,55 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "PolicyEvaluationContext",
+  "description": "Contract for guardrail/policy evaluation context. V0.8.3 — structure only, no execution.",
+  "type": "object",
+  "required": ["context_id", "scope", "subject"],
+  "properties": {
+    "context_id": {
+      "type": "string",
+      "description": "Unique context identifier."
+    },
+    "scope": {
+      "type": "string",
+      "enum": ["input", "output", "tool", "rag", "provider", "workflow"],
+      "description": "The evaluation scope."
+    },
+    "subject": {
+      "type": "object",
+      "required": ["type"],
+      "description": "The subject being evaluated.",
+      "properties": {
+        "type": {
+          "type": "string",
+          "description": "Subject type (e.g. user_message, tool_call, rag_query)."
+        },
+        "id": {
+          "type": "string",
+          "description": "Optional subject identifier."
+        },
+        "content": {
+          "type": "string",
+          "description": "Optional textual content."
+        },
+        "payload": {
+          "type": "object",
+          "description": "Optional structured payload."
+        },
+        "metadata": {
+          "type": "object",
+          "description": "Optional subject metadata."
+        }
+      },
+      "additionalProperties": false
+    },
+    "attributes": {
+      "type": "object",
+      "description": "Arbitrary structured attributes for context."
+    },
+    "metadata": {
+      "type": "object",
+      "description": "Arbitrary context metadata."
+    }
+  },
+  "additionalProperties": false
+}

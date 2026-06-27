@@ -1,0 +1,21 @@
+{
+  "type": "context_contract",
+  "name": "valid_input_context",
+  "description": "A valid evaluation context for input scope.",
+  "evaluation_context": {
+    "context_id": "ctx_001",
+    "scope": "input",
+    "subject": {
+      "type": "user_message",
+      "id": "msg_123",
+      "content": "Hello, how can you help me?",
+      "payload": {"length": 28, "language": "en"}
+    },
+    "attributes": {
+      "channel": "web",
+      "session_id": "sess_abc"
+    }
+  },
+  "expected_valid": true,
+  "expected_error_codes": []
+}

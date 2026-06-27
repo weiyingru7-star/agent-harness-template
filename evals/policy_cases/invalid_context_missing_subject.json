@@ -1,0 +1,11 @@
+{
+  "type": "context_contract",
+  "name": "invalid_context_missing_subject",
+  "description": "Evaluation context missing the required subject field.",
+  "evaluation_context": {
+    "context_id": "ctx_no_sub",
+    "scope": "input"
+  },
+  "expected_valid": false,
+  "expected_error_codes": ["CONTEXT_SUBJECT_MISSING"]
+}

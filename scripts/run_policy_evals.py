@@ -40,6 +40,9 @@ def run_case(case: dict[str, Any]) -> PolicyEvalResult:
     elif case_type == "decision_result":
         result_obj = case.get("decision_result", {})
         p_result = PolicyValidator.validate_decision_result(result_obj)
+    elif case_type == "context_contract":
+        ctx = case.get("evaluation_context", {})
+        p_result = PolicyValidator.validate_evaluation_context(ctx)
     else:
         # policy_validation (default) — validate policies + guardrails
         policies = case.get("policies", [])

@@ -174,6 +174,12 @@ class PolicyValidationResult(BaseModel):
 | DECISION_MATCHED_RULES_INVALID | error | matched_rules 不是 list |
 | DECISION_RESULT_ACTION_INVALID | error | DecisionResult final_action 不在允许列表中 |
 | DECISION_RESULT_DECISIONS_INVALID | error | DecisionResult decisions 不是 list |
+| CONTEXT_ID_MISSING | error | evaluation context 缺少 context_id |
+| CONTEXT_SCOPE_INVALID | error | scope 不在允许列表中 |
+| CONTEXT_SUBJECT_MISSING | error | subject 不存在 |
+| CONTEXT_SUBJECT_INVALID | error | subject 不是 object |
+| CONTEXT_SUBJECT_TYPE_MISSING | error | subject.type 不存在 |
+| CONTEXT_ATTRIBUTES_INVALID | error | attributes 不是 object |
 
 ## Agent Template 集成
 
@@ -221,7 +227,15 @@ AgentTemplateRegistry.validate_template() 现在也校验 policies 和 guardrail
 - ✅ `schemas/guardrail-decision.schema.json`
 - ✅ run_policy_evals.py 支持 `decision_contract` 和 `decision_result` 类型
 
-### V0.8.0 只做
+### V0.8.3 增加
+
+- ✅ EvaluationContext / EvaluationSubject 数据合同
+- ✅ Context 结构校验（`validate_evaluation_context`）
+- ✅ `schemas/policy-evaluation-context.schema.json`
+- ✅ 5 个 context contract eval case
+- ✅ run_policy_evals.py 支持 `context_contract` 类型
+
+### V0.8.0 不实现（V0.8.1–V0.8.3 同样不实现）
 
 - ❌ Condition 表达式执行
 - ❌ 真实请求拦截
@@ -230,14 +244,6 @@ AgentTemplateRegistry.validate_template() 现在也校验 policies 和 guardrail
 - ❌ 新 API endpoint
 - ❌ RunStore / Tool / RAG / Provider / Workflow 改动
 - ❌ 业务规则
-
-### V0.8.0 只做
-
-- ✅ Policy / Guardrail / Rule / Condition 数据合同
-- ✅ JSON Schema
-- ✅ PolicyValidator（结构校验）
-- ✅ AgentTemplate 集成（可选字段，不改变已有行为）
-- ✅ 文档和测试
 
 ## Decision Contract 决策合同
 
@@ -291,6 +297,44 @@ result = PolicyValidator.validate_decision_result(result_dict)
 
 **不执行**：不根据 input 执行 policy，不生成决策，不调用任何外部系统。
 
+## Evaluation Context Contract 评估上下文合同
+
+V0.8.3 新增 EvaluationContext 合同，用于描述 policy / guardrail 评估时可读取的
+上下文结构。未来 dry-run 或 runtime evaluation 可以使用该合同传递上下文信息。
+
+### EvaluationContext 评估上下文
+
+```python
+class EvaluationSubject(BaseModel):
+    type: str                       # 主体类型（必填）
+    id: str | None = None           # 可选主体标识
+    content: str | None = None      # 可选文本内容
+    payload: dict | None = None     # 可选结构化负载
+    metadata: dict = {}
+
+class EvaluationContext(BaseModel):
+    context_id: str                 # 上下文标识（必填）
+    scope: str                      # 作用范围（必填，与 POLICY_SCOPES 一致）
+    subject: EvaluationSubject      # 评估主体（必填）
+    attributes: dict = {}           # 中性结构化属性
+    metadata: dict = {}
+```
+
+### Evaluation Context 校验
+
+```python
+result = PolicyValidator.validate_evaluation_context(context_dict)
+```
+
+校验规则：
+- `context_id` 必填
+- `scope` 必填，必须在枚举列表中
+- `subject` 必填，必须是 object
+- `subject.type` 必填
+- `attributes`（如果存在）必须是 object
+
+**不执行**：不根据 context 执行 policy，不生成决策，不调用任何外部系统。
+
 ## Eval Runner 评估运行器
 
 V0.8.1 新增独立的 policy validation eval runner：
@@ -301,7 +345,7 @@ python3 scripts/run_policy_evals.py
 
 ### Eval Cases
 
-11 个 eval case 位于 `evals/policy_cases/`：
+16 个 eval case 位于 `evals/policy_cases/`：
 
 | Case | Type | 预期 valid | Error / Warning Codes |
 |---|---|---|---|
@@ -316,6 +360,11 @@ python3 scripts/run_policy_evals.py
 | invalid_decision_action | decision_contract | false | DECISION_ACTION_INVALID |
 | invalid_decision_severity | decision_contract | false | DECISION_SEVERITY_INVALID |
 | invalid_decision_missing_action | decision_contract | false | DECISION_ACTION_MISSING |
+| valid_input_context | context_contract | true | — |
+| valid_tool_context | context_contract | true | — |
+| invalid_context_scope | context_contract | false | CONTEXT_SCOPE_INVALID |
+| invalid_context_missing_subject | context_contract | false | CONTEXT_SUBJECT_MISSING |
+| invalid_context_attributes_type | context_contract | false | CONTEXT_ATTRIBUTES_INVALID |
 
 run_policy_evals.py 遵循与其他 eval runner（run_workflow_evals.py）相同的模式：
 加载 JSON → 调用 PolicyValidator → 比较 expected_valid / expected_error_codes →

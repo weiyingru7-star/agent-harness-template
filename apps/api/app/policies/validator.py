@@ -39,6 +39,13 @@ ERROR_CODES: dict[str, str] = {
     "decision_matched_rules_invalid": "DECISION_MATCHED_RULES_INVALID",
     "decision_result_final_action_invalid": "DECISION_RESULT_ACTION_INVALID",
     "decision_result_decisions_invalid": "DECISION_RESULT_DECISIONS_INVALID",
+    # Evaluation context codes (V0.8.3)
+    "context_id_missing": "CONTEXT_ID_MISSING",
+    "context_scope_invalid": "CONTEXT_SCOPE_INVALID",
+    "context_subject_missing": "CONTEXT_SUBJECT_MISSING",
+    "context_subject_invalid": "CONTEXT_SUBJECT_INVALID",
+    "context_subject_type_missing": "CONTEXT_SUBJECT_TYPE_MISSING",
+    "context_attributes_invalid": "CONTEXT_ATTRIBUTES_INVALID",
 }
 
 
@@ -243,6 +250,51 @@ class PolicyValidator:
                 errors.extend(sub.errors)
                 warnings.extend(sub.warnings)
                 items.extend(sub.error_items)
+
+        if not errors and not warnings:
+            return PolicyValidationResult(valid=True)
+        return PolicyValidationResult(valid=not bool(errors), errors=errors, warnings=warnings, error_items=items)
+
+    # ── Evaluation context validation (V0.8.3) ───────────────────────
+
+    @staticmethod
+    def validate_evaluation_context(context: dict) -> PolicyValidationResult:
+        """Validate an EvaluationContext dict — structure only, no execution."""
+        errors: list[str] = []
+        warnings: list[str] = []
+        items: list[PolicyValidationErrorItem] = []
+
+        def _err(code: str, msg: str, path: str | None = None) -> None:
+            errors.append(msg)
+            items.append(PolicyValidationErrorItem(
+                code=ERROR_CODES.get(code, code), message=msg, path=path,
+            ))
+
+        if not isinstance(context, dict):
+            _err("context_id_missing", "evaluation_context: must be an object")
+            return PolicyValidationResult(valid=False, errors=errors, items=items)
+
+        cid = context.get("context_id")
+        if not cid:
+            _err("context_id_missing", "evaluation_context: context_id is required")
+
+        scope = context.get("scope", "")
+        if scope not in POLICY_SCOPES:
+            _err("context_scope_invalid", f"evaluation_context: invalid scope '{scope}'; allowed: {sorted(POLICY_SCOPES)}")
+
+        subject = context.get("subject")
+        if subject is None:
+            _err("context_subject_missing", "evaluation_context: subject is required")
+        elif not isinstance(subject, dict):
+            _err("context_subject_invalid", "evaluation_context: subject must be an object")
+        else:
+            st = subject.get("type")
+            if not st:
+                _err("context_subject_type_missing", "evaluation_context.subject: type is required")
+
+        attributes = context.get("attributes", {})
+        if not isinstance(attributes, dict):
+            _err("context_attributes_invalid", "evaluation_context: attributes must be an object")
 
         if not errors and not warnings:
             return PolicyValidationResult(valid=True)

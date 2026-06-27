@@ -1,0 +1,20 @@
+{
+  "type": "context_contract",
+  "name": "valid_tool_context",
+  "description": "A valid evaluation context for tool scope.",
+  "evaluation_context": {
+    "context_id": "ctx_002",
+    "scope": "tool",
+    "subject": {
+      "type": "tool_call",
+      "id": "tl_456",
+      "payload": {"tool_name": "mock_echo", "args": {"input": "hello"}}
+    },
+    "attributes": {
+      "allowed_tools": ["mock_echo"],
+      "execution_mode": "in_process"
+    }
+  },
+  "expected_valid": true,
+  "expected_error_codes": []
+}

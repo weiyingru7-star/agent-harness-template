@@ -948,6 +948,59 @@ git diff --check
 
 - [Policy Guardrail Contract](docs/policy-guardrail-contract.md)
 
+## V0.8.3 Guardrail Evaluation Context Contract Acceptance V0.8.3 评估上下文合同验收
+
+V0.8.3 新增 EvaluationContext / EvaluationSubject 合同，用于描述 policy /
+guardrail 评估上下文结构。只做 contract / schema / validator / docs / tests，
+不执行 policy。
+
+### Contract 合同
+
+| 模型 | 说明 |
+|---|---|
+| `EvaluationContext` | 评估上下文：context_id / scope / subject / attributes / metadata |
+| `EvaluationSubject` | 评估主体：type / id / content / payload / metadata |
+
+scope 枚举：`input`, `output`, `tool`, `rag`, `provider`, `workflow`
+
+### Unified Acceptance Commands 统一验收命令
+
+```bash
+# 全量后端测试（当前预期 301 passed）
+make test-api
+
+# Agent trajectory eval（预期 8 passed）
+python3 scripts/run_evals.py
+
+# RAG eval（预期 2 passed）
+python3 scripts/run_rag_evals.py
+
+# Workflow eval（预期 1 passed）
+python3 scripts/run_workflow_evals.py
+
+# Policy validation eval（预期 16 passed）
+python3 scripts/run_policy_evals.py
+
+# 业务词污染检查
+python3 scripts/check_business_terms.py
+
+# 前端构建
+npm run build --prefix apps/web
+
+# Git diff whitespace 检查
+git diff --check
+```
+
+### 行为不变性检查
+
+- PolicyValidator.validate_evaluation_context **只做结构校验**
+- 不根据 context 执行 policy、不生成决策、不调用外部系统
+- 所有已有 API / tests / eval 不变
+
+### 文档参考
+
+- [Policy Guardrail Contract](docs/policy-guardrail-contract.md)
+
 ## Common Errors 常见错误排查
 
 ### `python: command not found`

@@ -328,3 +328,55 @@ def test_decision_result_propagates_child_errors() -> None:
     assert result.valid is False
     # Should have error about d2's invalid action
     assert any("decisions" in (item.path or "") for item in result.error_items if item.path)
+
+
+# ── Evaluation Context Tests (V0.8.3) ───────────────────────────────
+
+def test_evaluation_context_valid() -> None:
+    result = PolicyValidator.validate_evaluation_context({
+        "context_id": "ctx_001",
+        "scope": "input",
+        "subject": {"type": "user_message", "content": "hello"},
+        "attributes": {"channel": "web"},
+    })
+    assert result.valid is True
+
+
+def test_evaluation_context_invalid_scope() -> None:
+    result = PolicyValidator.validate_evaluation_context({
+        "context_id": "ctx_bad",
+        "scope": "storage",
+        "subject": {"type": "query"},
+    })
+    assert result.valid is False
+    assert any("scope" in e.lower() for e in result.errors)
+    assert any(
+        item.code == "CONTEXT_SCOPE_INVALID"
+        for item in result.error_items
+    )
+
+
+def test_evaluation_context_missing_subject() -> None:
+    result = PolicyValidator.validate_evaluation_context({
+        "context_id": "ctx_no_sub",
+        "scope": "tool",
+    })
+    assert result.valid is False
+    assert any("subject" in e.lower() for e in result.errors)
+
+
+def test_evaluation_context_invalid_attributes_type() -> None:
+    result = PolicyValidator.validate_evaluation_context({
+        "context_id": "ctx_attr",
+        "scope": "output",
+        "subject": {"type": "response"},
+        "attributes": "bad_string",
+    })
+    assert result.valid is False
+    assert any("attributes" in e.lower() for e in result.errors)
+
+
+def test_evaluation_context_not_an_object() -> None:
+    result = PolicyValidator.validate_evaluation_context("not_a_dict")
+    assert result.valid is False
+    assert any("object" in e.lower() for e in result.errors)

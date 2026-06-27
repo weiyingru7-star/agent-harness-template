@@ -1,0 +1,15 @@
+{
+  "type": "context_contract",
+  "name": "invalid_context_scope",
+  "description": "Evaluation context with a scope not in the allowed enum.",
+  "evaluation_context": {
+    "context_id": "ctx_bad",
+    "scope": "database",
+    "subject": {
+      "type": "query",
+      "content": "select * from users"
+    }
+  },
+  "expected_valid": false,
+  "expected_error_codes": ["CONTEXT_SCOPE_INVALID"]
+}

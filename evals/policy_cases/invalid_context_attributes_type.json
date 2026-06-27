@@ -1,0 +1,16 @@
+{
+  "type": "context_contract",
+  "name": "invalid_context_attributes_type",
+  "description": "Evaluation context with attributes as a string instead of object.",
+  "evaluation_context": {
+    "context_id": "ctx_bad_attr",
+    "scope": "output",
+    "subject": {
+      "type": "response",
+      "content": "Hello world"
+    },
+    "attributes": "not_an_object"
+  },
+  "expected_valid": false,
+  "expected_error_codes": ["CONTEXT_ATTRIBUTES_INVALID"]
+}

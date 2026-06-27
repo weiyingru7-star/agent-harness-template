@@ -1,0 +1,14 @@
+{
+  "name": "invalid_guardrail_type",
+  "description": "Guardrail type not in the allowed enum.",
+  "policies": [],
+  "guardrails": [
+    {
+      "id": "gr1",
+      "name": "Bad Guardrail",
+      "type": "database"
+    }
+  ],
+  "expected_valid": false,
+  "expected_error_codes": ["GUARDRAIL_TYPE_INVALID"]
+}

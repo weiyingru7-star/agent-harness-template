@@ -1,0 +1,21 @@
+{
+  "name": "invalid_condition_type",
+  "description": "Rule condition.type not in the allowed enum.",
+  "policies": [
+    {
+      "id": "p1",
+      "name": "Bad Condition",
+      "version": "1.0.0",
+      "scope": "output",
+      "rules": [
+        {
+          "id": "r1",
+          "condition": {"type": "regex"}
+        }
+      ]
+    }
+  ],
+  "guardrails": [],
+  "expected_valid": false,
+  "expected_error_codes": ["POLICY_CONDITION_TYPE_INVALID"]
+}

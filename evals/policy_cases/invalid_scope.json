@@ -1,0 +1,16 @@
+{
+  "name": "invalid_scope",
+  "description": "Policy scope not in the allowed enum.",
+  "policies": [
+    {
+      "id": "p1",
+      "name": "Bad Scope",
+      "version": "1.0.0",
+      "scope": "database",
+      "rules": []
+    }
+  ],
+  "guardrails": [],
+  "expected_valid": false,
+  "expected_error_codes": ["POLICY_SCOPE_INVALID"]
+}

@@ -840,6 +840,61 @@ git diff --check
 
 - [Policy Guardrail Contract](docs/policy-guardrail-contract.md)
 
+## V0.8.1 Policy Validation Evals Acceptance V0.8.1 Policy Eval 验收
+
+V0.8.1 新增独立 policy validation eval runner，7 个 eval case 覆盖
+valid / invalid 场景。只验证 contract 结构，不执行 policy。
+
+### Unified Acceptance Commands 统一验收命令
+
+```bash
+# 全量后端测试（当前预期 289 passed）
+make test-api
+
+# Agent trajectory eval（预期 8 passed）
+python3 scripts/run_evals.py
+
+# RAG eval（预期 2 passed）
+python3 scripts/run_rag_evals.py
+
+# Workflow eval（预期 1 passed）
+python3 scripts/run_workflow_evals.py
+
+# Policy validation eval（预期 7 passed）
+python3 scripts/run_policy_evals.py
+
+# 业务词污染检查
+python3 scripts/check_business_terms.py
+
+# 前端构建
+npm run build --prefix apps/web
+
+# Git diff whitespace 检查
+git diff --check
+```
+
+### Eval Cases
+
+| Case | 预期 |
+|---|---|
+| `valid_policy` | valid=true |
+| `valid_empty_policy_list` | valid=true |
+| `invalid_scope` | valid=false, POLICY_SCOPE_INVALID |
+| `invalid_action` | valid=false, POLICY_ACTION_INVALID |
+| `invalid_condition_type` | valid=false, POLICY_CONDITION_TYPE_INVALID |
+| `invalid_guardrail_type` | valid=false, GUARDRAIL_TYPE_INVALID |
+| `invalid_guardrail_policy_ref` | valid=true (warning only), GUARDRAIL_POLICY_REF_NOT_FOUND |
+
+### 行为不变性检查
+
+- PolicyValidator 只做结构校验，不执行 condition
+- 所有已有 tests / eval / API 不变
+- 不改 runtime
+
+### 文档参考
+
+- [Policy Guardrail Contract](docs/policy-guardrail-contract.md)
+
 ## Common Errors 常见错误排查
 
 ### `python: command not found`

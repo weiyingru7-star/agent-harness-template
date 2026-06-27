@@ -1,0 +1,17 @@
+{
+  "name": "invalid_action",
+  "description": "Policy default_action not in the allowed enum.",
+  "policies": [
+    {
+      "id": "p1",
+      "name": "Bad Action",
+      "version": "1.0.0",
+      "scope": "input",
+      "default_action": "delete",
+      "rules": []
+    }
+  ],
+  "guardrails": [],
+  "expected_valid": false,
+  "expected_error_codes": ["POLICY_ACTION_INVALID"]
+}

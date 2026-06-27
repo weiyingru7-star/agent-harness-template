@@ -1,0 +1,8 @@
+{
+  "name": "valid_empty_policy_list",
+  "description": "Empty policies and guardrails lists — always valid.",
+  "policies": [],
+  "guardrails": [],
+  "expected_valid": true,
+  "expected_error_codes": []
+}

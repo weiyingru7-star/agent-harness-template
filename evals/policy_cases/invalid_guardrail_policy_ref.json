@@ -1,0 +1,24 @@
+{
+  "name": "invalid_guardrail_policy_ref",
+  "description": "Guardrail policy_ref references a non-existent policy id.",
+  "policies": [
+    {
+      "id": "my_policy",
+      "name": "My Policy",
+      "version": "1.0.0",
+      "scope": "input",
+      "rules": []
+    }
+  ],
+  "guardrails": [
+    {
+      "id": "gr1",
+      "name": "Bad Ref Guardrail",
+      "type": "input",
+      "policy_ref": "nonexistent_policy"
+    }
+  ],
+  "expected_valid": true,
+  "expected_error_codes": [],
+  "expected_warning_codes": ["GUARDRAIL_POLICY_REF_NOT_FOUND"]
+}

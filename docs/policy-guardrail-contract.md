@@ -155,13 +155,17 @@ class PolicyValidationResult(BaseModel):
 
 | Code | Severity | 说明 |
 |---|---|---|
+| POLICY_ID_MISSING | error | policy 缺少 id |
 | POLICY_SCOPE_INVALID | error | scope 不在允许列表中 |
 | POLICY_ACTION_INVALID | error | action 不在允许列表中 |
-| POLICY_CONDITION_TYPE_INVALID | error | condition.type 不在允许列表中 |
+| POLICY_RULES_INVALID | error | rules 必须是 list，rule 必须是 object |
 | POLICY_RULE_ID_MISSING | error | rule 缺少 id |
 | POLICY_RULE_CONDITION_MISSING | error | rule 缺少 condition |
+| POLICY_CONDITION_TYPE_INVALID | error | condition.type 不在允许列表中 |
 | POLICY_SEVERITY_INVALID | error | severity 不在允许列表中 |
+| GUARDRAIL_ID_MISSING | error | guardrail 缺少 id |
 | GUARDRAIL_TYPE_INVALID | error | guardrail type 不在允许列表中 |
+| GUARDRAIL_ACTION_INVALID | error | guardrail action 不在允许列表中 |
 | GUARDRAIL_POLICY_REF_NOT_FOUND | warning | policy_ref 引用了不存在的 policy id |
 
 ## Agent Template 集成
@@ -185,7 +189,23 @@ AgentTemplateRegistry.validate_template() 现在也校验 policies 和 guardrail
 
 ## 边界说明
 
-### V0.8.0 不实现
+### V0.8.1 新增（V0.8.1 不实现以下，保持与 V0.8.0 一致）
+
+- ❌ Condition 表达式执行
+- ❌ 真实请求拦截
+- ❌ Policy Engine / Guardrail Engine
+- ❌ 运行时 middleware
+- ❌ 新 API endpoint
+- ❌ RunStore / Tool / RAG / Provider / Workflow 改动
+- ❌ 业务规则
+
+### V0.8.1 增加
+
+- ✅ PolicyValidationEval runner（`scripts/run_policy_evals.py`）
+- ✅ 7 个 eval case（`evals/policy_cases/`）
+- ✅ 补齐 4 个稳定 error code
+
+### V0.8.0 只做
 
 - ❌ Condition 表达式执行
 - ❌ 真实请求拦截
@@ -202,6 +222,32 @@ AgentTemplateRegistry.validate_template() 现在也校验 policies 和 guardrail
 - ✅ PolicyValidator（结构校验）
 - ✅ AgentTemplate 集成（可选字段，不改变已有行为）
 - ✅ 文档和测试
+
+## Eval Runner 评估运行器
+
+V0.8.1 新增独立的 policy validation eval runner：
+
+```bash
+python3 scripts/run_policy_evals.py
+```
+
+### Eval Cases
+
+7 个 eval case 位于 `evals/policy_cases/`：
+
+| Case | 预期 valid | Error / Warning Codes |
+|---|---|---|
+| valid_policy | true | — |
+| valid_empty_policy_list | true | — |
+| invalid_scope | false | POLICY_SCOPE_INVALID |
+| invalid_action | false | POLICY_ACTION_INVALID |
+| invalid_condition_type | false | POLICY_CONDITION_TYPE_INVALID |
+| invalid_guardrail_type | false | GUARDRAIL_TYPE_INVALID |
+| invalid_guardrail_policy_ref | true (warning) | GUARDRAIL_POLICY_REF_NOT_FOUND |
+
+run_policy_evals.py 遵循与其他 eval runner（run_workflow_evals.py）相同的模式：
+加载 JSON → 调用 PolicyValidator → 比较 expected_valid / expected_error_codes →
+输出 PASS / FAIL。
 
 ## 示例
 

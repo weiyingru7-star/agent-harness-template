@@ -1,0 +1,25 @@
+{
+  "name": "valid_policy",
+  "description": "A valid single policy with one rule — all fields correct.",
+  "policies": [
+    {
+      "id": "length_check",
+      "name": "Length Check",
+      "version": "1.0.0",
+      "scope": "input",
+      "rules": [
+        {
+          "id": "max_length",
+          "condition": {"type": "expression", "expression": "len(input) > 1000"},
+          "action": "warn",
+          "severity": "medium",
+          "message": "Input exceeds recommended length"
+        }
+      ],
+      "default_action": "allow"
+    }
+  ],
+  "guardrails": [],
+  "expected_valid": true,
+  "expected_error_codes": []
+}

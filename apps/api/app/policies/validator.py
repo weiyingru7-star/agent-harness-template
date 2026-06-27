@@ -19,13 +19,17 @@ from app.policies.models import (
 
 
 ERROR_CODES: dict[str, str] = {
+    "policy_id_missing": "POLICY_ID_MISSING",
     "scope_invalid": "POLICY_SCOPE_INVALID",
     "action_invalid": "POLICY_ACTION_INVALID",
-    "condition_type_invalid": "POLICY_CONDITION_TYPE_INVALID",
+    "rules_invalid": "POLICY_RULES_INVALID",
     "rule_id_missing": "POLICY_RULE_ID_MISSING",
     "rule_condition_missing": "POLICY_RULE_CONDITION_MISSING",
+    "condition_type_invalid": "POLICY_CONDITION_TYPE_INVALID",
     "severity_invalid": "POLICY_SEVERITY_INVALID",
+    "guardrail_id_missing": "GUARDRAIL_ID_MISSING",
     "guardrail_type_invalid": "GUARDRAIL_TYPE_INVALID",
+    "guardrail_action_invalid": "GUARDRAIL_ACTION_INVALID",
     "guardrail_policy_ref_not_found": "GUARDRAIL_POLICY_REF_NOT_FOUND",
 }
 
@@ -66,7 +70,7 @@ class PolicyValidator:
             path = f"policies[{pi}]"
             pid = policy.get("id", "")
             if not pid:
-                _err("rule_id_missing", f"{path}: policy id is required")
+                _err("policy_id_missing", f"{path}: policy id is required")
             else:
                 policy_ids.add(pid)
 
@@ -80,13 +84,13 @@ class PolicyValidator:
 
             rules = policy.get("rules", [])
             if not isinstance(rules, list):
-                _err("rule_id_missing", f"{path}: rules must be a list")
+                _err("rules_invalid", f"{path}: rules must be a list")
                 continue
 
             for ri, rule in enumerate(rules):
                 rule_path = f"{path}.rules[{ri}]"
                 if not isinstance(rule, dict):
-                    _err("rule_id_missing", f"{rule_path}: rule must be an object")
+                    _err("rules_invalid", f"{rule_path}: rule must be an object")
                     continue
 
                 rid = rule.get("id")
@@ -135,8 +139,12 @@ class PolicyValidator:
         for gi, guardrail in enumerate(guardrails):
             path = f"guardrails[{gi}]"
             if not isinstance(guardrail, dict):
-                _err("rule_id_missing", f"{path}: guardrail must be an object")
+                _err("guardrail_id_missing", f"{path}: guardrail must be an object")
                 continue
+
+            gid = guardrail.get("id", "")
+            if not gid:
+                _err("guardrail_id_missing", f"{path}: guardrail id is required")
 
             gt = guardrail.get("type", "")
             if gt not in GUARDRAIL_TYPES:
@@ -144,7 +152,7 @@ class PolicyValidator:
 
             action = guardrail.get("action", "allow")
             if action not in POLICY_ACTIONS:
-                _err("action_invalid", f"{path}.action: invalid action '{action}'")
+                _err("guardrail_action_invalid", f"{path}.action: invalid action '{action}'")
 
             policy_ref = guardrail.get("policy_ref")
             if policy_ref and policy_ids is not None and policy_ref not in policy_ids:

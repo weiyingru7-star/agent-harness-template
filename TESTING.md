@@ -1529,6 +1529,59 @@ git diff --check
 
 - [CLI Scaffold Contract](docs/cli-scaffold-contract.md)
 
+## V0.9.6 CLI Docs Consolidation Acceptance V0.9.6 CLI 文档收口验收
+
+V0.9.6 是纯文档阶段，不修改任何代码，不改 scaffold 脚本，不改测试。
+
+### 新增文档
+
+- `docs/cli-scaffold-guide.md`：4 个命令的 dry-run / normal / force 使用示例和验收方式
+- `docs/cli-scaffold-troubleshooting.md`：7 种常见错误及修复方法
+
+### V0.9 已实现能力总结
+
+| 命令 | 脚本 | 生成目标 |
+|---|---|---|
+| Scaffold Module | `scripts/scaffold_module.py` | `modules/<name>/` |
+| Scaffold Agent | `scripts/scaffold_agent.py` | `templates/<name>/` |
+| Scaffold Eval | `scripts/scaffold_eval.py` | `evals/cases/<name>.json` |
+| Scaffold Docs | `scripts/scaffold_docs.py` | `docs/scaffolds/<kind>-<name>.md` |
+| Validation | `scripts/scaffold_validation.py` | 共享校验逻辑 |
+
+### Unified Acceptance Commands 统一验收命令
+
+```bash
+# 全量后端测试
+make test-api
+
+# 所有 eval runner
+python3 scripts/run_evals.py
+python3 scripts/run_rag_evals.py
+python3 scripts/run_workflow_evals.py
+python3 scripts/run_policy_evals.py
+
+# 业务词污染检查
+python3 scripts/check_business_terms.py
+npm run build --prefix apps/web
+git diff --check
+```
+
+### CLI Dry-Run 验收
+
+```bash
+# 预览四个 scaffold 命令的输出（不写文件）
+python3 scripts/scaffold_module.py --name sample_module --dry-run
+python3 scripts/scaffold_agent.py --name sample_agent --dry-run
+python3 scripts/scaffold_eval.py --name sample_eval --dry-run
+python3 scripts/scaffold_docs.py --name sample_docs --kind generic --dry-run
+```
+
+### 文档参考
+
+- [CLI Scaffold Contract](docs/cli-scaffold-contract.md)
+- [CLI Scaffold Guide](docs/cli-scaffold-guide.md)
+- [CLI Scaffold Troubleshooting](docs/cli-scaffold-troubleshooting.md)
+
 ## Common Errors 常见错误排查
 
 ### `python: command not found`

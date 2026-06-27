@@ -18,7 +18,7 @@
 
 ## Current Stage 当前阶段
 
-当前阶段：V0.9.5 CLI Validation and Hygiene。
+当前阶段：V0.9.6 CLI Docs Consolidation。
 
 已完成的通用底座能力：
 - Agent Runtime（V0.2.x）：Trace / Span、Checkpoint、Failure / Retry、Timeline、Eval Trajectory
@@ -42,6 +42,7 @@
 - Scaffold Eval Cases（V0.9.3）：scripts/scaffold_eval.py，生成 evals/cases/<name>.json，匹配 run_evals.py 的 13 个 REQUIRED_FIELDS 和 eval-case.schema.json。使用 demo_agent module。复用命名校验
 - Scaffold Docs Generator（V0.9.4）：scripts/scaffold_docs.py，生成 docs/scaffolds/<kind>-<name>.md。支持 --kind (module/agent/eval/generic)
 - CLI Validation and Hygiene（V0.9.5）：抽取 scaffold 重复 validation 逻辑到 scripts/scaffold_validation.py。4 个 scaffold 脚本统一引用
+- CLI Docs Consolidation（V0.9.6）：V0.9 全阶段文档收口。新增 cli-scaffold-guide.md、cli-scaffold-troubleshooting.md。不修改代码
 
 ## Provider Layer Guidance Provider 层开发指引
 
@@ -57,7 +58,7 @@
 
 详见 [Provider Runtime Consolidation](docs/provider-runtime-consolidation.md)。
 
-下一阶段规划：V0.9.x CLI / Scaffold。
+下一阶段规划：V1.0 Minimal Reusable Agent Harness Template（项目整体成熟度提升）。
 
 ## Forbidden Scope 禁止提前实现
 

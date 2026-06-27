@@ -1,7 +1,16 @@
 # CLI / Scaffold Contract CLI 与脚手架合同
 
-V0.9.0 设计 CLI / Scaffold 方案，让用户可以快速创建新的 agent / module 模板。
-V0.9.1 实现了 `scripts/scaffold_module.py`。
+V0.9.0–V0.9.6 完成了 CLI / Scaffold 系统的设计、实现、测试和文档收口。
+当前已实现的 scaffold 能力：
+
+- **module** — `scripts/scaffold_module.py` → `modules/<name>/`
+- **agent template** — `scripts/scaffold_agent.py` → `templates/<name>/`
+- **eval case** — `scripts/scaffold_eval.py` → `evals/cases/<name>.json`
+- **docs** — `scripts/scaffold_docs.py` → `docs/scaffolds/<kind>-<name>.md`
+- **validation hygiene** — `scripts/scaffold_validation.py`（共享校验逻辑）
+
+详见 [CLI Scaffold Guide](cli-scaffold-guide.md) 和
+[CLI Scaffold Troubleshooting](cli-scaffold-troubleshooting.md)。
 
 ## 1. Motivation 动机
 
@@ -142,7 +151,7 @@ MAX_LENGTH = 64                   # 最大长度
 | **V0.9.3** | **scripts/scaffold_eval.py — 生成 evals/cases/<name>.json，匹配 run_evals.py 的 13 REQUIRED_FIELDS 和 eval-case.schema.json** | ✅ 已完成 |
 | **V0.9.4** | **scripts/scaffold_docs.py — 生成 docs/scaffolds/<kind>-<name>.md，支持 --kind (module/agent/eval/generic)** | ✅ 已完成 |
 | **V0.9.5** | **scripts/scaffold_validation.py — 抽取 scaffold 系列重复 validation 逻辑到共享模块，4 个 scaffold 脚本统一引用** | ✅ 已完成 |
-| V0.9.6 | CLI docs consolidation | ❌ 仅文档 |
+| **V0.9.6** | **CLI 文档收口 — cli-scaffold-guide.md、cli-scaffold-troubleshooting.md、README/TESTING 更新** | ✅ 已完成 |
 
 ## 10. Anti-Goals 明确不做的
 

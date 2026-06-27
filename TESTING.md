@@ -1866,6 +1866,57 @@ git diff --check
 
 - [Ingestion Pipeline](docs/ingestion-pipeline.md)
 
+## V1.6 Tool Permission / Ownership Guard Acceptance V1.6 工具权限 / 所有权守卫验收
+
+V1.6 为工具执行增加 ownership guard。已实现但文档待补充——详见 [Tool Permission Guard](docs/tool-permission-guard.md)。
+
+## V1.7 Concurrency / Idempotency Contract Acceptance V1.7 并发 / 幂等合同验收
+
+V1.7 增加 scoped idempotency_key 和 sequence_index 校验。
+
+### IdempotencyGuard 设计
+
+| 概念 | 说明 |
+|---|---|
+| Scoped key | `tenant_id\|user_id\|conversation_id\|action\|idempotency_key` |
+| Sequence scope | `tenant_id\|conversation_id` |
+| Storage | In-memory（单进程 MVP，进程重启丢失） |
+| Singelen | `idempotency_guard` 模块级单例 |
+| Reset | `guard.reset()` 用于测试隔离 |
+
+### 幂等规则
+
+| Code | 说明 |
+|---|---|
+| `LEGACY_SKIP` | 不传 key/seq 时跳过，兼容旧请求 |
+| `ALLOWED` | 可以继续执行 |
+| `DUPLICATE_IDEMPOTENCY_KEY` | 重复 key，返回已有 resource |
+| `STALE_SEQUENCE` | sequence ≤ 已有最大值 |
+| `SEQUENCE_GAP` | sequence > 最大值+1 |
+
+### Unified Acceptance Commands
+
+```bash
+# 全量后端测试（当前预期 577 passed）
+make test-api
+
+# 所有 eval runner
+python3 scripts/run_evals.py
+python3 scripts/run_rag_evals.py
+python3 scripts/run_workflow_evals.py
+python3 scripts/run_policy_evals.py
+
+# 模板健康检查
+python3 scripts/check_business_terms.py
+python3 scripts/check_template_health.py
+npm run build --prefix apps/web
+git diff --check
+```
+
+### 文档参考
+
+- [Concurrency Idempotency Contract](docs/concurrency-idempotency-contract.md)
+
 ## Common Errors 常见错误排查
 
 ### `python: command not found`

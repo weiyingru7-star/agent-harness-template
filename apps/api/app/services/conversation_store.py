@@ -78,6 +78,23 @@ class ConversationStore:
         with session_scope() as session:
             return MessageRepository(session).list_by_conversation(conversation_id)
 
+    def get_message_by_id(
+        self,
+        message_id: str,
+        tenant_id: str,
+        conversation_id: str | None = None,
+    ) -> Message | None:
+        """Get a message by ID with tenant/conversation validation."""
+        with session_scope() as session:
+            msg = MessageRepository(session).get_by_id(message_id)
+            if msg is None:
+                return None
+            if msg.tenant_id != tenant_id:
+                return None
+            if conversation_id is not None and msg.conversation_id != conversation_id:
+                return None
+            return msg
+
     def create_conversation_run(
         self,
         conversation_id: str,

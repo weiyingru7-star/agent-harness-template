@@ -18,7 +18,7 @@
 
 ## Current Stage 当前阶段
 
-当前阶段：V1.5 Document Cleaning Pipeline。
+当前阶段：V1.7 Concurrency / Idempotency Contract。
 
 已完成的通用底座能力：
 - Agent Runtime（V0.2.x）：模块注册、执行契约、Trace / Span、Checkpoint、Failure / Retry、Timeline、Eval Trajectory
@@ -52,8 +52,10 @@
 - Tenant Isolation（V1.3）：conversation/message API 强制 tenant_id。缺失→400，不匹配→404。list conversations 必须 tenant-scoped。user_id 一致性校验。旧 /api/runs 不变
 - RAG Tenant Filter（V1.4）：RAG ingestion/retrieval 支持可选 tenant_id。存储在已有 metadata JSON 列（无迁移）。keyword/vector/hybrid 三种模式均支持 tenant 过滤。向后兼容旧无 tenant 文档
 - Document Cleaning Pipeline（V1.5）：离线文档清洗流水线。支持 txt/md/pdf/docx/csv/xlsx。类型感知解析器、清洗器、预览 chunker。Plan A 文档级入库——RAG chunker 负责最终 chunking。metadata 保留 tenant_id/document_key/source_hash/document_version/status。新增 17 条测试
+- Tool Permission / Ownership Guard（V1.6）：ToolOwnershipGuard 验证 tenant/user/resource ownership。ToolOwnershipRequirement 加入 ToolDefinition（None=legacy）。guard 集成到 ToolExecutionPipeline。deny 阻止 handler 执行。所有旧工具不变。~14 条测试
+- Concurrency / Idempotency Contract（V1.7）：scoped idempotency_key（tenant+user+conversation+action）和 sequence_index 校验。in-memory IdempotencyGuard。message/run 重复 key 返回已有 resource。legacy 兼容。14 条测试。不做 Redis/worker
 
-下一阶段规划：V1.6 Tool Permission / Ownership Guard。
+下一阶段规划：V1.8 Async Job Queue / Worker Runtime。
 
 下一阶段规划：V0.8.x Advanced Features / Agent Memory。
 

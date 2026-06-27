@@ -58,6 +58,9 @@ class CreateMessageRequest(BaseModel):
     role: Literal["user", "assistant", "system", "tool"]
     content: str = ""
     metadata: dict[str, Any] = Field(default_factory=dict)
+    request_id: str | None = None
+    idempotency_key: str | None = None
+    sequence_index: int | None = Field(default=None, ge=0)
 
 
 class MessageResponse(BaseModel):
@@ -69,6 +72,9 @@ class MessageResponse(BaseModel):
     content: str = ""
     run_id: str | None = None
     metadata: dict[str, Any] = Field(default_factory=dict)
+    request_id: str | None = None
+    idempotency_key: str | None = None
+    sequence_index: int | None = None
     created_at: datetime
 
 
@@ -78,6 +84,8 @@ class CreateConversationRunRequest(BaseModel):
     input: str = Field(min_length=1)
     module_id: str | None = None
     metadata: dict[str, Any] = Field(default_factory=dict)
+    request_id: str | None = None
+    idempotency_key: str | None = None
 
 
 class ConversationRunResponse(BaseModel):
@@ -86,3 +94,5 @@ class ConversationRunResponse(BaseModel):
     assistant_message_id: str | None = None
     run_id: str
     run_status: str
+    request_id: str | None = None
+    idempotency_key: str | None = None

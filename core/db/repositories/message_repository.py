@@ -61,3 +61,10 @@ class MessageRepository:
             .order_by(MessageRecord.created_at.asc(), MessageRecord.id.asc())
         )
         return [self._from_record(r) for r in self.session.execute(stmt).scalars().all()]
+
+    def get_by_id(self, message_id: str) -> Message | None:
+        """Get a single message by ID without tenant filtering."""
+        record = self.session.get(MessageRecord, message_id)
+        if record is None:
+            return None
+        return self._from_record(record)

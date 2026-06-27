@@ -9,6 +9,10 @@ from app.models.conversation import (
     MessageResponse,
 )
 from app.services.conversation_store import conversation_store
+from app.services.idempotency_guard import (
+    IdempotencyContext,
+    idempotency_guard,
+)
 
 
 router = APIRouter(prefix="/api/conversations", tags=["conversations"])
@@ -55,10 +59,37 @@ def get_conversation(
     status_code=status.HTTP_201_CREATED,
 )
 def add_message(conversation_id: str, request: CreateMessageRequest) -> MessageResponse:
-    # Tenant consistency check
+    # Tenant consistency check (V1.3)
     conv = conversation_store.get_conversation(conversation_id, tenant_id=request.tenant_id)
     if conv is None or conv.user_id != request.user_id:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Conversation not found")
+
+    # Idempotency check (V1.7)
+    ctx = IdempotencyContext(
+        idempotency_key=request.idempotency_key,
+        request_id=request.request_id,
+        sequence_index=request.sequence_index,
+        tenant_id=request.tenant_id,
+        user_id=request.user_id,
+        conversation_id=conversation_id,
+        action="create_message",
+    )
+    decision = idempotency_guard.check(ctx)
+
+    if not decision.allowed:
+        if decision.code == "DUPLICATE_IDEMPOTENCY_KEY" and decision.existing_resource_id:
+            existing = conversation_store.get_message_by_id(
+                message_id=decision.existing_resource_id,
+                tenant_id=request.tenant_id,
+                conversation_id=conversation_id,
+            )
+            if existing:
+                return MessageResponse(**existing.model_dump())
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=f"{decision.code}: {decision.reason}",
+        )
+
     msg = conversation_store.add_message(
         conversation_id=conversation_id,
         tenant_id=request.tenant_id,
@@ -67,6 +98,7 @@ def add_message(conversation_id: str, request: CreateMessageRequest) -> MessageR
         content=request.content,
         metadata=request.metadata,
     )
+    idempotency_guard.record(ctx, resource_id=msg.id, resource_type="message")
     return MessageResponse(**msg.model_dump())
 
 
@@ -93,6 +125,34 @@ def create_conversation_run(
     conversation_id: str,
     request: CreateConversationRunRequest,
 ) -> ConversationRunResponse:
+    # Idempotency check (V1.7) — before any side effects
+    ctx = IdempotencyContext(
+        idempotency_key=request.idempotency_key,
+        request_id=request.request_id,
+        tenant_id=request.tenant_id,
+        user_id=request.user_id,
+        conversation_id=conversation_id,
+        action="create_conversation_run",
+    )
+    decision = idempotency_guard.check(ctx)
+
+    if not decision.allowed:
+        if decision.code == "DUPLICATE_IDEMPOTENCY_KEY" and decision.existing_metadata:
+            meta = decision.existing_metadata
+            return ConversationRunResponse(
+                conversation_id=meta.get("conversation_id", conversation_id),
+                user_message_id=meta.get("user_message_id", ""),
+                assistant_message_id=meta.get("assistant_message_id"),
+                run_id=meta.get("run_id", ""),
+                run_status=meta.get("run_status", "unknown"),
+                request_id=request.request_id,
+                idempotency_key=request.idempotency_key,
+            )
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=f"{decision.code}: {decision.reason}",
+        )
+
     result = conversation_store.create_conversation_run(
         conversation_id=conversation_id,
         user_id=request.user_id,
@@ -106,4 +166,24 @@ def create_conversation_run(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Conversation not found",
         )
+
+    # Record with full metadata for duplicate recovery
+    extra_meta = {
+        "run_id": result.run_id,
+        "user_message_id": result.user_message_id,
+        "assistant_message_id": result.assistant_message_id,
+        "conversation_id": conversation_id,
+        "tenant_id": request.tenant_id,
+        "user_id": request.user_id,
+        "run_status": result.run_status,
+    }
+    idempotency_guard.record(
+        ctx,
+        resource_id=result.run_id,
+        resource_type="conversation_run",
+        extra_metadata=extra_meta,
+    )
+
+    result.request_id = request.request_id
+    result.idempotency_key = request.idempotency_key
     return result

@@ -824,7 +824,7 @@ V0.7.0–V0.7.4 构建了 Workflow Contract 系统，共 4 个模块：
 
 ## Current Scope 当前范围
 
-当前版本（V0.7.6）已完成：
+当前版本（V0.7.7）已完成：
 - **V0.2.x Agent Runtime**：Trace / Span、Checkpoint、Failure / Retry、Timeline API 与前端视图、Eval Trajectory runner
 - **V0.3.x Tool Runtime**：Tool Call Contract、Tool Args Schema、Tool Result Contract、Tool Timeout、Tool Retry、Tool Permission、Tool Sandbox Policy、文档收口
 - **V0.4.x RAG Runtime**：数据合同、切分策略、直接文本创建、检索评估、嵌入层、向量存储、检索模式、文档收口
@@ -832,10 +832,17 @@ V0.7.0–V0.7.4 构建了 Workflow Contract 系统，共 4 个模块：
 - **V0.6.x Agent Template**：AgentTemplate contract、嵌套配置、Registry API、TemplateSummary、ValidateResult、Example Agent Template
 - **V0.7.x Workflow Contract**：Node/Edge/Condition schema、WorkflowValidator、校验规则、schema 增强、built-in node contracts、validation error codes、eval runner、文档收口
 - **V0.7.6 Tool Pipeline**：从 RunStore 抽取 Tool Execution Pipeline 到独立 `tool_runtime/` 模块。纯重构——不改变 API 响应、Event 结构、Eval 或测试断言。详见 [Tool Execution Pipeline](docs/tool-execution-pipeline.md)。
+- **V0.7.7 Provider Consolidation**：收口 `provider_runtime`（canonical layer）和 `ai_runtime`（legacy compatibility layer）的边界。新增收口文档，增加 deprecation 注释。不改变任何代码行为。详见 [Provider Runtime Consolidation](docs/provider-runtime-consolidation.md)。
 
 模板核心保持业务无关，具体业务逻辑应放在 `modules/{module_name}/` 内由使用者自行创建。详见 [Project Boundaries](PROJECT_BOUNDARIES.md)。
 
 下一阶段规划：V0.8.x Advanced Features / Agent Memory。
+
+### Provider Layer 分层说明
+
+`app/provider_runtime` 是 **canonical provider abstraction**（规范层），`app/ai_runtime` 是
+**legacy compatibility layer**（兼容层）。新 provider 功能应添加到 `provider_runtime`，
+不要新增对 `ai_runtime` 的依赖。详见 [Provider Runtime Consolidation](docs/provider-runtime-consolidation.md)。
 
 ## Requirements 环境要求
 

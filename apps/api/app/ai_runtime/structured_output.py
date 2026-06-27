@@ -1,3 +1,8 @@
+"""Structured output parsing — legacy compatibility layer.
+
+See docs/provider-runtime-consolidation.md.
+"""
+
 import json
 from typing import Any
 

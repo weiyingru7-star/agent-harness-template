@@ -1,3 +1,10 @@
+"""LLM client — legacy compatibility layer.
+
+Prefer call_provider / call_provider_with_timeout_retry from
+app.provider_runtime for new provider features.
+See docs/provider-runtime-consolidation.md.
+"""
+
 import time
 from collections.abc import Iterator
 from dataclasses import dataclass

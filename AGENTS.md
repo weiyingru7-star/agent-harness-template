@@ -18,7 +18,7 @@
 
 ## Current Stage 当前阶段
 
-当前阶段：V0.7.4 Workflow Runtime Docs Consolidation。
+当前阶段：V0.7.7 Provider Runtime Consolidation。
 
 已完成的通用底座能力：
 - Agent Runtime（V0.2.x）：Trace / Span、Checkpoint、Failure / Retry、Timeline、Eval Trajectory
@@ -27,6 +27,20 @@
 - Provider Runtime（V0.5.x）：ProviderRequest/Response/Error 合同、smoke 对齐、streaming、fallback、timeout/retry、配置管理、真实模型适配
 - Agent Template（V0.6.x）：AgentTemplate contract、嵌套配置、Registry API、TemplateSummary、ValidateResult、Example Agent Template
 - Workflow Contract（V0.7.x）：WorkflowNode/Edge/Condition schema、WorkflowValidator、校验规则、built-in node contracts、validation error codes、eval runner
+
+## Provider Layer Guidance Provider 层开发指引
+
+### 分层说明
+
+`app/provider_runtime` 是 **canonical provider abstraction**（规范层）。
+`app/ai_runtime` 是 **legacy compatibility layer**（兼容层）。
+
+- **新 provider 功能**：必须在 `provider_runtime` 中添加，不要新增对 `ai_runtime` 的依赖
+- **已有 provider 功能**：可在 `ai_runtime` 中修改，但优先考虑是否应该放入 `provider_runtime`
+- **导入规则**：`provider_runtime` 可以导入 `ai_runtime`，反之禁止
+- **兼容保留**：`ai_runtime` 暂不删除，因为 routes 和 tests 仍依赖 `LLMResponse`、`ProviderRouter`、`ProviderStreamEvent`
+
+详见 [Provider Runtime Consolidation](docs/provider-runtime-consolidation.md)。
 
 下一阶段规划：V0.8.x Advanced Features / Agent Memory。
 

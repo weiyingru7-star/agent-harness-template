@@ -1,8 +1,18 @@
-import json
+"""LLM provider implementations — legacy compatibility layer.
+
+All concrete providers (Mock, MockFailing, MockSlow, MockFlaky,
+OpenAICompatible) live here. This module is retained for backward
+compatibility. New provider features should be added in
+app.provider_runtime, not here.
+See docs/provider-runtime-consolidation.md.
+"""
+
 from collections.abc import Iterator
 from dataclasses import dataclass
 from typing import Any, Protocol
 from urllib import error, request
+
+import json
 
 
 @dataclass(frozen=True)

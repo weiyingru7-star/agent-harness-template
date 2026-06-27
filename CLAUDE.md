@@ -18,7 +18,7 @@
 
 ## Current Stage 当前阶段
 
-当前阶段：V0.7.4 Workflow Runtime Docs Consolidation。
+当前阶段：V0.7.7 Provider Runtime Consolidation。
 
 已完成的通用底座能力：
 - Agent Runtime（V0.2.x）：模块注册、执行契约、Trace / Span、Checkpoint、Failure / Retry、Timeline、Eval Trajectory
@@ -26,7 +26,9 @@
 - RAG Runtime（V0.4.x）：Document/Chunk/Citation/RetrievalResult 合同、切分策略、直接文本创建、检索评估、嵌入层、向量存储、三种检索模式
 - Provider Runtime（V0.5.x）：ProviderRequest/Response/Error 合同、smoke 对齐、streaming、fallback、timeout/retry、配置管理、真实模型适配
 - Agent Template（V0.6.x）：AgentTemplate contract、嵌套配置、Registry API、TemplateSummary、ValidateResult、Example Agent Template
-- Workflow Contract（V0.7.x）：WorkflowNode/Edge/Condition schema、WorkflowValidator、校验规则、built-in node contracts、validation error codes、eval runner
+- Workflow Contract（V0.7.x）：WorkflowNode/Edge/Condition schema、WorkflowValidator、校验规则、built-in node contracts、validation error codes、eval runner、文档收口
+- Tool Pipeline Refactor（V0.7.6）：从 RunStore 抽取 Tool Execution Pipeline 到独立 tool_runtime 模块
+- Provider Consolidation（V0.7.7）：收口 provider_runtime（canonical）和 ai_runtime（legacy）的边界
 
 下一阶段规划：V0.8.x Advanced Features / Agent Memory。
 

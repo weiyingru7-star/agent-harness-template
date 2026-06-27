@@ -1,3 +1,9 @@
+"""Provider runtime orchestration — canonical layer.
+
+Timeout, retry, and fallback logic for provider calls.
+See docs/provider-runtime-consolidation.md.
+"""
+
 from __future__ import annotations
 
 import threading

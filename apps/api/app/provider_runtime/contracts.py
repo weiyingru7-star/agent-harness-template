@@ -1,3 +1,8 @@
+"""Provider contracts — canonical data models.
+
+See docs/provider-runtime-consolidation.md.
+"""
+
 from __future__ import annotations
 
 from pydantic import BaseModel, Field

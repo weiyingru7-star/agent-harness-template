@@ -733,6 +733,55 @@ git diff --check
 
 - [Tool Execution Pipeline](docs/tool-execution-pipeline.md)
 
+## V0.7.7 Provider Runtime Consolidation Acceptance V0.7.7 Provider 运行时收口验收
+
+V0.7.7 只做 provider 边界收口和文档整理，不改变任何代码行为。
+
+### 验收确认项
+
+- `provider_runtime` 被正式确认为 canonical provider abstraction
+- `ai_runtime` 被正式标记为 legacy compatibility layer，暂不删除
+- 新 provider 功能应添加在 `provider_runtime`，不新增对 `ai_runtime` 的依赖
+- 所有已有 provider 行为不变
+- 所有已有 API response 不变
+- 所有已有 tests 不变
+
+### Unified Acceptance Commands 统一验收命令
+
+```bash
+# 全量后端测试（当前预期 270 passed）
+make test-api
+
+# Agent trajectory eval（预期 8 passed）
+python3 scripts/run_evals.py
+
+# RAG eval（预期 2 passed）
+python3 scripts/run_rag_evals.py
+
+# Workflow eval（预期 1 passed）
+python3 scripts/run_workflow_evals.py
+
+# 业务词污染检查
+python3 scripts/check_business_terms.py
+
+# 前端构建
+npm run build --prefix apps/web
+
+# Git diff whitespace 检查
+git diff --check
+```
+
+### Provider Test 说明
+
+- **CI 使用 mock provider**：所有 CI 测试和 eval runner 默认使用 `AI_PROVIDER=mock`
+- **真实 provider smoke test**：需要本地手动配置 `.env` 后运行 `POST /api/llm/smoke`
+  （如 `AI_PROVIDER=openai_compatible` + `AI_API_KEY` 等）
+- **真实 provider 调用不进入默认 CI**：`.env` 文件不得提交
+
+### 文档参考
+
+- [Provider Runtime Consolidation](docs/provider-runtime-consolidation.md)
+
 ## Common Errors 常见错误排查
 
 ### `python: command not found`

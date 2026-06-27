@@ -1,3 +1,10 @@
+"""Provider router — legacy compatibility layer.
+
+Resolves provider name → concrete provider instance from
+ai_runtime.providers. Used by provider_runtime/router.py.
+See docs/provider-runtime-consolidation.md.
+"""
+
 from dataclasses import dataclass
 
 from app.ai_runtime.providers import (

@@ -18,7 +18,7 @@
 
 ## Current Stage 当前阶段
 
-当前阶段：V0.8.9 Policy / Guardrail Runtime Docs Consolidation。
+当前阶段：V0.9.0 CLI / Scaffold Contract。
 
 已完成的通用底座能力：
 - Agent Runtime（V0.2.x）：模块注册、执行契约、Trace / Span、Checkpoint、Failure / Retry、Timeline、Eval Trajectory
@@ -39,8 +39,9 @@
 - Tool Guardrail Dry-Run Hook（V0.8.7）：run_tool_guardrail() 在 ToolExecutionPipeline._execute_tool 中插入 tool dry-run hook。构造 tool-scope EvaluationContext，记录 guardrail event。纯 dry-run，不阻止 tool 执行
 - Provider / RAG Guardrail Dry-Run Helpers（V0.8.8）：run_provider_guardrail() / run_rag_guardrail() dry-run helpers。返回 DecisionResult dict。当前不做 runtime wiring——provider/rag runtime 没有 run_id/trace_id/event_repository 上下文。纯 helper，不接入运行链路
 - Policy / Guardrail Runtime Docs Consolidation（V0.8.9）：V0.8 全阶段文档收口，整理 support/not-supported 说明。不修改代码
+- CLI / Scaffold Contract（V0.9.0）：设计 CLI / Scaffold 方案，新增 docs/cli-scaffold-contract.md。覆盖命令设计、scaffold 生成物、命名规则、安全规则、V0.9 路线图。只做 contract 文档
 
-下一阶段规划：V0.9.x CLI / Scaffold。
+下一阶段规划：V0.9.x CLI / Scaffold Implementation。
 
 下一阶段规划：V0.8.x Advanced Features / Agent Memory。
 

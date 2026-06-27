@@ -1261,6 +1261,38 @@ git diff --check
 - [Policy Guardrail Contract](docs/policy-guardrail-contract.md)
 - [Guardrail Runtime Integration Plan](docs/guardrail-runtime-integration-plan.md)
 
+## V0.9.0 CLI / Scaffold Contract Acceptance V0.9.0 CLI 脚手架合同验收
+
+V0.9.0 是纯文档阶段——新增 `docs/cli-scaffold-contract.md`，设计 CLI / Scaffold
+方案。**不实现 CLI 代码，不修改运行时模块。**
+
+### 文档产出
+
+- `docs/cli-scaffold-contract.md`：覆盖命令设计（3 级）、scaffold 生成物范围、
+  命名规则、dry-run/preview/overwrite 模式、安全规则、V0.9 路线图
+
+### Unified Acceptance Commands 统一验收命令
+
+```bash
+# 全量后端测试（当前预期 324 passed）
+make test-api
+
+# 所有 eval runner
+python3 scripts/run_evals.py
+python3 scripts/run_rag_evals.py
+python3 scripts/run_workflow_evals.py
+python3 scripts/run_policy_evals.py
+
+# 业务词污染检查
+python3 scripts/check_business_terms.py
+npm run build --prefix apps/web
+git diff --check
+```
+
+### 文档参考
+
+- [CLI Scaffold Contract](docs/cli-scaffold-contract.md)
+
 ## Common Errors 常见错误排查
 
 ### `python: command not found`

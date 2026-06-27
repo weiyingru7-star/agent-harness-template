@@ -1001,6 +1001,82 @@ git diff --check
 
 - [Policy Guardrail Contract](docs/policy-guardrail-contract.md)
 
+## V0.8.4 Policy Dry-Run Evaluator Acceptance V0.8.4 策略 Dry-Run 评估器验收
+
+V0.8.4 新增业务无关的 PolicyDryRunEvaluator，根据 Policy / Guardrail /
+EvaluationContext 生成 DecisionResult。支持 always / match / route condition，
+expression 安全拒绝。**不接 runtime，不拦截请求**。
+
+### 已实现能力
+
+- ✅ always condition → 按 rule action 生成 decision
+- ✅ match condition → field + equals/contains/exists 结构匹配
+- ✅ route condition → route_key 存在性匹配
+- ✅ expression condition → 安全拒绝（require_review + unsupported_expression）
+- ✅ final_action 按优先级合并：block > require_review > warn > allow
+- ✅ guardrail policy_ref 解析
+- ✅ guardrail scope 过滤
+
+### Unified Acceptance Commands 统一验收命令
+
+```bash
+# 全量后端测试（当前预期 301 passed）
+make test-api
+
+# 所有 eval runner
+python3 scripts/run_evals.py
+python3 scripts/run_rag_evals.py
+python3 scripts/run_workflow_evals.py
+python3 scripts/run_policy_evals.py
+
+# 业务词污染检查和前端构建
+python3 scripts/check_business_terms.py
+npm run build --prefix apps/web
+git diff --check
+```
+
+## V0.8.5 Guardrail Runtime Integration Plan Acceptance V0.8.5 运行时集成计划验收
+
+V0.8.5 只产出集成计划文档，**不修改任何代码**。
+
+### 文档产出
+
+- `docs/guardrail-runtime-integration-plan.md`：完整的 runtime 集成设计，包括
+  execution mode、7 个接入点设计、DecisionResult handling、dry-run/enforcement 边界、
+  未来版本路线
+
+### Unified Acceptance Commands 统一验收命令
+
+```bash
+# 全量后端测试（当前预期 301 passed，纯文档阶段）
+make test-api
+
+# 所有 eval runner
+python3 scripts/run_evals.py
+python3 scripts/run_rag_evals.py
+python3 scripts/run_workflow_evals.py
+python3 scripts/run_policy_evals.py
+
+# 业务词污染检查
+python3 scripts/check_business_terms.py
+
+# 前端构建
+npm run build --prefix apps/web
+
+# Git diff whitespace 检查
+git diff --check
+```
+
+### 验收确认项
+
+- ✅ 不修改任何 runtime 模块
+- ✅ 不新增 API endpoint
+- ✅ 不实现 enforcement
+- ✅ 不接真实请求链路
+- ✅ 不创建业务 Agent
+- ✅ 所有现有测试不变
+- ✅ 所有现有 eval 不变
+
 ## Common Errors 常见错误排查
 
 ### `python: command not found`

@@ -412,4 +412,5 @@ guardrail = Guardrail(
 
 - [Agent YAML Config](agent-yaml-config.md)
 - [Example Agent Template](example-agent-template.md)
+- [Guardrail Runtime Integration Plan](guardrail-runtime-integration-plan.md)
 - [Validation Error Codes](workflow-validation.md)（Policy 错误码独立但风格一致）

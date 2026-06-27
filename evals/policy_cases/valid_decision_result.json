@@ -1,0 +1,24 @@
+{
+  "type": "decision_result",
+  "name": "valid_decision_result",
+  "description": "A valid DecisionResult containing one valid GuardrailDecision.",
+  "decision_result": {
+    "valid": true,
+    "final_action": "allow",
+    "decisions": [
+      {
+        "decision_id": "dec_001",
+        "policy_id": "length_check",
+        "guardrail_id": "gr_input_length",
+        "action": "allow",
+        "severity": "low",
+        "reason": "Input within acceptable length",
+        "matched_rules": []
+      }
+    ],
+    "errors": [],
+    "warnings": []
+  },
+  "expected_valid": true,
+  "expected_error_codes": []
+}

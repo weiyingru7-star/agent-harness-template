@@ -895,6 +895,59 @@ git diff --check
 
 - [Policy Guardrail Contract](docs/policy-guardrail-contract.md)
 
+## V0.8.2 Guardrail Decision Contract Acceptance V0.8.2 决策合同验收
+
+V0.8.2 新增 GuardrailDecision / DecisionResult 合同，用于描述标准化决策结果。
+只做 contract / schema / validator / docs / tests，不执行 policy。
+
+### Contract 合同
+
+| 模型 | 说明 |
+|---|---|
+| `GuardrailDecision` | 单条决策：decision_id / action / severity / reason / matched_rules |
+| `DecisionResult` | 聚合结果：valid / final_action / decisions / errors / warnings |
+
+action 枚举：`allow`, `block`, `warn`, `require_review`
+severity 枚举：`low`, `medium`, `high`, `critical`
+
+### Unified Acceptance Commands 统一验收命令
+
+```bash
+# 全量后端测试（当前预期 296 passed）
+make test-api
+
+# Agent trajectory eval（预期 8 passed）
+python3 scripts/run_evals.py
+
+# RAG eval（预期 2 passed）
+python3 scripts/run_rag_evals.py
+
+# Workflow eval（预期 1 passed）
+python3 scripts/run_workflow_evals.py
+
+# Policy validation eval（预期 11 passed）
+python3 scripts/run_policy_evals.py
+
+# 业务词污染检查
+python3 scripts/check_business_terms.py
+
+# 前端构建
+npm run build --prefix apps/web
+
+# Git diff whitespace 检查
+git diff --check
+```
+
+### 行为不变性检查
+
+- PolicyValidator.validate_decision_contract / validate_decision_result **只做结构校验**
+- 不生成决策、不执行 policy、不调用外部系统
+- 所有已有 API / tests / eval 不变
+
+### 文档参考
+
+- [Policy Guardrail Contract](docs/policy-guardrail-contract.md)
+
 ## Common Errors 常见错误排查
 
 ### `python: command not found`

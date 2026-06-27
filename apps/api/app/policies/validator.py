@@ -31,6 +31,14 @@ ERROR_CODES: dict[str, str] = {
     "guardrail_type_invalid": "GUARDRAIL_TYPE_INVALID",
     "guardrail_action_invalid": "GUARDRAIL_ACTION_INVALID",
     "guardrail_policy_ref_not_found": "GUARDRAIL_POLICY_REF_NOT_FOUND",
+    # Decision contract codes (V0.8.2)
+    "decision_id_missing": "DECISION_ID_MISSING",
+    "decision_action_missing": "DECISION_ACTION_MISSING",
+    "decision_action_invalid": "DECISION_ACTION_INVALID",
+    "decision_severity_invalid": "DECISION_SEVERITY_INVALID",
+    "decision_matched_rules_invalid": "DECISION_MATCHED_RULES_INVALID",
+    "decision_result_final_action_invalid": "DECISION_RESULT_ACTION_INVALID",
+    "decision_result_decisions_invalid": "DECISION_RESULT_DECISIONS_INVALID",
 }
 
 
@@ -157,6 +165,84 @@ class PolicyValidator:
             policy_ref = guardrail.get("policy_ref")
             if policy_ref and policy_ids is not None and policy_ref not in policy_ids:
                 _warn("guardrail_policy_ref_not_found", f"{path}.policy_ref: referenced policy '{policy_ref}' not found in policy list")
+
+        if not errors and not warnings:
+            return PolicyValidationResult(valid=True)
+        return PolicyValidationResult(valid=not bool(errors), errors=errors, warnings=warnings, error_items=items)
+
+    # ── Decision contract validation (V0.8.2) ────────────────────────
+
+    @staticmethod
+    def validate_decision_contract(decision: dict) -> PolicyValidationResult:
+        """Validate a single GuardrailDecision dict — structure only, no execution."""
+        errors: list[str] = []
+        warnings: list[str] = []
+        items: list[PolicyValidationErrorItem] = []
+
+        def _err(code: str, msg: str, path: str | None = None) -> None:
+            errors.append(msg)
+            items.append(PolicyValidationErrorItem(
+                code=ERROR_CODES.get(code, code), message=msg, path=path,
+            ))
+
+        if not isinstance(decision, dict):
+            _err("decision_id_missing", "decision: must be an object")
+            return PolicyValidationResult(valid=False, errors=errors, items=items)
+
+        did = decision.get("decision_id")
+        if not did:
+            _err("decision_id_missing", "decision: decision_id is required")
+
+        action = decision.get("action")
+        if action is None:
+            _err("decision_action_missing", "decision: action is required")
+        elif action not in POLICY_ACTIONS:
+            _err("decision_action_invalid", f"decision: invalid action '{action}'; allowed: {sorted(POLICY_ACTIONS)}")
+
+        severity = decision.get("severity", "medium")
+        if severity not in RULE_SEVERITIES:
+            _err("decision_severity_invalid", f"decision: invalid severity '{severity}'; allowed: {sorted(RULE_SEVERITIES)}")
+
+        matched_rules = decision.get("matched_rules", [])
+        if not isinstance(matched_rules, list):
+            _err("decision_matched_rules_invalid", "decision: matched_rules must be a list")
+
+        if not errors and not warnings:
+            return PolicyValidationResult(valid=True)
+        return PolicyValidationResult(valid=not bool(errors), errors=errors, warnings=warnings, error_items=items)
+
+    @staticmethod
+    def validate_decision_result(result: dict) -> PolicyValidationResult:
+        """Validate a DecisionResult dict — structure only, no execution."""
+        errors: list[str] = []
+        warnings: list[str] = []
+        items: list[PolicyValidationErrorItem] = []
+
+        def _err(code: str, msg: str, path: str | None = None) -> None:
+            errors.append(msg)
+            items.append(PolicyValidationErrorItem(
+                code=ERROR_CODES.get(code, code), message=msg, path=path,
+            ))
+
+        if not isinstance(result, dict):
+            _err("decision_result_decisions_invalid", "decision_result: must be an object")
+            return PolicyValidationResult(valid=False, errors=errors, items=items)
+
+        final_action = result.get("final_action", "allow")
+        if final_action not in POLICY_ACTIONS:
+            _err("decision_result_final_action_invalid", f"decision_result: invalid final_action '{final_action}'; allowed: {sorted(POLICY_ACTIONS)}")
+
+        decisions = result.get("decisions", [])
+        if not isinstance(decisions, list):
+            _err("decision_result_decisions_invalid", "decision_result: decisions must be a list")
+        else:
+            for di, d in enumerate(decisions):
+                sub = PolicyValidator.validate_decision_contract(d)
+                for item in sub.error_items:
+                    item.path = f"decisions[{di}].{item.path}" if item.path else f"decisions[{di}]"
+                errors.extend(sub.errors)
+                warnings.extend(sub.warnings)
+                items.extend(sub.error_items)
 
         if not errors and not warnings:
             return PolicyValidationResult(valid=True)

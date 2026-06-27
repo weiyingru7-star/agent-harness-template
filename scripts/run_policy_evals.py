@@ -32,17 +32,25 @@ def load_cases() -> list[dict[str, Any]]:
 def run_case(case: dict[str, Any]) -> PolicyEvalResult:
     case_id = str(case.get("name", "unknown"))
     failures: list[str] = []
+    case_type = case.get("type", "policy_validation")
 
-    policies = case.get("policies", [])
-    guardrails = case.get("guardrails", [])
-
-    p_result = PolicyValidator.validate_policies(policies)
-    if guardrails:
-        policy_ids = {p.get("id", "") for p in policies}
-        g_result = PolicyValidator.validate_guardrails(guardrails, policy_ids=policy_ids)
-        p_result.errors.extend(g_result.errors)
-        p_result.warnings.extend(g_result.warnings)
-        p_result.error_items.extend(g_result.error_items)
+    if case_type == "decision_contract":
+        decision = case.get("decision", {})
+        p_result = PolicyValidator.validate_decision_contract(decision)
+    elif case_type == "decision_result":
+        result_obj = case.get("decision_result", {})
+        p_result = PolicyValidator.validate_decision_result(result_obj)
+    else:
+        # policy_validation (default) — validate policies + guardrails
+        policies = case.get("policies", [])
+        guardrails = case.get("guardrails", [])
+        p_result = PolicyValidator.validate_policies(policies)
+        if guardrails:
+            policy_ids = {p.get("id", "") for p in policies}
+            g_result = PolicyValidator.validate_guardrails(guardrails, policy_ids=policy_ids)
+            p_result.errors.extend(g_result.errors)
+            p_result.warnings.extend(g_result.warnings)
+            p_result.error_items.extend(g_result.error_items)
 
     combined_valid = not bool(p_result.errors)
 

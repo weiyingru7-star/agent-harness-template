@@ -249,3 +249,82 @@ def test_policy_validator_does_not_execute_conditions() -> None:
     ])
     # Should pass — expression content is not evaluated
     assert result.valid is True
+
+
+# ── Decision Contract Tests (V0.8.2) ────────────────────────────────
+
+def test_decision_contract_valid() -> None:
+    result = PolicyValidator.validate_decision_contract({
+        "decision_id": "dec_001",
+        "action": "block",
+        "severity": "high",
+        "reason": "Blocked by policy",
+        "matched_rules": ["rule_a"],
+    })
+    assert result.valid is True
+
+
+def test_decision_contract_missing_action() -> None:
+    result = PolicyValidator.validate_decision_contract({
+        "decision_id": "dec_no_action",
+    })
+    assert result.valid is False
+    assert any("action" in e.lower() for e in result.errors)
+    assert any(
+        item.code == "DECISION_ACTION_MISSING"
+        for item in result.error_items
+    )
+
+
+def test_decision_contract_invalid_action() -> None:
+    result = PolicyValidator.validate_decision_contract({
+        "decision_id": "dec_bad",
+        "action": "delete_all",
+    })
+    assert result.valid is False
+    assert any("action" in e.lower() for e in result.errors)
+
+
+def test_decision_contract_invalid_severity() -> None:
+    result = PolicyValidator.validate_decision_contract({
+        "decision_id": "dec_sev",
+        "action": "warn",
+        "severity": "planet_killer",
+    })
+    assert result.valid is False
+    assert any("severity" in e.lower() for e in result.errors)
+
+
+def test_decision_result_valid() -> None:
+    result = PolicyValidator.validate_decision_result({
+        "valid": True,
+        "final_action": "allow",
+        "decisions": [
+            {"decision_id": "d1", "action": "allow", "severity": "low"},
+            {"decision_id": "d2", "action": "warn", "severity": "medium"},
+        ],
+    })
+    assert result.valid is True
+
+
+def test_decision_result_invalid_final_action() -> None:
+    result = PolicyValidator.validate_decision_result({
+        "valid": True,
+        "final_action": "explode",
+    })
+    assert result.valid is False
+    assert any("final_action" in e.lower() for e in result.errors)
+
+
+def test_decision_result_propagates_child_errors() -> None:
+    result = PolicyValidator.validate_decision_result({
+        "valid": False,
+        "final_action": "allow",
+        "decisions": [
+            {"decision_id": "d1", "action": "allow"},
+            {"decision_id": "d2", "action": "invalid_action"},
+        ],
+    })
+    assert result.valid is False
+    # Should have error about d2's invalid action
+    assert any("decisions" in (item.path or "") for item in result.error_items if item.path)

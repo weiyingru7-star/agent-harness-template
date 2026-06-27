@@ -1,0 +1,10 @@
+{
+  "type": "decision_contract",
+  "name": "invalid_decision_missing_action",
+  "description": "A decision missing the required action field.",
+  "decision": {
+    "decision_id": "dec_no_action"
+  },
+  "expected_valid": false,
+  "expected_error_codes": ["DECISION_ACTION_MISSING"]
+}

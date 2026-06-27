@@ -1,0 +1,11 @@
+{
+  "type": "decision_contract",
+  "name": "invalid_decision_action",
+  "description": "A single decision with an invalid action value.",
+  "decision": {
+    "decision_id": "dec_bad",
+    "action": "nuke"
+  },
+  "expected_valid": false,
+  "expected_error_codes": ["DECISION_ACTION_INVALID"]
+}

@@ -18,7 +18,7 @@
 
 ## Current Stage 当前阶段
 
-当前阶段：V0.8.1 Policy Validation Eval Runner。
+当前阶段：V0.8.2 Guardrail Decision Contract。
 
 已完成的通用底座能力：
 - Agent Runtime（V0.2.x）：模块注册、执行契约、Trace / Span、Checkpoint、Failure / Retry、Timeline、Eval Trajectory
@@ -31,6 +31,7 @@
 - Provider Consolidation（V0.7.7）：收口 provider_runtime（canonical）和 ai_runtime（legacy）的边界
 - Policy / Guardrail Contract（V0.8.0）：Policy / Guardrail / Rule / Condition 合同、JSON Schema、PolicyValidator、AgentTemplate 集成。只做 contract / schema / validator / docs / tests，不执行 policy
 - Policy Validation Evals（V0.8.1）：独立 policy validation eval runner（scripts/run_policy_evals.py），7 个 eval case，补齐稳定 error codes。只验证 contract，不执行 policy
+- Guardrail Decision Contract（V0.8.2）：GuardrailDecision / DecisionResult 合同、结构校验、JSON Schema、eval cases。只做 contract / schema / validator / docs / tests，不执行 policy
 
 下一阶段规划：V0.8.x Advanced Features / Agent Memory。
 

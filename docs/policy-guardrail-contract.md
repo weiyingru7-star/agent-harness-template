@@ -167,6 +167,13 @@ class PolicyValidationResult(BaseModel):
 | GUARDRAIL_TYPE_INVALID | error | guardrail type 不在允许列表中 |
 | GUARDRAIL_ACTION_INVALID | error | guardrail action 不在允许列表中 |
 | GUARDRAIL_POLICY_REF_NOT_FOUND | warning | policy_ref 引用了不存在的 policy id |
+| DECISION_ID_MISSING | error | decision 缺少 decision_id |
+| DECISION_ACTION_MISSING | error | decision 缺少 action |
+| DECISION_ACTION_INVALID | error | decision action 不在允许列表中 |
+| DECISION_SEVERITY_INVALID | error | decision severity 不在允许列表中 |
+| DECISION_MATCHED_RULES_INVALID | error | matched_rules 不是 list |
+| DECISION_RESULT_ACTION_INVALID | error | DecisionResult final_action 不在允许列表中 |
+| DECISION_RESULT_DECISIONS_INVALID | error | DecisionResult decisions 不是 list |
 
 ## Agent Template 集成
 
@@ -205,6 +212,15 @@ AgentTemplateRegistry.validate_template() 现在也校验 policies 和 guardrail
 - ✅ 7 个 eval case（`evals/policy_cases/`）
 - ✅ 补齐 4 个稳定 error code
 
+### V0.8.2 增加
+
+- ✅ GuardrailDecision / DecisionResult 数据合同
+- ✅ Decision contract 结构校验（`validate_decision_contract` / `validate_decision_result`）
+- ✅ 4 个 decision contract eval case
+- ✅ 补齐 6 个 decision error code
+- ✅ `schemas/guardrail-decision.schema.json`
+- ✅ run_policy_evals.py 支持 `decision_contract` 和 `decision_result` 类型
+
 ### V0.8.0 只做
 
 - ❌ Condition 表达式执行
@@ -223,6 +239,58 @@ AgentTemplateRegistry.validate_template() 现在也校验 policies 和 guardrail
 - ✅ AgentTemplate 集成（可选字段，不改变已有行为）
 - ✅ 文档和测试
 
+## Decision Contract 决策合同
+
+V0.8.2 新增 GuardrailDecision 和 DecisionResult 合同，用于描述 policy / guardrail
+结构校验或未来评估后的标准化决策结果。
+
+### GuardrailDecision 单条决策
+
+```python
+class GuardrailDecision(BaseModel):
+    decision_id: str                    # 唯一标识（必填）
+    policy_id: str | None = None        # 关联的 Policy id
+    guardrail_id: str | None = None     # 关联的 Guardrail id
+    action: str                         # 决策动作（必填）：allow/block/warn/require_review
+    severity: str = "medium"            # 严重程度：low/medium/high/critical
+    reason: str = ""                    # 决策理由
+    matched_rules: list[str] = []       # 匹配的规则 id 列表
+    metadata: dict = {}
+```
+
+### DecisionResult 决策结果聚合
+
+```python
+class DecisionResult(BaseModel):
+    valid: bool                         # 决策是否成功解析
+    final_action: str = "allow"         # 聚合后的最终动作
+    decisions: list[GuardrailDecision] = []  # 所有决策明细
+    errors: list[str] = []
+    warnings: list[str] = []
+    error_items: list[PolicyValidationErrorItem] = []
+    metadata: dict = {}
+```
+
+### Decision Contract 校验
+
+```python
+# 校验单条决策结构
+result = PolicyValidator.validate_decision_contract(decision_dict)
+
+# 校验决策结果结构
+result = PolicyValidator.validate_decision_result(result_dict)
+```
+
+校验规则：
+- `decision_id` 必填
+- `action` 必填，必须在枚举列表中
+- `severity`（如果存在）必须在枚举列表中
+- `matched_rules`（如果存在）必须是 list
+- `final_action` 必须在枚举列表中
+- `decisions` 必须是 list，每个元素递归校验
+
+**不执行**：不根据 input 执行 policy，不生成决策，不调用任何外部系统。
+
 ## Eval Runner 评估运行器
 
 V0.8.1 新增独立的 policy validation eval runner：
@@ -233,17 +301,21 @@ python3 scripts/run_policy_evals.py
 
 ### Eval Cases
 
-7 个 eval case 位于 `evals/policy_cases/`：
+11 个 eval case 位于 `evals/policy_cases/`：
 
-| Case | 预期 valid | Error / Warning Codes |
-|---|---|---|
-| valid_policy | true | — |
-| valid_empty_policy_list | true | — |
-| invalid_scope | false | POLICY_SCOPE_INVALID |
-| invalid_action | false | POLICY_ACTION_INVALID |
-| invalid_condition_type | false | POLICY_CONDITION_TYPE_INVALID |
-| invalid_guardrail_type | false | GUARDRAIL_TYPE_INVALID |
-| invalid_guardrail_policy_ref | true (warning) | GUARDRAIL_POLICY_REF_NOT_FOUND |
+| Case | Type | 预期 valid | Error / Warning Codes |
+|---|---|---|---|
+| valid_policy | policy_validation | true | — |
+| valid_empty_policy_list | policy_validation | true | — |
+| invalid_scope | policy_validation | false | POLICY_SCOPE_INVALID |
+| invalid_action | policy_validation | false | POLICY_ACTION_INVALID |
+| invalid_condition_type | policy_validation | false | POLICY_CONDITION_TYPE_INVALID |
+| invalid_guardrail_type | policy_validation | false | GUARDRAIL_TYPE_INVALID |
+| invalid_guardrail_policy_ref | policy_validation | true (warning) | GUARDRAIL_POLICY_REF_NOT_FOUND |
+| valid_decision_result | decision_result | true | — |
+| invalid_decision_action | decision_contract | false | DECISION_ACTION_INVALID |
+| invalid_decision_severity | decision_contract | false | DECISION_SEVERITY_INVALID |
+| invalid_decision_missing_action | decision_contract | false | DECISION_ACTION_MISSING |
 
 run_policy_evals.py 遵循与其他 eval runner（run_workflow_evals.py）相同的模式：
 加载 JSON → 调用 PolicyValidator → 比较 expected_valid / expected_error_codes →

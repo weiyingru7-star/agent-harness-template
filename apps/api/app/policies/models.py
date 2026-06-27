@@ -75,3 +75,27 @@ class Guardrail(BaseModel):
     policy_ref: str | None = None
     action: str = "allow"  # from POLICY_ACTIONS
     metadata: dict = Field(default_factory=dict)
+
+
+# ── Decision Contracts (V0.8.2) ─────────────────────────────────────
+
+
+class GuardrailDecision(BaseModel):
+    decision_id: str
+    policy_id: str | None = None
+    guardrail_id: str | None = None
+    action: str  # from POLICY_ACTIONS
+    severity: str = "medium"  # from RULE_SEVERITIES
+    reason: str = ""
+    matched_rules: list[str] = Field(default_factory=list)
+    metadata: dict = Field(default_factory=dict)
+
+
+class DecisionResult(BaseModel):
+    valid: bool
+    final_action: str = "allow"  # from POLICY_ACTIONS
+    decisions: list[GuardrailDecision] = Field(default_factory=list)
+    errors: list[str] = Field(default_factory=list)
+    warnings: list[str] = Field(default_factory=list)
+    error_items: list[PolicyValidationErrorItem] = Field(default_factory=list)
+    metadata: dict = Field(default_factory=dict)

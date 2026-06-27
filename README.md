@@ -824,7 +824,7 @@ V0.7.0–V0.7.4 构建了 Workflow Contract 系统，共 4 个模块：
 
 ## Current Scope 当前范围
 
-当前版本（V0.8.1）已完成：
+当前版本（V0.8.2）已完成：
 - **V0.2.x Agent Runtime**：Trace / Span、Checkpoint、Failure / Retry、Timeline API 与前端视图、Eval Trajectory runner
 - **V0.3.x Tool Runtime**：Tool Call Contract、Tool Args Schema、Tool Result Contract、Tool Timeout、Tool Retry、Tool Permission、Tool Sandbox Policy、文档收口
 - **V0.4.x RAG Runtime**：数据合同、切分策略、直接文本创建、检索评估、嵌入层、向量存储、检索模式、文档收口
@@ -835,12 +835,13 @@ V0.7.0–V0.7.4 构建了 Workflow Contract 系统，共 4 个模块：
 - **V0.7.7 Provider Consolidation**：收口 `provider_runtime`（canonical layer）和 `ai_runtime`（legacy compatibility layer）的边界。新增收口文档，增加 deprecation 注释。不改变任何代码行为。详见 [Provider Runtime Consolidation](docs/provider-runtime-consolidation.md)。
 - **V0.8.0 Policy / Guardrail Contract**：Policy / Guardrail / Rule / Condition 业务无关合同。新增 PolicyValidator（结构校验，不执行）、JSON Schema、AgentTemplate 集成、文档和测试。详见 [Policy Guardrail Contract](docs/policy-guardrail-contract.md)。
 - **V0.8.1 Policy Validation Evals**：独立 policy validation eval runner（`scripts/run_policy_evals.py`），7 个 eval case，补齐稳定 error codes。只验证 contract，不执行 policy。详见 [Policy Guardrail Contract](docs/policy-guardrail-contract.md)。
+- **V0.8.2 Guardrail Decision Contract**：GuardrailDecision / DecisionResult 业务无关合同，描述 policy / guardrail 标准化决策结果。新增结构校验、JSON Schema、eval case 和测试。只做 contract，不执行 policy。详见 [Policy Guardrail Contract](docs/policy-guardrail-contract.md)。
 
 模板核心保持业务无关，具体业务逻辑应放在 `modules/{module_name}/` 内由使用者自行创建。详见 [Project Boundaries](PROJECT_BOUNDARIES.md)。
 
 下一阶段规划：V0.8.x Advanced Features / Agent Memory。
 
-> 当前阶段 V0.8.1 为 Policy Validation Eval Runner。policy eval 只验证
+> 当前阶段 V0.8.2 为 Guardrail Decision Contract。decision eval 只验证
 > contract 结构，不执行 policy，不拦截真实请求。后续阶段会实现 Policy Engine
 > 和 Guardrail Engine。
 

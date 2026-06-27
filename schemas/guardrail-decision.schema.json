@@ -1,0 +1,46 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "GuardrailDecision",
+  "description": "Contract for a single guardrail/policy evaluation decision. V0.8.2 — structure only, no execution.",
+  "type": "object",
+  "required": ["decision_id", "action"],
+  "properties": {
+    "decision_id": {
+      "type": "string",
+      "description": "Unique decision identifier."
+    },
+    "policy_id": {
+      "type": "string",
+      "description": "Optional reference to a policy id."
+    },
+    "guardrail_id": {
+      "type": "string",
+      "description": "Optional reference to a guardrail id."
+    },
+    "action": {
+      "type": "string",
+      "enum": ["allow", "block", "warn", "require_review"],
+      "description": "The decision action."
+    },
+    "severity": {
+      "type": "string",
+      "enum": ["low", "medium", "high", "critical"],
+      "description": "Severity level.",
+      "default": "medium"
+    },
+    "reason": {
+      "type": "string",
+      "description": "Human-readable reason for the decision."
+    },
+    "matched_rules": {
+      "type": "array",
+      "description": "List of rule ids that matched.",
+      "items": {"type": "string"}
+    },
+    "metadata": {
+      "type": "object",
+      "description": "Arbitrary metadata."
+    }
+  },
+  "additionalProperties": false
+}

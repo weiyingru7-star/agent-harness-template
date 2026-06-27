@@ -1,0 +1,12 @@
+{
+  "type": "decision_contract",
+  "name": "invalid_decision_severity",
+  "description": "A single decision with an invalid severity value.",
+  "decision": {
+    "decision_id": "dec_sev",
+    "action": "warn",
+    "severity": "catastrophic"
+  },
+  "expected_valid": false,
+  "expected_error_codes": ["DECISION_SEVERITY_INVALID"]
+}

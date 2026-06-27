@@ -1819,6 +1819,53 @@ git diff --check
 
 - [RAG Tenant Filter](docs/rag-tenant-filter.md)
 
+## V1.5 Document Cleaning Pipeline Acceptance V1.5 文档清洗流水线验收
+
+V1.5 离线文档清洗和入库流水线。支持 6 种文件类型，Plan A 文档级入库。
+
+### 新增组件
+
+| 组件 | 路径 | 说明 |
+|---|---|---|
+| 解析器 | `harness/ingestion/parsers/` | 6 个 parser（txt/md/pdf/docx/csv/xlsx） |
+| 清洗器 | `harness/ingestion/cleaner.py` | 类型感知文本去噪音 |
+| 预览 chunker | `harness/ingestion/chunker.py` | 预览 chunks（最终 chunking 由 RAG 负责） |
+| 流水线 | `harness/ingestion/pipeline.py` | 扫描 → 解析 → 清洗 → chunk → manifest |
+| CLI | `scripts/clean_documents.py` | 清洗命令 |
+| CLI | `scripts/ingest_cleaned_docs.py` | 入库命令 |
+
+### Metadata 流入路径
+
+```
+ingest_text(metadata={source_hash, document_key, ...})
+  → Document.metadata (包含 tenant_id + metadata)
+  → Chunk.chunk_metadata (包含 tenant_id + metadata)
+  → V1.4 tenant filter 自动生效
+```
+
+### Unified Acceptance Commands
+
+```bash
+# 全量后端测试（当前预期 563 passed）
+make test-api
+
+# 所有 eval runner
+python3 scripts/run_evals.py
+python3 scripts/run_rag_evals.py
+python3 scripts/run_workflow_evals.py
+python3 scripts/run_policy_evals.py
+
+# 模板健康检查
+python3 scripts/check_business_terms.py
+python3 scripts/check_template_health.py
+npm run build --prefix apps/web
+git diff --check
+```
+
+### 文档参考
+
+- [Ingestion Pipeline](docs/ingestion-pipeline.md)
+
 ## Common Errors 常见错误排查
 
 ### `python: command not found`

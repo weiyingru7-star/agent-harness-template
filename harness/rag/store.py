@@ -25,7 +25,11 @@ class KnowledgeStore:
         collection: str = "default",
         chunking_config: ChunkingConfig | None = None,
         tenant_id: str | None = None,
+        metadata: dict | None = None,
     ) -> IngestResponse:
+        base_meta = dict(metadata or {})
+        if tenant_id:
+            base_meta["tenant_id"] = tenant_id
         document = Document(
             id=self._new_id("doc"),
             file_id=uploaded_file.id,
@@ -34,9 +38,9 @@ class KnowledgeStore:
             title=uploaded_file.filename,
             source="file",
             content_type=uploaded_file.content_type,
-            metadata={} if not tenant_id else {"tenant_id": tenant_id},
+            metadata=base_meta,
         )
-        chunks = self._chunk_text(uploaded_file.text, document, collection, chunking_config, tenant_id=tenant_id)
+        chunks = self._chunk_text(uploaded_file.text, document, collection, chunking_config, base_meta=base_meta)
         return self._ingest_document(document, chunks)
 
     def ingest_text(
@@ -48,7 +52,11 @@ class KnowledgeStore:
         content_type: str = "text/plain",
         chunking_config: ChunkingConfig | None = None,
         tenant_id: str | None = None,
+        metadata: dict | None = None,
     ) -> IngestResponse:
+        base_meta = dict(metadata or {})
+        if tenant_id:
+            base_meta["tenant_id"] = tenant_id
         virtual_file = self._create_virtual_file(title, text, content_type)
         document = Document(
             id=self._new_id("doc"),
@@ -58,9 +66,9 @@ class KnowledgeStore:
             title=title,
             source=source,
             content_type=content_type,
-            metadata={} if not tenant_id else {"tenant_id": tenant_id},
+            metadata=base_meta,
         )
-        chunks = self._chunk_text(text, document, collection, chunking_config, tenant_id=tenant_id)
+        chunks = self._chunk_text(text, document, collection, chunking_config, base_meta=base_meta)
         return self._ingest_document(document, chunks)
 
     def _chunk_text(
@@ -69,8 +77,9 @@ class KnowledgeStore:
         document: Document,
         collection: str,
         config: ChunkingConfig | None,
-        tenant_id: str | None = None,
+        base_meta: dict | None = None,
     ) -> list[Chunk]:
+        bm = base_meta or {}
         if config is not None:
             results = chunk_text_with_strategy(text, config)
             return [
@@ -83,7 +92,7 @@ class KnowledgeStore:
                     collection=collection,
                     char_count=r.char_count,
                     token_count=r.token_count,
-                    chunk_metadata=self._build_chunk_meta(config, r, tenant_id),
+                    chunk_metadata={**bm, **self._build_chunk_meta(config, r)},
                 )
                 for r in results
             ]
@@ -97,14 +106,14 @@ class KnowledgeStore:
                 collection=collection,
                 char_count=_compute_chunk_stats(t)[0],
                 token_count=_compute_chunk_stats(t)[1],
-                chunk_metadata={"tenant_id": tenant_id} if tenant_id else {},
+                chunk_metadata=dict(bm),
             )
             for index, t in enumerate(chunk_text(text))
         ]
 
     @staticmethod
-    def _build_chunk_meta(config, r, tenant_id):
-        meta = {
+    def _build_chunk_meta(config, r):
+        return {
             "start_char": r.start_char,
             "end_char": r.end_char,
             "split_strategy": r.split_strategy,
@@ -112,9 +121,6 @@ class KnowledgeStore:
             "chunk_size": config.chunk_size,
             "chunk_overlap": config.chunk_overlap,
         }
-        if tenant_id:
-            meta["tenant_id"] = tenant_id
-        return meta
 
     def _ingest_document(self, document: Document, chunks: list[Chunk]) -> IngestResponse:
         with session_scope() as session:

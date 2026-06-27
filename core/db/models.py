@@ -213,3 +213,24 @@ class MessageRecord(Base):
     run_id: Mapped[str | None] = mapped_column(String(64), nullable=True)
     metadata_: Mapped[dict] = mapped_column("metadata", JSON, default=dict)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now)
+
+
+class JobRecord(Base):
+    __tablename__ = "jobs"
+
+    id: Mapped[str] = mapped_column(String(64), primary_key=True)
+    job_type: Mapped[str] = mapped_column(String(128))
+    status: Mapped[str] = mapped_column(String(32), default="queued")
+    tenant_id: Mapped[str | None] = mapped_column(String(128), nullable=True)
+    user_id: Mapped[str | None] = mapped_column(String(128), nullable=True)
+    request_id: Mapped[str | None] = mapped_column(String(128), nullable=True)
+    idempotency_key: Mapped[str | None] = mapped_column(String(256), nullable=True)
+    payload: Mapped[dict] = mapped_column(JSON, default=dict)
+    result: Mapped[dict | None] = mapped_column(JSON, nullable=True)
+    error: Mapped[dict | None] = mapped_column(JSON, nullable=True)
+    attempts: Mapped[int] = mapped_column(Integer, default=0)
+    max_attempts: Mapped[int] = mapped_column(Integer, default=1)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now)
+    updated_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    started_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    finished_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)

@@ -1917,6 +1917,63 @@ git diff --check
 
 - [Concurrency Idempotency Contract](docs/concurrency-idempotency-contract.md)
 
+## V1.8 Async Job Queue / Worker Runtime Acceptance V1.8 异步任务队列验收
+
+V1.8 新增 DB 后台异步任务队列和 Worker Runtime。
+
+### Job 状态机
+
+```
+queued → running → succeeded
+queued → running → failed
+running → queued (retry, attempts < max_attempts)
+queued → canceled (only queued)
+```
+
+### API Endpoints
+
+| Method | Path | 用途 |
+|---|---|---|
+| POST | `/api/jobs` | 创建 job（幂等入队） |
+| GET | `/api/jobs` | 列表（可 tenant/status 过滤） |
+| GET | `/api/jobs/{id}` | 详情 |
+| POST | `/api/jobs/{id}/cancel` | 取消（仅 queued） |
+
+### Idempotent Enqueue
+
+Scoped key: `tenant_id | user_id | job_type | idempotency_key`
+
+已有 job（任何状态）重复 key → 返回已有 job。
+
+### CLI Worker
+
+```bash
+python3 scripts/run_worker_once.py
+```
+
+### Unified Acceptance Commands
+
+```bash
+# 全量后端测试（当前预期 599 passed）
+make test-api
+
+# 所有 eval runner
+python3 scripts/run_evals.py
+python3 scripts/run_rag_evals.py
+python3 scripts/run_workflow_evals.py
+python3 scripts/run_policy_evals.py
+
+# 模板健康检查
+python3 scripts/check_business_terms.py
+python3 scripts/check_template_health.py
+npm run build --prefix apps/web
+git diff --check
+```
+
+### 文档参考
+
+- [Async Job Worker Runtime](docs/async-job-worker-runtime.md)
+
 ## Common Errors 常见错误排查
 
 ### `python: command not found`

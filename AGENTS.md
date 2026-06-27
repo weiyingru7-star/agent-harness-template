@@ -18,7 +18,7 @@
 
 ## Current Stage 当前阶段
 
-当前阶段：V1.7 Concurrency / Idempotency Contract。
+当前阶段：V1.8 Async Job Queue / Worker Runtime。
 
 已完成的通用底座能力：
 - Agent Runtime（V0.2.x）：Trace / Span、Checkpoint、Failure / Retry、Timeline、Eval Trajectory
@@ -51,6 +51,7 @@
 - Document Cleaning Pipeline（V1.5）：离线文档清洗流水线。支持 txt/md/pdf/docx/csv/xlsx。Plan A 文档级入库。metadata 保留 tenant_id/document_key/source_hash/document_version/status
 - Tool Permission / Ownership Guard（V1.6）：ToolOwnershipGuard 验证 tenant/user/resource ownership。ToolOwnershipRequirement 加入 ToolDefinition。deny 阻止 handler 执行。所有旧工具不变
 - Concurrency / Idempotency Contract（V1.7）：scoped idempotency_key + sequence_index 校验。in-memory IdempotencyGuard。message/run 重复 key 返回已有 resource。legacy 兼容
+- Async Job Queue / Worker Runtime（V1.8）：DB 后台异步任务队列。Job 状态机。幂等入队。WorkerRuntime。Retry/max_attempts。API create/list/get/cancel。CLI run_worker_once.py。不做 Redis/daemon
 
 ## Provider Layer Guidance Provider 层开发指引
 

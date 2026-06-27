@@ -824,13 +824,14 @@ V0.7.0–V0.7.4 构建了 Workflow Contract 系统，共 4 个模块：
 
 ## Current Scope 当前范围
 
-当前版本（V0.7.4）已完成：
+当前版本（V0.7.6）已完成：
 - **V0.2.x Agent Runtime**：Trace / Span、Checkpoint、Failure / Retry、Timeline API 与前端视图、Eval Trajectory runner
 - **V0.3.x Tool Runtime**：Tool Call Contract、Tool Args Schema、Tool Result Contract、Tool Timeout、Tool Retry、Tool Permission、Tool Sandbox Policy、文档收口
 - **V0.4.x RAG Runtime**：数据合同、切分策略、直接文本创建、检索评估、嵌入层、向量存储、检索模式、文档收口
 - **V0.5.x Provider Runtime**：ProviderRequest / Response / Error 合同、call_provider、fallback、smoke 响应合同对齐、streaming contract、error/fallback 路径、timeout/retry、config/env 管理、真实 OpenAI-compatible 适配
 - **V0.6.x Agent Template**：AgentTemplate contract、嵌套配置、Registry API、TemplateSummary、ValidateResult、Example Agent Template
 - **V0.7.x Workflow Contract**：Node/Edge/Condition schema、WorkflowValidator、校验规则、schema 增强、built-in node contracts、validation error codes、eval runner、文档收口
+- **V0.7.6 Tool Pipeline**：从 RunStore 抽取 Tool Execution Pipeline 到独立 `tool_runtime/` 模块。纯重构——不改变 API 响应、Event 结构、Eval 或测试断言。详见 [Tool Execution Pipeline](docs/tool-execution-pipeline.md)。
 
 模板核心保持业务无关，具体业务逻辑应放在 `modules/{module_name}/` 内由使用者自行创建。详见 [Project Boundaries](PROJECT_BOUNDARIES.md)。
 

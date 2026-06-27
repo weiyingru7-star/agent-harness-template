@@ -684,6 +684,55 @@ curl http://localhost:8005/api/runs/$RETRY_RUN_ID/events
 - retry run metadata 包含 `retry_of_run_id`。
 - events 包含 `run.retry_started`。
 
+## V0.7.6 Tool Pipeline Refactor Acceptance V0.7.6 重构验收
+
+V0.7.6 是纯重构：将 tool execution pipeline 从 RunStore 抽取到独立
+`apps/api/app/tool_runtime/` 模块。不改变任何 API 行为、Event 结构、
+Tool Runtime 合同或测试断言。
+
+### Unified Acceptance Commands 统一验收命令
+
+```bash
+# 全量后端测试（当前预期 266 passed）
+make test-api
+
+# Agent trajectory eval（预期 8 passed）
+python3 scripts/run_evals.py
+
+# RAG eval（预期 2 passed）
+python3 scripts/run_rag_evals.py
+
+# Workflow eval（预期 1 passed）
+python3 scripts/run_workflow_evals.py
+
+# 业务词污染检查
+python3 scripts/check_business_terms.py
+
+# 前端构建
+npm run build --prefix apps/web
+
+# Git diff whitespace 检查
+git diff --check
+```
+
+### 行为不变性检查
+
+所有以下行为与重构前完全一致：
+
+- `POST /api/runs` 响应结构不变
+- `GET /api/runs/{id}` 响应结构不变
+- `GET /api/runs/{id}/tool-calls` 响应结构不变
+- `GET /api/tool-calls/{id}` 响应结构不变
+- tool.call.started / completed / failed / retry_scheduled event 类型和 metadata 不变
+- ToolCall 模型字段不变
+- Sequence 顺序不变
+- Trace / Checkpoint / Timeline 语义不变
+- Tool Runtime contract（Permission / Sandbox / Args / Retry / Timeout）不变
+
+### 文档参考
+
+- [Tool Execution Pipeline](docs/tool-execution-pipeline.md)
+
 ## Common Errors 常见错误排查
 
 ### `python: command not found`

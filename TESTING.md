@@ -1392,6 +1392,48 @@ git diff --check
 - [CLI Scaffold Contract](docs/cli-scaffold-contract.md)
 - [scripts/scaffold_agent.py](scripts/scaffold_agent.py)
 
+## V0.9.3 Scaffold Eval Cases Acceptance V0.9.3 Eval Case 脚手架验收
+
+V0.9.3 新增 `scripts/scaffold_eval.py`，生成 `evals/cases/<name>.json`。
+字段精确匹配 `run_evals.py` 的 13 个 REQUIRED_FIELDS 和
+`schemas/eval-case.schema.json`。使用 `demo_agent` 作为中性 module_id。
+
+### CLI 参数
+
+| 参数 | 说明 |
+|---|---|
+| `--name NAME, -n NAME` | Eval case name in snake_case（必填） |
+| `--dry-run` | 打印将创建的文件，不写入 |
+| `--preview` | `--dry-run` 的别名 |
+| `--force` | 覆盖已存在的目标文件 |
+
+### 生成文件
+
+`evals/cases/<name>.json` — 包含 13 个字段，可被 `run_evals.py` 加载执行。
+
+### Unified Acceptance Commands 统一验收命令
+
+```bash
+# 全量后端测试（当前预期 395 passed）
+make test-api
+
+# 所有 eval runner
+python3 scripts/run_evals.py
+python3 scripts/run_rag_evals.py
+python3 scripts/run_workflow_evals.py
+python3 scripts/run_policy_evals.py
+
+# 业务词污染检查
+python3 scripts/check_business_terms.py
+npm run build --prefix apps/web
+git diff --check
+```
+
+### 文档参考
+
+- [CLI Scaffold Contract](docs/cli-scaffold-contract.md)
+- [scripts/scaffold_eval.py](scripts/scaffold_eval.py)
+
 ## Common Errors 常见错误排查
 
 ### `python: command not found`

@@ -1728,6 +1728,62 @@ git diff --check
 - [Conversation Message API](docs/conversation-message-api.md)
 - [Multi-user Runtime Contract](docs/multi-user-runtime-contract.md)
 
+## V1.3 Tenant Isolation Acceptance V1.3 租户隔离验收
+
+V1.3 为 Conversation/Message API 增加 tenant isolation。所有 conversation
+操作必须携带 `tenant_id`。
+
+### Tenant 规则
+
+| 场景 | 状态码 |
+|---|---|
+| 缺少 `tenant_id` | 400 |
+| `tenant_id` 不匹配 | 404 |
+| `user_id` 不匹配（message/run） | 404 |
+| `tenant_id` 匹配 + `user_id` 匹配 | 200/201 |
+
+### Tenant Isolation 检查清单
+
+| 检查项 | 结果 |
+|---|---|
+| GET conversations without tenant → 400 | ✅ |
+| GET conversations with tenant → 200 | ✅ |
+| GET conversations with tenant+user → 200 | ✅ |
+| GET conversation without tenant → 400 | ✅ |
+| GET conversation wrong tenant → 404 | ✅ |
+| GET conversation own tenant → 200 | ✅ |
+| GET messages without tenant → 400 | ✅ |
+| GET messages wrong tenant → 404 | ✅ |
+| GET messages own tenant → 200 | ✅ |
+| POST message wrong tenant → 404 | ✅ |
+| POST message wrong user → 404 | ✅ |
+| POST conversation run wrong tenant → 404 | ✅ |
+| POST conversation run wrong user → 404 | ✅ |
+| Old POST /api/runs unchanged | ✅ |
+
+### Unified Acceptance Commands
+
+```bash
+# 全量后端测试（当前预期 536 passed）
+make test-api
+
+# 所有 eval runner
+python3 scripts/run_evals.py
+python3 scripts/run_rag_evals.py
+python3 scripts/run_workflow_evals.py
+python3 scripts/run_policy_evals.py
+
+# 模板健康检查
+python3 scripts/check_business_terms.py
+python3 scripts/check_template_health.py
+npm run build --prefix apps/web
+git diff --check
+```
+
+### 文档参考
+
+- [Tenant Isolation](docs/tenant-isolation.md)
+
 ## Common Errors 常见错误排查
 
 ### `python: command not found`

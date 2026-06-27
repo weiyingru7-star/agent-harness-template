@@ -30,9 +30,12 @@ class ConversationStore:
                 metadata=metadata,
             )
 
-    def get_conversation(self, conversation_id: str) -> Conversation | None:
+    def get_conversation(self, conversation_id: str, tenant_id: str | None = None) -> Conversation | None:
         with session_scope() as session:
-            return ConversationRepository(session).get(conversation_id)
+            repo = ConversationRepository(session)
+            if tenant_id:
+                return repo.get_by_id_and_tenant(conversation_id, tenant_id)
+            return repo.get(conversation_id)
 
     def list_conversations(
         self,
@@ -41,10 +44,12 @@ class ConversationStore:
     ) -> list[Conversation]:
         with session_scope() as session:
             repo = ConversationRepository(session)
-            if user_id:
-                return repo.list_by_user(user_id)
+            if user_id and tenant_id:
+                return repo.list_by_user_and_tenant(user_id, tenant_id)
             if tenant_id:
                 return repo.list_by_tenant(tenant_id)
+            if user_id:
+                return repo.list_by_user(user_id)
             return []
 
     def add_message(

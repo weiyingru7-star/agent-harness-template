@@ -1,7 +1,6 @@
-"""Tests for V1.2 Conversation / Message API.
+"""Tests for V1.2 Conversation / Message API and V1.3 Tenant Isolation.
 
-Uses TestClient against the running app with SQLite (test default).
-All existing tests unchanged.
+Uses TestClient against the running app (SQLite test default).
 """
 
 from fastapi.testclient import TestClient
@@ -11,11 +10,13 @@ from app.main import app
 
 client = TestClient(app)
 
+_TENANT = "tenant_xyz"
+_USER = "user_abc"
 
-def _create_conv(user_id="user_abc", tenant_id="tenant_xyz"):
+
+def _create_conv(user_id=_USER, tenant_id=_TENANT):
     return client.post("/api/conversations", json={
-        "user_id": user_id,
-        "tenant_id": tenant_id,
+        "user_id": user_id, "tenant_id": tenant_id,
     }).json()
 
 
@@ -24,13 +25,12 @@ def _create_conv(user_id="user_abc", tenant_id="tenant_xyz"):
 
 def test_create_conversation() -> None:
     resp = client.post("/api/conversations", json={
-        "user_id": "user_abc",
-        "tenant_id": "tenant_xyz",
+        "user_id": _USER, "tenant_id": _TENANT,
     })
     assert resp.status_code == 201
     data = resp.json()
-    assert data["user_id"] == "user_abc"
-    assert data["tenant_id"] == "tenant_xyz"
+    assert data["user_id"] == _USER
+    assert data["tenant_id"] == _TENANT
     assert data["id"].startswith("conv_")
     assert "metadata" in data
 
@@ -45,30 +45,47 @@ def test_create_conversation_requires_tenant_id() -> None:
     assert resp.status_code == 422
 
 
-def test_get_conversation() -> None:
+def test_get_conversation_own_tenant() -> None:
     conv = _create_conv()
-    resp = client.get(f"/api/conversations/{conv['id']}")
+    resp = client.get(f"/api/conversations/{conv['id']}?tenant_id={_TENANT}")
     assert resp.status_code == 200
     assert resp.json()["id"] == conv["id"]
 
 
-def test_get_conversation_not_found() -> None:
-    resp = client.get("/api/conversations/conv_nonexistent")
+def test_get_conversation_without_tenant_400() -> None:
+    conv = _create_conv()
+    resp = client.get(f"/api/conversations/{conv['id']}")
+    assert resp.status_code == 400
+
+
+def test_get_conversation_wrong_tenant_404() -> None:
+    conv = _create_conv()
+    resp = client.get(f"/api/conversations/{conv['id']}?tenant_id=wrong_tenant")
     assert resp.status_code == 404
 
 
-def test_list_conversations_by_user() -> None:
-    _create_conv(user_id="user_list")
-    resp = client.get("/api/conversations?user_id=user_list")
+def test_get_conversation_not_found() -> None:
+    resp = client.get(f"/api/conversations/conv_nonexistent?tenant_id={_TENANT}")
+    assert resp.status_code == 404
+
+
+def test_list_conversations_tenant_only() -> None:
+    _create_conv()
+    resp = client.get(f"/api/conversations?tenant_id={_TENANT}")
     assert resp.status_code == 200
     assert len(resp.json()) >= 1
 
 
-def test_list_conversations_by_tenant() -> None:
-    _create_conv(tenant_id="tenant_list")
-    resp = client.get("/api/conversations?tenant_id=tenant_list")
+def test_list_conversations_user_and_tenant() -> None:
+    _create_conv()
+    resp = client.get(f"/api/conversations?tenant_id={_TENANT}&user_id={_USER}")
     assert resp.status_code == 200
     assert len(resp.json()) >= 1
+
+
+def test_list_conversations_without_tenant_400() -> None:
+    resp = client.get("/api/conversations")
+    assert resp.status_code == 400
 
 
 def test_two_conversations_different_ids() -> None:
@@ -81,22 +98,40 @@ def test_two_conversations_different_ids() -> None:
 
 
 def _create_msg(conv_id, role="user", content="hello"):
-    return client.post(f"/api/conversations/{conv_id}/messages", json={
-        "user_id": "user_abc",
-        "tenant_id": "tenant_xyz",
-        "role": role,
-        "content": content,
-    }).json()
+    resp = client.post(f"/api/conversations/{conv_id}/messages", json={
+        "user_id": _USER, "tenant_id": _TENANT,
+        "role": role, "content": content,
+    })
+    assert resp.status_code == 201
+    return resp.json()
 
 
-def test_add_message_user_role() -> None:
+def test_add_message_own_tenant() -> None:
     conv = _create_conv()
     msg = _create_msg(conv["id"], role="user", content="Hello")
     assert msg["role"] == "user"
     assert msg["content"] == "Hello"
     assert msg["conversation_id"] == conv["id"]
-    assert msg["user_id"] == "user_abc"
-    assert msg["tenant_id"] == "tenant_xyz"
+    assert msg["user_id"] == _USER
+    assert msg["tenant_id"] == _TENANT
+
+
+def test_add_message_wrong_tenant_404() -> None:
+    conv = _create_conv()
+    resp = client.post(f"/api/conversations/{conv['id']}/messages", json={
+        "user_id": _USER, "tenant_id": "wrong_tenant",
+        "role": "user", "content": "x",
+    })
+    assert resp.status_code == 404
+
+
+def test_add_message_wrong_user_404() -> None:
+    conv = _create_conv()
+    resp = client.post(f"/api/conversations/{conv['id']}/messages", json={
+        "user_id": "wrong_user", "tenant_id": _TENANT,
+        "role": "user", "content": "x",
+    })
+    assert resp.status_code == 404
 
 
 def test_add_message_all_roles() -> None:
@@ -109,7 +144,7 @@ def test_add_message_all_roles() -> None:
 def test_add_message_invalid_role() -> None:
     conv = _create_conv()
     resp = client.post(f"/api/conversations/{conv['id']}/messages", json={
-        "user_id": "u", "tenant_id": "t",
+        "user_id": _USER, "tenant_id": _TENANT,
         "role": "admin", "content": "x",
     })
     assert resp.status_code == 422
@@ -118,7 +153,7 @@ def test_add_message_invalid_role() -> None:
 def test_message_metadata_round_trip() -> None:
     conv = _create_conv()
     resp = client.post(f"/api/conversations/{conv['id']}/messages", json={
-        "user_id": "u", "tenant_id": "t",
+        "user_id": _USER, "tenant_id": _TENANT,
         "role": "user", "content": "with meta",
         "metadata": {"source": "test", "version": 1},
     })
@@ -128,29 +163,41 @@ def test_message_metadata_round_trip() -> None:
     assert data["metadata"]["version"] == 1
 
 
-def test_list_messages_stable_order() -> None:
+def test_list_messages_own_tenant() -> None:
     conv = _create_conv()
     ids = []
     for i in range(3):
         msg = _create_msg(conv["id"], role="user", content=f"msg_{i}")
         ids.append(msg["id"])
 
-    resp = client.get(f"/api/conversations/{conv['id']}/messages")
+    resp = client.get(f"/api/conversations/{conv['id']}/messages?tenant_id={_TENANT}")
     assert resp.status_code == 200
     returned = [m["id"] for m in resp.json()]
     assert returned == ids  # insertion order preserved
 
 
-def test_list_messages_empty() -> None:
+def test_list_messages_without_tenant_400() -> None:
     conv = _create_conv()
     resp = client.get(f"/api/conversations/{conv['id']}/messages")
+    assert resp.status_code == 400
+
+
+def test_list_messages_wrong_tenant_404() -> None:
+    conv = _create_conv()
+    resp = client.get(f"/api/conversations/{conv['id']}/messages?tenant_id=wrong_tenant")
+    assert resp.status_code == 404
+
+
+def test_list_messages_empty() -> None:
+    conv = _create_conv()
+    resp = client.get(f"/api/conversations/{conv['id']}/messages?tenant_id={_TENANT}")
     assert resp.status_code == 200
     assert resp.json() == []
 
 
 def test_add_message_to_nonexistent_conversation() -> None:
     resp = client.post("/api/conversations/conv_nonexist/messages", json={
-        "user_id": "u", "tenant_id": "t", "role": "user", "content": "x",
+        "user_id": _USER, "tenant_id": _TENANT, "role": "user", "content": "x",
     })
     assert resp.status_code == 404
 
@@ -158,12 +205,10 @@ def test_add_message_to_nonexistent_conversation() -> None:
 # ── Conversation Run ───────────────────────────────────────────────
 
 
-def test_conversation_run_creates_user_message() -> None:
+def test_conversation_run_own_tenant() -> None:
     conv = _create_conv()
     resp = client.post(f"/api/conversations/{conv['id']}/runs", json={
-        "user_id": "user_abc",
-        "tenant_id": "tenant_xyz",
-        "input": "hello",
+        "user_id": _USER, "tenant_id": _TENANT, "input": "hello",
     })
     assert resp.status_code == 201
     data = resp.json()
@@ -175,73 +220,69 @@ def test_conversation_run_creates_user_message() -> None:
 def test_conversation_run_metadata_binding() -> None:
     conv = _create_conv()
     resp = client.post(f"/api/conversations/{conv['id']}/runs", json={
-        "user_id": "user_abc",
-        "tenant_id": "tenant_xyz",
-        "input": "binding test",
+        "user_id": _USER, "tenant_id": _TENANT, "input": "binding test",
     })
     assert resp.status_code == 201
     data = resp.json()
 
-    # Verify run metadata has user context
     run_resp = client.get(f"/api/runs/{data['run_id']}")
     assert run_resp.status_code == 200
     run = run_resp.json()
     meta = run.get("metadata", {})
-    assert meta.get("user_id") == "user_abc"
-    assert meta.get("tenant_id") == "tenant_xyz"
+    assert meta.get("user_id") == _USER
+    assert meta.get("tenant_id") == _TENANT
     assert meta.get("conversation_id") == conv["id"]
     assert meta.get("message_id") == data["user_message_id"]
 
 
 def test_conversation_run_assistant_message_written() -> None:
-    """When run completes with output, assistant message is written."""
     conv = _create_conv()
     resp = client.post(f"/api/conversations/{conv['id']}/runs", json={
-        "user_id": "user_abc",
-        "tenant_id": "tenant_xyz",
-        "input": "hello",
+        "user_id": _USER, "tenant_id": _TENANT, "input": "hello",
     })
     assert resp.status_code == 201
     data = resp.json()
-    # Run should complete with demo_agent
     assert data["run_status"] == "completed"
     assert data["assistant_message_id"] is not None
 
-    # Verify assistant message exists with run output
-    msgs = client.get(f"/api/conversations/{conv['id']}/messages").json()
+    msgs = client.get(f"/api/conversations/{conv['id']}/messages?tenant_id={_TENANT}").json()
     roles = [m["role"] for m in msgs]
     assert roles == ["user", "assistant"]
     assert msgs[1]["run_id"] == data["run_id"]
     assert msgs[1]["content"] != ""
 
 
-def test_conversation_run_user_tenant_mismatch() -> None:
+def test_conversation_run_wrong_tenant_404() -> None:
     conv = _create_conv()
     resp = client.post(f"/api/conversations/{conv['id']}/runs", json={
-        "user_id": "wrong_user",
-        "tenant_id": "tenant_xyz",
-        "input": "hello",
+        "user_id": _USER, "tenant_id": "wrong_tenant", "input": "hello",
     })
-    assert resp.status_code == 400
+    assert resp.status_code == 404
 
 
-def test_conversation_run_nonexistent() -> None:
+def test_conversation_run_wrong_user_404() -> None:
+    conv = _create_conv()
+    resp = client.post(f"/api/conversations/{conv['id']}/runs", json={
+        "user_id": "wrong_user", "tenant_id": _TENANT, "input": "hello",
+    })
+    assert resp.status_code == 404
+
+
+def test_conversation_run_nonexistent_404() -> None:
     resp = client.post("/api/conversations/conv_nonexist/runs", json={
-        "user_id": "u", "tenant_id": "t", "input": "hello",
+        "user_id": _USER, "tenant_id": _TENANT, "input": "hello",
     })
-    assert resp.status_code == 400
+    assert resp.status_code == 404
 
 
 # ── Backward compatibility ─────────────────────────────────────────
 
 
 def test_old_runs_endpoint_unchanged() -> None:
-    """Old POST /api/runs without user context still works."""
     resp = client.post("/api/runs", json={"input": "old style"})
     assert resp.status_code == 201
     run = resp.json()
     assert run["status"] == "completed"
-    # No user context in metadata
     meta = run.get("metadata", {})
     assert "user_id" not in meta
     assert "tenant_id" not in meta

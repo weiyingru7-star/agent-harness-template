@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, HTTPException, Query, status
 
 from app.models.conversation import (
     ConversationResponse,
@@ -27,16 +27,23 @@ def create_conversation(request: CreateConversationRequest) -> ConversationRespo
 
 @router.get("", response_model=list[ConversationResponse])
 def list_conversations(
-    user_id: str | None = None,
-    tenant_id: str | None = None,
+    tenant_id: str | None = Query(None, min_length=1, description="Tenant ID (required)"),
+    user_id: str | None = Query(None, min_length=1, description="Optional user filter"),
 ) -> list[ConversationResponse]:
+    if not tenant_id:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="tenant_id is required")
     convs = conversation_store.list_conversations(user_id=user_id, tenant_id=tenant_id)
     return [ConversationResponse(**c.model_dump()) for c in convs]
 
 
 @router.get("/{conversation_id}", response_model=ConversationResponse)
-def get_conversation(conversation_id: str) -> ConversationResponse:
-    conv = conversation_store.get_conversation(conversation_id)
+def get_conversation(
+    conversation_id: str,
+    tenant_id: str | None = Query(None, min_length=1, description="Tenant ID (required)"),
+) -> ConversationResponse:
+    if not tenant_id:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="tenant_id is required")
+    conv = conversation_store.get_conversation(conversation_id, tenant_id=tenant_id)
     if conv is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Conversation not found")
     return ConversationResponse(**conv.model_dump())
@@ -48,8 +55,9 @@ def get_conversation(conversation_id: str) -> ConversationResponse:
     status_code=status.HTTP_201_CREATED,
 )
 def add_message(conversation_id: str, request: CreateMessageRequest) -> MessageResponse:
-    conv = conversation_store.get_conversation(conversation_id)
-    if conv is None:
+    # Tenant consistency check
+    conv = conversation_store.get_conversation(conversation_id, tenant_id=request.tenant_id)
+    if conv is None or conv.user_id != request.user_id:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Conversation not found")
     msg = conversation_store.add_message(
         conversation_id=conversation_id,
@@ -63,8 +71,13 @@ def add_message(conversation_id: str, request: CreateMessageRequest) -> MessageR
 
 
 @router.get("/{conversation_id}/messages", response_model=list[MessageResponse])
-def list_messages(conversation_id: str) -> list[MessageResponse]:
-    conv = conversation_store.get_conversation(conversation_id)
+def list_messages(
+    conversation_id: str,
+    tenant_id: str | None = Query(None, min_length=1, description="Tenant ID (required)"),
+) -> list[MessageResponse]:
+    if not tenant_id:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="tenant_id is required")
+    conv = conversation_store.get_conversation(conversation_id, tenant_id=tenant_id)
     if conv is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Conversation not found")
     msgs = conversation_store.list_messages(conversation_id)
@@ -90,7 +103,7 @@ def create_conversation_run(
     )
     if result is None:
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Conversation not found or user/tenant mismatch",
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Conversation not found",
         )
     return result

@@ -52,6 +52,20 @@ class ConversationRepository:
             return None
         return self._from_record(record)
 
+    def get_by_id_and_tenant(self, conversation_id: str, tenant_id: str) -> Conversation | None:
+        """Get conversation only if it belongs to the given tenant."""
+        stmt = (
+            select(ConversationRecord)
+            .where(
+                ConversationRecord.id == conversation_id,
+                ConversationRecord.tenant_id == tenant_id,
+            )
+        )
+        record = self.session.execute(stmt).scalar_one_or_none()
+        if record is None:
+            return None
+        return self._from_record(record)
+
     def list_by_user(self, user_id: str) -> list[Conversation]:
         stmt = (
             select(ConversationRecord)
@@ -64,6 +78,18 @@ class ConversationRepository:
         stmt = (
             select(ConversationRecord)
             .where(ConversationRecord.tenant_id == tenant_id)
+            .order_by(ConversationRecord.created_at.desc())
+        )
+        return [self._from_record(r) for r in self.session.execute(stmt).scalars().all()]
+
+    def list_by_user_and_tenant(self, user_id: str, tenant_id: str) -> list[Conversation]:
+        """List conversations filtered by both user and tenant."""
+        stmt = (
+            select(ConversationRecord)
+            .where(
+                ConversationRecord.user_id == user_id,
+                ConversationRecord.tenant_id == tenant_id,
+            )
             .order_by(ConversationRecord.created_at.desc())
         )
         return [self._from_record(r) for r in self.session.execute(stmt).scalars().all()]

@@ -1,7 +1,8 @@
 # Guardrail Runtime Integration Plan 护栏运行时集成计划
 
 本文档规划 Policy / Guardrail Runtime 的集成路径，明确从 contract 到
-dry-run 再到 future enforcement 的各个阶段。当前 V0.8.5 只做计划文档，
+dry-run 再到 future enforcement 的各个阶段。当前 V0.8.6 已完成 input
+guardrail dry-run hook，后续将继续实现 tool / provider / RAG 等 hook。
 **不修改任何运行时模块**。
 
 ## 1. Current State 当前状态
@@ -15,7 +16,8 @@ V0.8.0–V0.8.4 已完成所有基础合同和 dry-run 能力：
 | V0.8.2 | GuardrailDecision / DecisionResult 合同、决策结构校验 | ✅ 完成 |
 | V0.8.3 | EvaluationContext / EvaluationSubject 合同、上下文结构校验 | ✅ 完成 |
 | V0.8.4 | PolicyDryRunEvaluator——根据 Policy/Guardrail/Context 生成 DecisionResult。支持 always / match / route condition，expression 安全拒绝 | ✅ 完成 |
-| **V0.8.5** | **Runtime 集成计划文档，不修改代码** | 📄 本文档 |
+| **V0.8.5** | **Runtime 集成计划文档，不修改代码** | 📄 已完成 |
+| **V0.8.6** | **Input Guardrail Dry-Run Hook——在 RunStore._create_run 中插入 input dry-run helper** | ✅ 已完成 |
 
 **当前不存在的（明确未来实现）**：
 
@@ -146,7 +148,7 @@ def create_run(self, task_input, module_id=None):
 | 版本 | 内容 | 改 runtime？ | Enforcement？ |
 |---|---|---|---|
 | **V0.8.5** | Runtime 集成计划文档 | ❌ 不改 | ❌ 不 enforcement |
-| V0.8.6 | Input Guardrail Dry-Run Hook——在 RunStore.create_run() 附近调用 dry-run evaluator，记录 decision 但永不阻止 | ⚠️ 仅 dry-run hook | ❌ 不 enforcement |
+| **V0.8.6** | Input Guardrail Dry-Run Hook——在 RunStore._create_run 附近调用 dry-run evaluator，记录 decision 但永不阻止 | ⚠️ 仅 dry-run hook | ❌ 不 enforcement |
 | V0.8.7 | Tool Guardrail Dry-Run Hook——在 ToolExecutionPipeline 附近调用 dry-run evaluator | ⚠️ 仅 dry-run hook | ❌ 不 enforcement |
 | V0.8.8 | Provider / RAG Guardrail Dry-Run Hook | ⚠️ 仅 dry-run hook | ❌ 不 enforcement |
 | V0.8.9 | Guardrail Runtime Docs 收口 | ❌ 不改 | ❌ 不 enforcement |

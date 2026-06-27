@@ -107,6 +107,20 @@ class RunStore:
                 )
                 sequence += 1
 
+            # ── Input guardrail dry-run hook (V0.8.6) ────────────────
+            from app.policies.dry_run_hooks import run_input_guardrail
+            sequence = run_input_guardrail(
+                task_input=task_input,
+                run_id=run.id,
+                run_metadata=run_metadata,
+                trace_id=trace_id,
+                sequence=sequence,
+                event_repository=event_repository,
+                policies=[],      # No policies loaded yet — no-op by default
+                guardrails=[],
+            )
+            # ── End input guardrail hook ─────────────────────────────
+
             result = execute_module(selected_module_id, task_input, run.id)
             checkpoint_index = 1
             for node_trace in result.steps:

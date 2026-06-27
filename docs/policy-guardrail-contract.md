@@ -387,6 +387,41 @@ result = PolicyDryRunEvaluator.evaluate(
 # result = DecisionResult dict
 ```
 
+## Dry-Run Hooks 运行时 Hook
+
+V0.8.6 开始将 PolicyDryRunEvaluator 接入 Agent 核心链路。每个 hook
+构造对应 scope 的 EvaluationContext，调用 evaluator，记录决策结果。
+
+### Input Guardrail Hook（V0.8.6）
+
+在 `RunStore._create_run` 中 `run.started` 之后、`execute_module` 之前执行：
+
+```python
+from app.policies.dry_run_hooks import run_input_guardrail
+
+sequence = run_input_guardrail(
+    task_input=task_input,
+    run_id=run.id,
+    run_metadata=run_metadata,
+    trace_id=trace_id,
+    sequence=sequence,
+    event_repository=event_repository,
+    policies=[],      # 需要从 AgentConfig 加载
+    guardrails=[],
+)
+```
+
+### Hook 行为约束
+
+| 约束 | 说明 |
+|---|---|
+| No-op | 没有 policies/guardrails 时跳过，不记录 event |
+| Dry-run only | 生成 DecisionResult 但永不阻止请求 |
+| Safe exception | 任何异常被捕获并静默返回，不影响 run 创建 |
+| Event type | `guardrail.dry_run.completed` |
+| API response | 不改变 `/api/runs` 响应结构 |
+| Run status | 不改变 run.status |
+
 ## Eval Runner 评估运行器
 
 V0.8.1 新增独立的 policy validation eval runner：

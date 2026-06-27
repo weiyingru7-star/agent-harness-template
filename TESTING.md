@@ -1094,6 +1094,44 @@ git diff --check
 - ✅ 所有现有测试不变
 - ✅ 所有现有 eval 不变
 
+## V0.8.6 Input Guardrail Dry-Run Hook Acceptance V0.8.6 输入护栏 Dry-Run Hook 验收
+
+V0.8.6 新增 `run_input_guardrail()` dry-run hook，在 RunStore._create_run
+中构造 input-scope EvaluationContext，调用 PolicyDryRunEvaluator，
+记录 `guardrail.dry_run.completed` event。纯 dry-run，不拦截请求，
+不改变 API response 主结构。
+
+### 已实现能力
+
+- ✅ `dry_run_hooks.py` — `run_input_guardrail()` helper
+- ✅ RunStore._create_run 接入点（run.started 后、execute_module 前）
+- ✅ EvaluationContext: scope=input, subject.type=run_input
+- ✅ 没有 policies/guardrails 时 no-op，不记录事件
+- ✅ 异常安全——hook 不抛出，不影响 run 创建
+- ✅ final_action=block 时仍继续执行 run
+
+### Unified Acceptance Commands 统一验收命令
+
+```bash
+# 全量后端测试（当前预期 314 passed）
+make test-api
+
+# 所有 eval runner
+python3 scripts/run_evals.py
+python3 scripts/run_rag_evals.py
+python3 scripts/run_workflow_evals.py
+python3 scripts/run_policy_evals.py
+
+# 业务词污染检查和前端构建
+python3 scripts/check_business_terms.py
+npm run build --prefix apps/web
+git diff --check
+```
+
+### 文档参考
+
+- [Policy Guardrail Contract](docs/policy-guardrail-contract.md)
+
 ## Common Errors 常见错误排查
 
 ### `python: command not found`

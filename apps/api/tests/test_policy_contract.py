@@ -500,3 +500,143 @@ def test_dry_run_evaluator_scope_filter() -> None:
     # Policy scope is 'tool', context scope is 'input' — no match
     assert result["final_action"] == "allow"
     assert len(result["decisions"]) == 0
+
+
+# ── Dry-Run Hook Tests (V0.8.6) ────────────────────────────────────
+
+class _MockEventRepo:
+    """Minimal mock that records create() calls for hook testing."""
+
+    def __init__(self) -> None:
+        self.events: list[dict] = []
+
+    def create(self, **kwargs) -> None:
+        self.events.append(kwargs)
+
+
+def test_input_hook_noop_without_policies() -> None:
+    """No policies means no guardrail event and sequence unchanged."""
+    from app.policies.dry_run_hooks import run_input_guardrail
+
+    repo = _MockEventRepo()
+    seq = run_input_guardrail(
+        task_input="hello",
+        run_id="run_test",
+        run_metadata={"module_id": "test"},
+        trace_id="trace_test",
+        sequence=5,
+        event_repository=repo,
+        policies=[],
+        guardrails=[],
+    )
+    assert seq == 5  # unchanged
+    assert len(repo.events) == 0  # no event recorded
+
+
+def test_input_hook_records_event() -> None:
+    """With policies, guardrail.dry_run.completed event is recorded."""
+    from app.policies.dry_run_hooks import run_input_guardrail
+
+    repo = _MockEventRepo()
+    seq = run_input_guardrail(
+        task_input="hello",
+        run_id="run_test",
+        run_metadata={"module_id": "test"},
+        trace_id="trace_test",
+        sequence=5,
+        event_repository=repo,
+        policies=[{
+            "id": "allow_all",
+            "name": "Allow All",
+            "version": "1.0",
+            "scope": "input",
+            "rules": [
+                {"id": "r1", "condition": {"type": "always"}, "action": "allow"},
+            ],
+            "default_action": "allow",
+        }],
+        guardrails=[],
+    )
+    assert seq == 6  # advanced
+    assert len(repo.events) == 1
+    event = repo.events[0]
+    assert event["event_type"] == "guardrail.dry_run.completed"
+    assert event["metadata"]["scope"] == "input"
+    assert event["metadata"]["execution_mode"] == "dry_run"
+    assert event["metadata"]["final_action"] == "allow"
+    assert event["metadata"]["decision_count"] == 1
+
+
+def test_input_hook_block_does_not_block() -> None:
+    """Even with final_action=block, the run is not prevented."""
+    from app.policies.dry_run_hooks import run_input_guardrail
+
+    repo = _MockEventRepo()
+    seq = run_input_guardrail(
+        task_input="block_me",
+        run_id="run_test",
+        run_metadata={"module_id": "test"},
+        trace_id="trace_test",
+        sequence=5,
+        event_repository=repo,
+        policies=[{
+            "id": "block_policy",
+            "name": "Block Policy",
+            "version": "1.0",
+            "scope": "input",
+            "rules": [
+                {
+                    "id": "r1",
+                    "condition": {"type": "match", "match": {"field": "subject.content", "equals": "block_me"}},
+                    "action": "block",
+                    "severity": "high",
+                },
+            ],
+            "default_action": "allow",
+        }],
+        guardrails=[],
+    )
+    assert seq == 6  # advanced (no crash)
+    assert len(repo.events) == 1
+    assert repo.events[0]["metadata"]["final_action"] == "block"
+
+
+def test_input_hook_exception_safe() -> None:
+    """Exception in hook should not crash — returns sequence unchanged."""
+    from app.policies.dry_run_hooks import run_input_guardrail
+
+    # Pass garbage that will cause evaluator to crash when accessed
+    seq = run_input_guardrail(
+        task_input="hello",
+        run_id="run_test",
+        run_metadata=None,  # type: ignore — will cause AttributeError
+        trace_id="trace_test",
+        sequence=5,
+        event_repository=_MockEventRepo(),
+        policies=[{
+            "id": "p1", "name": "P1", "version": "1.0", "scope": "input",
+            "rules": [{"id": "r1", "condition": {"type": "always"}, "action": "allow"}],
+            "default_action": "allow",
+        }],
+    )
+    # Should fall through to except and return sequence unchanged
+    assert seq == 5
+
+
+def test_run_flow_unaffected_by_hook() -> None:
+    """Normal run via API still works with the hook wired in."""
+    from fastapi.testclient import TestClient
+    from app.main import app
+
+    client = TestClient(app)
+    response = client.post("/api/runs", json={"input": "hello"})
+    assert response.status_code == 201
+    run = response.json()
+    assert run["status"] == "completed"
+    assert run["output"] is not None
+    # No guardrail event visible in default flow (no policies)
+    events = client.get(f"/api/runs/{run['id']}/events").json()
+    event_types = [e["event_type"] for e in events]
+    assert "guardrail.dry_run.completed" not in event_types
+    assert event_types[:2] == ["run.created", "run.started"]
+    assert event_types[-1] == "run.completed"

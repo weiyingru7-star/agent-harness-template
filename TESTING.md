@@ -1680,6 +1680,54 @@ git diff --check
 
 - [Multi-user Runtime Contract](docs/multi-user-runtime-contract.md)
 
+## V1.2 Message / Conversation API Acceptance V1.2 消息与会话 API 验收
+
+V1.2 实现 Conversation/Message CRUD API、conversation-triggered run、assistant message 回写。新增 DB 表自动创建。
+
+### API Endpoints
+
+| Method | Path | 用途 |
+|---|---|---|
+| POST | `/api/conversations` | 创建 conversation |
+| GET | `/api/conversations` | 列表（按 user_id / tenant_id） |
+| GET | `/api/conversations/{id}` | 读取 conversation |
+| POST | `/api/conversations/{id}/messages` | 添加消息（4 种角色） |
+| GET | `/api/conversations/{id}/messages` | 消息列表（插入顺序） |
+| POST | `/api/conversations/{id}/runs` | 创建 user message + run + assistant message |
+
+### 新增 DB 表
+
+| 表 | 字段 |
+|---|---|
+| `conversations` | id, user_id, tenant_id, agent_template_id, metadata, created_at, updated_at |
+| `messages` | id, conversation_id(FK), tenant_id, user_id, role, content, run_id, metadata, created_at |
+
+表通过 `Base.metadata.create_all` 自动创建，无迁移。
+
+### Unified Acceptance Commands 统一验收命令
+
+```bash
+# 全量后端测试（当前预期 528 passed）
+make test-api
+
+# 所有 eval runner
+python3 scripts/run_evals.py
+python3 scripts/run_rag_evals.py
+python3 scripts/run_workflow_evals.py
+python3 scripts/run_policy_evals.py
+
+# 模板健康检查
+python3 scripts/check_business_terms.py
+python3 scripts/check_template_health.py
+npm run build --prefix apps/web
+git diff --check
+```
+
+### 文档参考
+
+- [Conversation Message API](docs/conversation-message-api.md)
+- [Multi-user Runtime Contract](docs/multi-user-runtime-contract.md)
+
 ## Common Errors 常见错误排查
 
 ### `python: command not found`

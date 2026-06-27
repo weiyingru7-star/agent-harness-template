@@ -8,6 +8,7 @@ from app.core.config import settings
 from app.routes.agent_templates import router as agent_templates_router
 from app.routes.artifacts import router as artifacts_router
 from app.routes.checkpoints import router as checkpoints_router
+from app.routes.conversations import router as conversations_router
 from app.routes.files import router as files_router
 from app.routes.health import router as health_router
 from app.routes.knowledge import router as knowledge_router
@@ -44,6 +45,7 @@ app.include_router(files_router)
 app.include_router(artifacts_router)
 app.include_router(knowledge_router)
 app.include_router(agent_templates_router)
+app.include_router(conversations_router)
 
 
 @app.get("/")

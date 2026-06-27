@@ -344,6 +344,21 @@ class ToolExecutionPipeline:
         tool_arguments: dict,
         tool_definition,
     ) -> PipelineResult:
+        # ── Tool guardrail dry-run hook (V0.8.7) ────────────────────
+        from app.policies.dry_run_hooks import run_tool_guardrail
+        sequence = run_tool_guardrail(
+            tool_name=tool_definition.id if tool_definition else "unknown",
+            tool_arguments=tool_arguments,
+            run_id=run_id,
+            trace_id=trace_id,
+            span_id=span_id,
+            sequence=sequence,
+            event_repository=event_repository,
+            policies=[],
+            guardrails=[],
+        )
+        # ── End guardrail hook ──────────────────────────────────────
+
         tool_handler = get_tool("mock_echo")
         tool_timeout_ms = tool_definition.timeout_ms if tool_definition else None
         tool_max_attempts = tool_definition.max_attempts if tool_definition else 1

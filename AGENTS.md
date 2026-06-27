@@ -18,7 +18,7 @@
 
 ## Current Stage 当前阶段
 
-当前阶段：V0.8.6 Input Guardrail Dry-Run Hook。
+当前阶段：V0.8.7 Tool Guardrail Dry-Run Hook。
 
 已完成的通用底座能力：
 - Agent Runtime（V0.2.x）：Trace / Span、Checkpoint、Failure / Retry、Timeline、Eval Trajectory
@@ -33,6 +33,7 @@
 - Policy Dry-Run Evaluator（V0.8.4）：PolicyDryRunEvaluator——根据 Policy/Guardrail/Context 生成 DecisionResult。支持 always/match/route condition，expression 安全拒绝。不接 runtime，不拦截请求
 - Guardrail Runtime Integration Plan（V0.8.5）：集成计划文档，设计 runtime 接入点、execution mode、dry-run/enforcement 边界。不修改任何代码
 - Input Guardrail Dry-Run Hook（V0.8.6）：run_input_guardrail() 在 RunStore._create_run 中插入 input dry-run hook。纯 dry-run，不拦截请求
+- Tool Guardrail Dry-Run Hook（V0.8.7）：run_tool_guardrail() 在 ToolExecutionPipeline._execute_tool 中插入 tool dry-run hook。纯 dry-run，不阻止 tool 执行
 
 ## Provider Layer Guidance Provider 层开发指引
 

@@ -1132,6 +1132,43 @@ git diff --check
 
 - [Policy Guardrail Contract](docs/policy-guardrail-contract.md)
 
+## V0.8.7 Tool Guardrail Dry-Run Hook Acceptance V0.8.7 工具护栏 Dry-Run Hook 验收
+
+V0.8.7 复用已有 `run_tool_guardrail()` 接入 ToolExecutionPipeline。
+构造 tool-scope EvaluationContext，调用 PolicyDryRunEvaluator，
+记录 `guardrail.dry_run.completed` event。纯 dry-run，不阻止 tool 执行。
+
+### 已实现能力
+
+- ✅ `run_tool_guardrail()` 接入 ToolExecutionPipeline._execute_tool
+- ✅ EvaluationContext: scope=tool, subject.type=tool_call
+- ✅ 没有 policies/guardrails 时 no-op，不影响现有 tool tests
+- ✅ 异常安全——hook 不抛出，不影响 tool 执行
+- ✅ final_action=block 时仍继续执行 tool
+- ✅ ToolCall / tool result / timeout / retry / permission / sandbox 行为完全不变
+
+### Unified Acceptance Commands 统一验收命令
+
+```bash
+# 全量后端测试（当前预期 318 passed）
+make test-api
+
+# 所有 eval runner
+python3 scripts/run_evals.py
+python3 scripts/run_rag_evals.py
+python3 scripts/run_workflow_evals.py
+python3 scripts/run_policy_evals.py
+
+# 业务词污染检查和前端构建
+python3 scripts/check_business_terms.py
+npm run build --prefix apps/web
+git diff --check
+```
+
+### 文档参考
+
+- [Policy Guardrail Contract](docs/policy-guardrail-contract.md)
+
 ## Common Errors 常见错误排查
 
 ### `python: command not found`

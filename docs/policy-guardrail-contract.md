@@ -411,6 +411,29 @@ sequence = run_input_guardrail(
 )
 ```
 
+### Tool Guardrail Hook（V0.8.7）
+
+在 `ToolExecutionPipeline._execute_tool` 中 tool handler 执行之前插入：
+
+```python
+from app.policies.dry_run_hooks import run_tool_guardrail
+
+sequence = run_tool_guardrail(
+    tool_name=tool_definition.id if tool_definition else "unknown",
+    tool_arguments=tool_arguments,
+    run_id=run_id,
+    trace_id=trace_id,
+    span_id=span_id,
+    sequence=sequence,
+    event_repository=event_repository,
+    policies=[],      # 需要从配置加载
+    guardrails=[],
+)
+```
+
+默认没有 tool policies source，因此普通运行 no-op。未来版本再接入
+config-driven policies / guardrails。
+
 ### Hook 行为约束
 
 | 约束 | 说明 |

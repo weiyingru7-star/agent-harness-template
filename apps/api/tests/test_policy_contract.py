@@ -640,3 +640,117 @@ def test_run_flow_unaffected_by_hook() -> None:
     assert "guardrail.dry_run.completed" not in event_types
     assert event_types[:2] == ["run.created", "run.started"]
     assert event_types[-1] == "run.completed"
+
+
+# ── Tool Guardrail Hook Tests (V0.8.7) ─────────────────────────────
+
+def test_tool_hook_noop_without_policies() -> None:
+    """No policies means no guardrail event and sequence unchanged."""
+    from app.policies.dry_run_hooks import run_tool_guardrail
+
+    repo = _MockEventRepo()
+    seq = run_tool_guardrail(
+        tool_name="mock_echo",
+        tool_arguments={"input": "hello"},
+        run_id="run_test",
+        trace_id="trace_test",
+        span_id="span_test",
+        sequence=10,
+        event_repository=repo,
+        policies=[],
+        guardrails=[],
+    )
+    assert seq == 10  # unchanged
+    assert len(repo.events) == 0  # no event recorded
+
+
+def test_tool_hook_records_event() -> None:
+    """With policies, guardrail.dry_run.completed event is recorded."""
+    from app.policies.dry_run_hooks import run_tool_guardrail
+
+    repo = _MockEventRepo()
+    seq = run_tool_guardrail(
+        tool_name="mock_echo",
+        tool_arguments={"input": "hello"},
+        run_id="run_test",
+        trace_id="trace_test",
+        span_id="span_test",
+        sequence=10,
+        event_repository=repo,
+        policies=[{
+            "id": "tool_allow",
+            "name": "Tool Allow",
+            "version": "1.0",
+            "scope": "tool",
+            "rules": [
+                {"id": "r1", "condition": {"type": "always"}, "action": "allow"},
+            ],
+            "default_action": "allow",
+        }],
+        guardrails=[],
+    )
+    assert seq == 11  # advanced
+    assert len(repo.events) == 1
+    event = repo.events[0]
+    assert event["event_type"] == "guardrail.dry_run.completed"
+    assert event["metadata"]["scope"] == "tool"
+    assert event["metadata"]["execution_mode"] == "dry_run"
+    assert event["metadata"]["final_action"] == "allow"
+    assert event["metadata"]["decision_count"] == 1
+    assert event["metadata"]["tool_name"] == "mock_echo"
+
+
+def test_tool_hook_block_does_not_block() -> None:
+    """Even with final_action=block, tool execution is not prevented."""
+    from app.policies.dry_run_hooks import run_tool_guardrail
+
+    repo = _MockEventRepo()
+    seq = run_tool_guardrail(
+        tool_name="mock_echo",
+        tool_arguments={"input": "block_test"},
+        run_id="run_test",
+        trace_id="trace_test",
+        span_id="span_test",
+        sequence=10,
+        event_repository=repo,
+        policies=[{
+            "id": "tool_block",
+            "name": "Tool Block",
+            "version": "1.0",
+            "scope": "tool",
+            "rules": [
+                {
+                    "id": "r1",
+                    "condition": {"type": "always"},
+                    "action": "block",
+                    "severity": "high",
+                },
+            ],
+            "default_action": "allow",
+        }],
+        guardrails=[],
+    )
+    assert seq == 11  # advanced (no crash)
+    assert len(repo.events) == 1
+    assert repo.events[0]["metadata"]["final_action"] == "block"
+
+
+def test_tool_hook_noop_in_pipeline() -> None:
+    """Default pipeline run with no policies — no guardrail event."""
+    from fastapi.testclient import TestClient
+    from app.main import app
+
+    client = TestClient(app)
+    run = client.post("/api/runs", json={"input": "tool noop test"}).json()
+    assert run["status"] == "completed"
+
+    events = client.get(f"/api/runs/{run['id']}/events").json()
+    event_types = [e["event_type"] for e in events]
+    # No guardrail event in default flow
+    assert "guardrail.dry_run.completed" not in event_types
+    # Core event order preserved
+    assert event_types[:2] == ["run.created", "run.started"]
+    assert event_types[-1] == "run.completed"
+    # Tool events still present
+    assert "tool.call.started" in event_types
+    assert "tool.call.completed" in event_types

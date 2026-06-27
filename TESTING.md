@@ -1434,6 +1434,48 @@ git diff --check
 - [CLI Scaffold Contract](docs/cli-scaffold-contract.md)
 - [scripts/scaffold_eval.py](scripts/scaffold_eval.py)
 
+## V0.9.4 Scaffold Docs Generator Acceptance V0.9.4 文档脚手架验收
+
+V0.9.4 新增 `scripts/scaffold_docs.py`，生成 `docs/scaffolds/<kind>-<name>.md`。
+
+### CLI 参数
+
+| 参数 | 说明 |
+|---|---|
+| `--name NAME, -n NAME` | Name in snake_case（必填） |
+| `--kind {module,agent,eval,generic}` | Scaffold kind（默认 generic） |
+| `--dry-run` | 打印将创建的文件，不写入 |
+| `--preview` | `--dry-run` 的别名 |
+| `--force` | 覆盖已存在的目标文件 |
+
+### 生成文件
+
+`docs/scaffolds/<kind>-<name>.md` — 中性文档骨架，包含 Purpose /
+Generated Files / How to Validate / How to Run Tests / Next Steps / Safety Notes。
+
+### Unified Acceptance Commands 统一验收命令
+
+```bash
+# 全量后端测试（当前预期 422 passed）
+make test-api
+
+# 所有 eval runner
+python3 scripts/run_evals.py
+python3 scripts/run_rag_evals.py
+python3 scripts/run_workflow_evals.py
+python3 scripts/run_policy_evals.py
+
+# 业务词污染检查
+python3 scripts/check_business_terms.py
+npm run build --prefix apps/web
+git diff --check
+```
+
+### 文档参考
+
+- [CLI Scaffold Contract](docs/cli-scaffold-contract.md)
+- [scripts/scaffold_docs.py](scripts/scaffold_docs.py)
+
 ## Common Errors 常见错误排查
 
 ### `python: command not found`

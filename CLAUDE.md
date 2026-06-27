@@ -18,7 +18,7 @@
 
 ## Current Stage 当前阶段
 
-当前阶段：V0.9.3 Scaffold Eval Cases。
+当前阶段：V0.9.4 Scaffold Docs / README Generator。
 
 已完成的通用底座能力：
 - Agent Runtime（V0.2.x）：模块注册、执行契约、Trace / Span、Checkpoint、Failure / Retry、Timeline、Eval Trajectory
@@ -43,6 +43,7 @@
 - Scaffold Module Script（V0.9.1）：scripts/scaffold_module.py，支持 --name/--dry-run/--force/--preview。命名校验、sensitive name 拒绝、path traversal 拒绝、business term 检查。复用 templates/module-template/。22 条测试
 - Scaffold Agent Template（V0.9.2）：scripts/scaffold_agent.py，从 templates/agent-template/ 读取源模板，生成 templates/<name>/ 下的 agent.json + README.md。生成的 agent.json 可被 AgentConfig 和 AgentTemplateRegistry 解析。复用命名校验。10 条测试
 - Scaffold Eval Cases（V0.9.3）：scripts/scaffold_eval.py，生成 evals/cases/<name>.json，匹配 run_evals.py 的 13 个 REQUIRED_FIELDS 和 eval-case.schema.json。使用 demo_agent module。复用命名校验。测试包含 JSON 结构校验和可选 schema 校验
+- Scaffold Docs Generator（V0.9.4）：scripts/scaffold_docs.py，生成 docs/scaffolds/<kind>-<name>.md。支持 --kind (module/agent/eval/generic)。每个 kind 生成不同的中性文档骨架。复用命名校验。27 条测试
 
 下一阶段规划：V0.9.x CLI / Scaffold Implementation。
 

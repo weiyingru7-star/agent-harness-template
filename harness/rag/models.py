@@ -16,6 +16,7 @@ class Document(BaseModel):
     title: str | None = None
     source: str | None = None
     content_type: str | None = None
+    metadata: dict = Field(default_factory=dict)
     created_at: datetime = Field(default_factory=utc_now)
 
 

@@ -18,7 +18,7 @@
 
 ## Current Stage 当前阶段
 
-当前阶段：V1.3 Tenant Isolation。
+当前阶段：V1.4 RAG Tenant Filter。
 
 已完成的通用底座能力：
 - Agent Runtime（V0.2.x）：模块注册、执行契约、Trace / Span、Checkpoint、Failure / Retry、Timeline、Eval Trajectory
@@ -50,8 +50,9 @@
 - Multi-user Runtime Contract（V1.1）：UserContext / Conversation / Message / RunBinding 数据合同。CreateRunRequest 可选 user_id/tenant_id/conversation_id/message_id。20 条 contract + API 测试。不修改 runtime 行为
 - Message / Conversation API（V1.2）：实现 Conversation/Message CRUD API 和 conversation-triggered run。新增 ConversationRecord/MessageRecord 表（自动创建）。assistant message 在 run completed 且有 output 时回写。旧 /api/runs 完全不变。21 条测试
 - Tenant Isolation（V1.3）：conversation/message API 强制 tenant_id。缺失→400，不匹配→404。list conversations 必须 tenant-scoped。user_id 一致性校验。旧 /api/runs 不变
+- RAG Tenant Filter（V1.4）：RAG ingestion/retrieval 支持可选 tenant_id。存储在已有 metadata JSON 列（无迁移）。keyword/vector/hybrid 三种模式均支持 tenant 过滤。向后兼容旧无 tenant 文档
 
-下一阶段规划：V1.4 RAG Tenant Filter。
+下一阶段规划：V1.5 Tool Permission / Ownership Guard。
 
 下一阶段规划：V0.8.x Advanced Features / Agent Memory。
 

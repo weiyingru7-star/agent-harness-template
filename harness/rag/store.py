@@ -24,6 +24,7 @@ class KnowledgeStore:
         uploaded_file: UploadedFile,
         collection: str = "default",
         chunking_config: ChunkingConfig | None = None,
+        tenant_id: str | None = None,
     ) -> IngestResponse:
         document = Document(
             id=self._new_id("doc"),
@@ -33,8 +34,9 @@ class KnowledgeStore:
             title=uploaded_file.filename,
             source="file",
             content_type=uploaded_file.content_type,
+            metadata={} if not tenant_id else {"tenant_id": tenant_id},
         )
-        chunks = self._chunk_text(uploaded_file.text, document, collection, chunking_config)
+        chunks = self._chunk_text(uploaded_file.text, document, collection, chunking_config, tenant_id=tenant_id)
         return self._ingest_document(document, chunks)
 
     def ingest_text(
@@ -45,6 +47,7 @@ class KnowledgeStore:
         source: str = "direct",
         content_type: str = "text/plain",
         chunking_config: ChunkingConfig | None = None,
+        tenant_id: str | None = None,
     ) -> IngestResponse:
         virtual_file = self._create_virtual_file(title, text, content_type)
         document = Document(
@@ -55,8 +58,9 @@ class KnowledgeStore:
             title=title,
             source=source,
             content_type=content_type,
+            metadata={} if not tenant_id else {"tenant_id": tenant_id},
         )
-        chunks = self._chunk_text(text, document, collection, chunking_config)
+        chunks = self._chunk_text(text, document, collection, chunking_config, tenant_id=tenant_id)
         return self._ingest_document(document, chunks)
 
     def _chunk_text(
@@ -65,6 +69,7 @@ class KnowledgeStore:
         document: Document,
         collection: str,
         config: ChunkingConfig | None,
+        tenant_id: str | None = None,
     ) -> list[Chunk]:
         if config is not None:
             results = chunk_text_with_strategy(text, config)
@@ -78,14 +83,7 @@ class KnowledgeStore:
                     collection=collection,
                     char_count=r.char_count,
                     token_count=r.token_count,
-                    chunk_metadata={
-                        "start_char": r.start_char,
-                        "end_char": r.end_char,
-                        "split_strategy": r.split_strategy,
-                        "overlap_with_previous": r.overlap_with_previous,
-                        "chunk_size": config.chunk_size,
-                        "chunk_overlap": config.chunk_overlap,
-                    },
+                    chunk_metadata=self._build_chunk_meta(config, r, tenant_id),
                 )
                 for r in results
             ]
@@ -99,19 +97,35 @@ class KnowledgeStore:
                 collection=collection,
                 char_count=_compute_chunk_stats(t)[0],
                 token_count=_compute_chunk_stats(t)[1],
+                chunk_metadata={"tenant_id": tenant_id} if tenant_id else {},
             )
             for index, t in enumerate(chunk_text(text))
         ]
 
+    @staticmethod
+    def _build_chunk_meta(config, r, tenant_id):
+        meta = {
+            "start_char": r.start_char,
+            "end_char": r.end_char,
+            "split_strategy": r.split_strategy,
+            "overlap_with_previous": r.overlap_with_previous,
+            "chunk_size": config.chunk_size,
+            "chunk_overlap": config.chunk_overlap,
+        }
+        if tenant_id:
+            meta["tenant_id"] = tenant_id
+        return meta
+
     def _ingest_document(self, document: Document, chunks: list[Chunk]) -> IngestResponse:
         with session_scope() as session:
             repository = KnowledgeRepository(session)
+            meta = dict(document.metadata) if document.metadata else {}
             repository.create_document(
                 document=document,
                 collection=document.collection or "default",
                 title=document.title,
                 source=document.source or "direct",
-                metadata={},
+                metadata=meta,
             )
             repository.create_chunks(chunks)
         return IngestResponse(document=document, chunks=chunks)
@@ -149,19 +163,20 @@ class KnowledgeStore:
         limit: int = 3,
         retrieval_mode: str = "keyword",
         collection: str | None = None,
+        tenant_id: str | None = None,
     ) -> list[RetrieveResult]:
         if retrieval_mode == "keyword":
-            return self._keyword_retrieve(query, limit)
+            return self._keyword_retrieve(query, limit, tenant_id=tenant_id)
         if retrieval_mode == "vector":
-            return self._vector_retrieve(query, limit, collection)
+            return self._vector_retrieve(query, limit, collection, tenant_id=tenant_id)
         if retrieval_mode == "hybrid":
-            return self._hybrid_retrieve(query, limit, collection)
+            return self._hybrid_retrieve(query, limit, collection, tenant_id=tenant_id)
         msg = f"Unknown retrieval_mode: {retrieval_mode}"
         raise ValueError(msg)
 
     # --- keyword ---
 
-    def _keyword_retrieve(self, query: str, limit: int = 3) -> list[RetrieveResult]:
+    def _keyword_retrieve(self, query: str, limit: int = 3, tenant_id: str | None = None) -> list[RetrieveResult]:
         terms = [term for term in query.lower().split() if term]
         scored: list[tuple[int, Chunk]] = []
 
@@ -171,6 +186,8 @@ class KnowledgeStore:
             documents = {document.id: document for document in repository.list_documents()}
 
         for chunk in chunks:
+            if tenant_id and chunk.chunk_metadata.get("tenant_id") != tenant_id:
+                continue
             haystack = chunk.text.lower()
             score = sum(haystack.count(term) for term in terms)
             if score > 0:
@@ -221,6 +238,7 @@ class KnowledgeStore:
 
     def _vector_retrieve(
         self, query: str, limit: int, collection: str | None,
+        tenant_id: str | None = None,
     ) -> list[RetrieveResult]:
         self._ensure_vector_index()
         provider = EmbeddingRegistry.get()
@@ -232,6 +250,9 @@ class KnowledgeStore:
             collection=collection,
             top_k=limit,
         ))
+
+        if tenant_id:
+            results = [r for r in results if r.metadata.get("tenant_id") == tenant_id]
 
         with session_scope() as session:
             repo = KnowledgeRepository(session)
@@ -268,9 +289,10 @@ class KnowledgeStore:
 
     def _hybrid_retrieve(
         self, query: str, limit: int, collection: str | None,
+        tenant_id: str | None = None,
     ) -> list[RetrieveResult]:
-        kw_results = self._keyword_retrieve(query, limit * 2)
-        vec_results = self._vector_retrieve(query, limit * 2, collection)
+        kw_results = self._keyword_retrieve(query, limit * 2, tenant_id=tenant_id)
+        vec_results = self._vector_retrieve(query, limit * 2, collection, tenant_id=tenant_id)
 
         seen: set[str] = set()
         merged: list[RetrieveResult] = []

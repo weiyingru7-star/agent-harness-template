@@ -87,6 +87,7 @@ class KnowledgeRepository:
             title=record.title,
             source=record.source,
             content_type="text",
+            metadata=record.metadata_ or {},
             created_at=record.created_at,
         )
 

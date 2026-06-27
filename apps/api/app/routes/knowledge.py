@@ -14,6 +14,7 @@ router = APIRouter(prefix="/api/knowledge", tags=["knowledge"])
 class IngestRequest(BaseModel):
     file_id: str
     chunking_config: dict | None = None
+    tenant_id: str | None = None
 
 
 class CreateDocumentRequest(BaseModel):
@@ -24,6 +25,7 @@ class CreateDocumentRequest(BaseModel):
     content_type: str = "text/plain"
     metadata: dict = Field(default_factory=dict)
     chunking_config: dict | None = None
+    tenant_id: str | None = None
 
 
 class RetrieveRequest(BaseModel):
@@ -31,6 +33,7 @@ class RetrieveRequest(BaseModel):
     limit: int = Field(default=3, ge=1, le=10)
     retrieval_mode: str = "keyword"
     collection: str | None = None
+    tenant_id: str | None = None
 
 
 @router.post("/ingest", response_model=IngestResponse, status_code=status.HTTP_201_CREATED)
@@ -41,7 +44,7 @@ def ingest(request: IngestRequest) -> IngestResponse:
     config: ChunkingConfig | None = None
     if request.chunking_config is not None:
         config = ChunkingConfig(**request.chunking_config)
-    return knowledge_store.ingest_file(uploaded_file, chunking_config=config)
+    return knowledge_store.ingest_file(uploaded_file, chunking_config=config, tenant_id=request.tenant_id)
 
 
 @router.post("/documents", response_model=IngestResponse, status_code=status.HTTP_201_CREATED)
@@ -56,6 +59,7 @@ def create_document(request: CreateDocumentRequest) -> IngestResponse:
         source=request.source,
         content_type=request.content_type,
         chunking_config=config,
+        tenant_id=request.tenant_id,
     )
 
 
@@ -72,6 +76,7 @@ def retrieve(request: RetrieveRequest) -> RetrieveResponse:
             limit=request.limit,
             retrieval_mode=request.retrieval_mode,
             collection=request.collection,
+            tenant_id=request.tenant_id,
         )
     except ValueError as exc:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc)) from exc

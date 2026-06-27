@@ -1784,6 +1784,41 @@ git diff --check
 
 - [Tenant Isolation](docs/tenant-isolation.md)
 
+## V1.4 RAG Tenant Filter Acceptance V1.4 RAG 租户过滤验收
+
+V1.4 为 RAG ingestion/retrieval 增加可选 tenant_id 过滤。
+
+### 新增功能
+
+- Ingestion（`POST /api/knowledge/documents`、`POST /api/knowledge/ingest`）接受可选 `tenant_id`
+- Retrieval（`POST /api/knowledge/retrieve`）接受可选 `tenant_id`
+- Tenant_id 存储在已有 metadata JSON 列（ChunkRecord.metadata_、DocumentRecord.metadata_）
+- Keyword / Vector / Hybrid 三种检索模式都支持 tenant 过滤
+- 向后兼容旧无 tenant 文档
+
+### Unified Acceptance Commands
+
+```bash
+# 全量后端测试（当前预期 546 passed）
+make test-api
+
+# 所有 eval runner
+python3 scripts/run_evals.py
+python3 scripts/run_rag_evals.py
+python3 scripts/run_workflow_evals.py
+python3 scripts/run_policy_evals.py
+
+# 模板健康检查
+python3 scripts/check_business_terms.py
+python3 scripts/check_template_health.py
+npm run build --prefix apps/web
+git diff --check
+```
+
+### 文档参考
+
+- [RAG Tenant Filter](docs/rag-tenant-filter.md)
+
 ## Common Errors 常见错误排查
 
 ### `python: command not found`

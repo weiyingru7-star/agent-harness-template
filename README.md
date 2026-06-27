@@ -824,7 +824,7 @@ V0.7.0–V0.7.4 构建了 Workflow Contract 系统，共 4 个模块：
 
 ## Current Scope 当前范围
 
-当前版本（V0.9.6）已完成：
+当前版本（V1.0）已完成：
 - **V0.2.x Agent Runtime**：Trace / Span、Checkpoint、Failure / Retry、Timeline API 与前端视图、Eval Trajectory runner
 - **V0.3.x Tool Runtime**：Tool Call Contract、Tool Args Schema、Tool Result Contract、Tool Timeout、Tool Retry、Tool Permission、Tool Sandbox Policy、文档收口
 - **V0.4.x RAG Runtime**：数据合同、切分策略、直接文本创建、检索评估、嵌入层、向量存储、检索模式、文档收口
@@ -850,6 +850,7 @@ V0.7.0–V0.7.4 构建了 Workflow Contract 系统，共 4 个模块：
 - **V0.9.4 Scaffold Docs Generator**：新增 `scripts/scaffold_docs.py`，生成 `docs/scaffolds/<kind>-<name>.md`。支持 `--kind`（module/agent/eval/generic），每个 kind 生成不同的中性文档骨架（用途、生成文件、验证步骤、安全说明）。复用命名校验。27 条测试。
 - **V0.9.5 CLI Validation and Hygiene**：抽取 scaffold 系列脚本中重复的命名校验、安全校验、路径校验逻辑到 `scripts/scaffold_validation.py`。提供 `validate_scaffold_name()`、`resolve_safe_target()`、`format_errors()` 统一入口。4 个 scaffold 脚本全部引用共享模块。59 条共享校验测试。
 - **V0.9.6 CLI Docs Consolidation**：V0.9 全阶段文档收口。新增 `docs/cli-scaffold-guide.md`（4 个命令的 dry-run/normal/force 使用示例）、`docs/cli-scaffold-troubleshooting.md`（7 种常见错误修复）。更新 CLI contract 文档。不修改代码。
+- **V1.0 Minimal Reusable Agent Harness Template**：新增 `QUICKSTART.md`（10 分钟快速启动）、`TEMPLATE_USAGE.md`（fork/clone 分离指南）、`docs/template-release-checklist.md`（发布清单）、`scripts/check_template_health.py`（模板健康检查）。README 重新定位为 template landing page。不修改 runtime。详见 [Template Release Checklist](docs/template-release-checklist.md)。
 
 模板核心保持业务无关，具体业务逻辑应放在 `modules/{module_name}/` 内由使用者自行创建。详见 [Project Boundaries](PROJECT_BOUNDARIES.md)。
 
@@ -860,6 +861,15 @@ V0.7.0–V0.7.4 构建了 Workflow Contract 系统，共 4 个模块：
 - [CLI Scaffold Contract](docs/cli-scaffold-contract.md) — 总体设计和路线图
 - [CLI Scaffold Guide](docs/cli-scaffold-guide.md) — 四个命令的使用示例
 - [CLI Scaffold Troubleshooting](docs/cli-scaffold-troubleshooting.md) — 常见问题修复
+
+### Template vs Project
+
+Agent Harness Template 是**通用 Agent 底座**，不绑定任何具体行业。
+如果你要用它构建自己的 Agent 项目，请阅读 [TEMPLATE_USAGE.md](TEMPLATE_USAGE.md)。
+
+- **模板核心**保持业务中性，业务代码放在 `modules/<your_module>/` 中
+- **不要**在模板核心中写业务词、API key、真实 provider 配置
+- **scaffold 命令**可以帮助你快速生成 module / agent / eval / docs 骨架
 
 模板核心保持业务无关，具体业务逻辑应放在 `modules/{module_name}/` 内由使用者自行创建。详见 [Project Boundaries](PROJECT_BOUNDARIES.md)。
 
@@ -883,8 +893,9 @@ V0.7.0–V0.7.4 构建了 Workflow Contract 系统，共 4 个模块：
 - **Modifying output** — 不修改 tool / provider / RAG result
 - **Changing run status** — dry-run hook 不改变 run.status
 
-> 当前阶段 V0.9.6 为 CLI Docs Consolidation。V0.9 CLI / Scaffold 阶段
-> 正式收口。所有 scaffold 命令、校验规则、测试和文档已统一。
+> 当前阶段 V1.0 为 Minimal Reusable Agent Harness Template。本阶段新增
+> QUICKSTART.md、TEMPLATE_USAGE.md、template-release-checklist.md、
+> check_template_health.py。README 重新定位为模板首页。**不修改 runtime。**
 
 ### Provider Layer 分层说明
 

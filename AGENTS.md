@@ -18,7 +18,7 @@
 
 ## Current Stage 当前阶段
 
-当前阶段：V0.9.6 CLI Docs Consolidation。
+当前阶段：V1.0 Minimal Reusable Agent Harness Template。
 
 已完成的通用底座能力：
 - Agent Runtime（V0.2.x）：Trace / Span、Checkpoint、Failure / Retry、Timeline、Eval Trajectory
@@ -43,6 +43,7 @@
 - Scaffold Docs Generator（V0.9.4）：scripts/scaffold_docs.py，生成 docs/scaffolds/<kind>-<name>.md。支持 --kind (module/agent/eval/generic)
 - CLI Validation and Hygiene（V0.9.5）：抽取 scaffold 重复 validation 逻辑到 scripts/scaffold_validation.py。4 个 scaffold 脚本统一引用
 - CLI Docs Consolidation（V0.9.6）：V0.9 全阶段文档收口。新增 cli-scaffold-guide.md、cli-scaffold-troubleshooting.md。不修改代码
+- Minimal Reusable Agent Harness Template（V1.0）：新增 QUICKSTART.md、TEMPLATE_USAGE.md、release-checklist.md、check_template_health.py。README 重新定位。不修改 runtime
 
 ## Provider Layer Guidance Provider 层开发指引
 

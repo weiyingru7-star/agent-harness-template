@@ -18,7 +18,7 @@
 
 ## Current Stage 当前阶段
 
-当前阶段：V0.9.6 CLI Docs Consolidation。
+当前阶段：V1.0 Minimal Reusable Agent Harness Template。
 
 已完成的通用底座能力：
 - Agent Runtime（V0.2.x）：模块注册、执行契约、Trace / Span、Checkpoint、Failure / Retry、Timeline、Eval Trajectory
@@ -46,8 +46,9 @@
 - Scaffold Docs Generator（V0.9.4）：scripts/scaffold_docs.py，生成 docs/scaffolds/<kind>-<name>.md。支持 --kind (module/agent/eval/generic)。每个 kind 生成不同的中性文档骨架。复用命名校验。27 条测试
 - CLI Validation and Hygiene（V0.9.5）：抽取 scaffold 重复 validation 逻辑到 scripts/scaffold_validation.py。提供 validate_scaffold_name()、resolve_safe_target()、format_errors()。4 个 scaffold 脚本统一引用。59 条共享校验测试
 - CLI Docs Consolidation（V0.9.6）：V0.9 全阶段文档收口。新增 cli-scaffold-guide.md、cli-scaffold-troubleshooting.md。不修改代码
+- Minimal Reusable Agent Harness Template（V1.0）：新增 QUICKSTART.md、TEMPLATE_USAGE.md、release-checklist.md、check_template_health.py。README 重新定位为 template landing page。不修改 runtime
 
-下一阶段规划：V1.0 Minimal Reusable Agent Harness Template（项目整体成熟度提升）。
+下一阶段规划：V1.1 Conversation / Multi-user Runtime Contract。
 
 下一阶段规划：V0.8.x Advanced Features / Agent Memory。
 

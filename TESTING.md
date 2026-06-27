@@ -1582,6 +1582,67 @@ python3 scripts/scaffold_docs.py --name sample_docs --kind generic --dry-run
 - [CLI Scaffold Guide](docs/cli-scaffold-guide.md)
 - [CLI Scaffold Troubleshooting](docs/cli-scaffold-troubleshooting.md)
 
+## V1.0 Minimal Reusable Agent Harness Template Acceptance V1.0 模板验收
+
+V1.0 重新定位项目为可复用 Agent Harness Template。新增快速启动、
+模板使用指南、发布清单和健康检查脚本。**不修改 runtime。**
+
+### 新增文件
+
+| 文件 | 用途 |
+|---|---|
+| `QUICKSTART.md` | 10 分钟快速启动 |
+| `TEMPLATE_USAGE.md` | fork/clone 分离指南 |
+| `docs/template-release-checklist.md` | 发布清单 |
+| `scripts/check_template_health.py` | 静态模板健康检查 |
+| `apps/api/tests/test_template_health.py` | 6 条健康检查测试 |
+
+### Template Health Checks
+
+| 检查项 | 说明 |
+|---|---|
+| Key files | README, QUICKSTART, TEMPLATE_USAGE, Makefile, CLAUDE, AGENTS, docker-compose, check_business_terms |
+| Scaffold scripts | 5 scaffold 脚本全部存在 |
+| Template dirs | agent.json、module.yaml 存在 |
+| .env git tracking | .env 不被 git 跟踪 |
+| Business terms | 调用 check_business_terms.py 确认无污染 |
+
+### Unified Acceptance Commands 统一验收命令
+
+```bash
+# 全量后端测试
+make test-api
+
+# 所有 eval runner
+python3 scripts/run_evals.py
+python3 scripts/run_rag_evals.py
+python3 scripts/run_workflow_evals.py
+python3 scripts/run_policy_evals.py
+
+# 模板健康检查
+python3 scripts/check_business_terms.py
+python3 scripts/check_template_health.py
+
+# 前端构建
+npm run build --prefix apps/web
+git diff --check
+```
+
+### CLI Dry-Run 验收
+
+```bash
+python3 scripts/scaffold_module.py --name sample_module --dry-run
+python3 scripts/scaffold_agent.py --name sample_agent --dry-run
+python3 scripts/scaffold_eval.py --name sample_eval --dry-run
+python3 scripts/scaffold_docs.py --name sample_docs --kind generic --dry-run
+```
+
+### 文档参考
+
+- [Template Release Checklist](docs/template-release-checklist.md)
+- [TEMPLATE_USAGE.md](TEMPLATE_USAGE.md)
+- [QUICKSTART.md](QUICKSTART.md)
+
 ## Common Errors 常见错误排查
 
 ### `python: command not found`

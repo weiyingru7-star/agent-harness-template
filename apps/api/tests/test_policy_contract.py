@@ -9,6 +9,7 @@ from app.policies import (
     Condition,
     Guardrail,
     Policy,
+    PolicyDryRunEvaluator,
     PolicyValidationResult,
     PolicyValidator,
     Rule,
@@ -380,3 +381,122 @@ def test_evaluation_context_not_an_object() -> None:
     result = PolicyValidator.validate_evaluation_context("not_a_dict")
     assert result.valid is False
     assert any("object" in e.lower() for e in result.errors)
+
+
+# ── Dry-Run Evaluator Tests (V0.8.4 backfill) ──────────────────────
+
+def test_dry_run_evaluator_imports() -> None:
+    from app.policies.evaluator import PolicyDryRunEvaluator
+    assert PolicyDryRunEvaluator is not None
+
+
+def test_dry_run_evaluator_always_allow() -> None:
+    result = PolicyDryRunEvaluator.evaluate(
+        policies=[{
+            "id": "p1", "name": "P1", "version": "1.0", "scope": "input",
+            "rules": [
+                {"id": "r1", "condition": {"type": "always"}, "action": "allow", "severity": "low"},
+            ],
+            "default_action": "allow",
+        }],
+        guardrails=[],
+        context={"context_id": "c1", "scope": "input", "subject": {"type": "msg", "content": "x"}},
+    )
+    assert result["valid"] is True
+    assert result["final_action"] == "allow"
+    assert len(result["decisions"]) == 1
+    assert result["decisions"][0]["action"] == "allow"
+
+
+def test_dry_run_evaluator_match_block() -> None:
+    result = PolicyDryRunEvaluator.evaluate(
+        policies=[{
+            "id": "p1", "name": "P1", "version": "1.0", "scope": "input",
+            "rules": [
+                {"id": "r1", "condition": {"type": "match", "match": {"field": "subject.content", "equals": "bad"}}, "action": "block", "severity": "high"},
+            ],
+            "default_action": "allow",
+        }],
+        guardrails=[],
+        context={"context_id": "c1", "scope": "input", "subject": {"type": "msg", "content": "bad"}},
+    )
+    assert result["final_action"] == "block"
+    assert result["decisions"][0]["action"] == "block"
+
+
+def test_dry_run_evaluator_expression_safe() -> None:
+    result = PolicyDryRunEvaluator.evaluate(
+        policies=[{
+            "id": "p1", "name": "P1", "version": "1.0", "scope": "input",
+            "rules": [
+                {"id": "r1", "condition": {"type": "expression", "expression": "len(x) > 5"}, "action": "block"},
+            ],
+            "default_action": "allow",
+        }],
+        guardrails=[],
+        context={"context_id": "c1", "scope": "input", "subject": {"type": "msg", "content": "hello"}},
+    )
+    # Expression not executed — returns require_review instead
+    assert result["final_action"] == "require_review"
+    assert result["decisions"][0]["metadata"].get("unsupported_expression") is True
+
+
+def test_dry_run_evaluator_no_policies() -> None:
+    result = PolicyDryRunEvaluator.evaluate(
+        policies=[],
+        guardrails=[],
+        context={"context_id": "c1", "scope": "input", "subject": {"type": "msg", "content": "x"}},
+    )
+    assert result["valid"] is True
+    assert result["final_action"] == "allow"
+    assert len(result["decisions"]) == 0
+
+
+def test_dry_run_evaluator_block_wins() -> None:
+    result = PolicyDryRunEvaluator.evaluate(
+        policies=[{
+            "id": "p1", "name": "P1", "version": "1.0", "scope": "input",
+            "rules": [
+                {"id": "r1", "condition": {"type": "always"}, "action": "allow"},
+                {"id": "r2", "condition": {"type": "always"}, "action": "block"},
+                {"id": "r3", "condition": {"type": "always"}, "action": "warn"},
+            ],
+            "default_action": "allow",
+        }],
+        guardrails=[],
+        context={"context_id": "c1", "scope": "input", "subject": {"type": "msg", "content": "x"}},
+    )
+    assert result["final_action"] == "block"
+
+
+def test_dry_run_evaluator_no_match_falls_to_default() -> None:
+    result = PolicyDryRunEvaluator.evaluate(
+        policies=[{
+            "id": "p1", "name": "P1", "version": "1.0", "scope": "input",
+            "rules": [
+                {"id": "r1", "condition": {"type": "match", "match": {"field": "subject.content", "equals": "nonexistent"}}, "action": "block"},
+            ],
+            "default_action": "allow",
+        }],
+        guardrails=[],
+        context={"context_id": "c1", "scope": "input", "subject": {"type": "msg", "content": "hello"}},
+    )
+    assert result["final_action"] == "allow"
+    assert result["decisions"][0]["action"] == "allow"
+
+
+def test_dry_run_evaluator_scope_filter() -> None:
+    result = PolicyDryRunEvaluator.evaluate(
+        policies=[{
+            "id": "p1", "name": "P1", "version": "1.0", "scope": "tool",
+            "rules": [
+                {"id": "r1", "condition": {"type": "always"}, "action": "block"},
+            ],
+            "default_action": "allow",
+        }],
+        guardrails=[],
+        context={"context_id": "c1", "scope": "input", "subject": {"type": "msg", "content": "x"}},
+    )
+    # Policy scope is 'tool', context scope is 'input' — no match
+    assert result["final_action"] == "allow"
+    assert len(result["decisions"]) == 0

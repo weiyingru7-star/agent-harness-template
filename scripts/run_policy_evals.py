@@ -14,7 +14,8 @@ CASE_DIR = ROOT / "evals" / "policy_cases"
 sys.path.insert(0, str(ROOT))
 sys.path.insert(0, str(ROOT / "apps" / "api"))
 
-from app.policies import PolicyValidator  # noqa: E402
+from app.policies import PolicyValidator, PolicyValidationErrorItem, PolicyValidationResult  # noqa: E402
+from app.policies.evaluator import PolicyDryRunEvaluator  # noqa: E402
 
 
 @dataclass
@@ -43,6 +44,33 @@ def run_case(case: dict[str, Any]) -> PolicyEvalResult:
     elif case_type == "context_contract":
         ctx = case.get("evaluation_context", {})
         p_result = PolicyValidator.validate_evaluation_context(ctx)
+    elif case_type == "dry_run":
+        result = PolicyDryRunEvaluator.evaluate(
+            policies=case.get("policies", []),
+            guardrails=case.get("guardrails", []),
+            context=case.get("evaluation_context", {}),
+        )
+        # Check expected_final_action
+        expected_final = case.get("expected_final_action")
+        if expected_final and result.get("final_action") != expected_final:
+            failures.append(f"expected_final_action={expected_final} got {result.get('final_action')}")
+        # Check expected_decision_count
+        expected_count = case.get("expected_decision_count")
+        if expected_count is not None and len(result.get("decisions", [])) != expected_count:
+            failures.append(f"expected_decision_count={expected_count} got {len(result.get('decisions', []))}")
+        # Check expected_no_errors
+        if case.get("expected_no_errors") and result.get("errors"):
+            failures.append(f"expected_no_errors but got errors: {result.get('errors')}")
+        # Use error_items for expected_error_codes
+        p_result = PolicyValidationResult(
+            valid=result.get("valid", True),
+            errors=result.get("errors", []),
+            warnings=result.get("warnings", []),
+            error_items=[
+                PolicyValidationErrorItem(**e) if isinstance(e, dict) else e
+                for e in result.get("error_items", [])
+            ],
+        )
     else:
         # policy_validation (default) — validate policies + guardrails
         policies = case.get("policies", [])

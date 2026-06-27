@@ -1,0 +1,35 @@
+{
+  "type": "dry_run",
+  "name": "dry_run_guardrail_policy_ref_missing",
+  "description": "Guardrail with policy_ref pointing to a non-existent policy should produce an error decision.",
+  "policies": [
+    {
+      "id": "existing_policy",
+      "name": "Existing Policy",
+      "version": "1.0.0",
+      "scope": "input",
+      "rules": [],
+      "default_action": "allow"
+    }
+  ],
+  "guardrails": [
+    {
+      "id": "gr_ref_missing",
+      "name": "Bad Ref Guardrail",
+      "type": "input",
+      "enabled": true,
+      "policy_ref": "nonexistent_policy"
+    }
+  ],
+  "evaluation_context": {
+    "context_id": "ctx_006",
+    "scope": "input",
+    "subject": {"type": "user_message", "content": "test"},
+    "attributes": {}
+  },
+  "expected_valid": true,
+  "expected_final_action": "require_review",
+  "expected_decision_count": 1,
+  "expected_no_errors": true,
+  "expected_error_codes": []
+}

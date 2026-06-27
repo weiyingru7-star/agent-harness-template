@@ -18,7 +18,7 @@
 
 ## Current Stage 当前阶段
 
-当前阶段：V0.8.5 Guardrail Runtime Integration Plan。
+当前阶段：V0.8.4 Policy Dry-Run Evaluator Backfill。
 
 已完成的通用底座能力：
 - Agent Runtime（V0.2.x）：模块注册、执行契约、Trace / Span、Checkpoint、Failure / Retry、Timeline、Eval Trajectory

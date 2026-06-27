@@ -966,7 +966,7 @@ scope 枚举：`input`, `output`, `tool`, `rag`, `provider`, `workflow`
 ### Unified Acceptance Commands 统一验收命令
 
 ```bash
-# 全量后端测试（当前预期 301 passed）
+# 全量后端测试（当前预期 309 passed）
 make test-api
 
 # Agent trajectory eval（预期 8 passed）
@@ -1020,7 +1020,7 @@ expression 安全拒绝。**不接 runtime，不拦截请求**。
 ### Unified Acceptance Commands 统一验收命令
 
 ```bash
-# 全量后端测试（当前预期 301 passed）
+# 全量后端测试（当前预期 309 passed）
 make test-api
 
 # 所有 eval runner
@@ -1034,6 +1034,23 @@ python3 scripts/check_business_terms.py
 npm run build --prefix apps/web
 git diff --check
 ```
+
+### Eval Cases
+
+6 个 dry_run eval case（共 22 个 policy eval case）：
+
+| Case | 预期 final_action |
+|---|---|
+| dry_run_allow_always | allow |
+| dry_run_warn_match | warn |
+| dry_run_block_match | block |
+| dry_run_require_review_route | require_review |
+| dry_run_unsupported_expression | require_review |
+| dry_run_guardrail_policy_ref_missing | require_review |
+
+### 文档参考
+
+- [Policy Guardrail Contract](docs/policy-guardrail-contract.md)
 
 ## V0.8.5 Guardrail Runtime Integration Plan Acceptance V0.8.5 运行时集成计划验收
 

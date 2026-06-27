@@ -1,0 +1,33 @@
+{
+  "type": "dry_run",
+  "name": "dry_run_allow_always",
+  "description": "always condition with allow action should produce final_action=allow.",
+  "policies": [
+    {
+      "id": "allow_all",
+      "name": "Allow All",
+      "version": "1.0.0",
+      "scope": "input",
+      "rules": [
+        {
+          "id": "always_allow",
+          "condition": {"type": "always"},
+          "action": "allow",
+          "severity": "low"
+        }
+      ],
+      "default_action": "allow"
+    }
+  ],
+  "guardrails": [],
+  "evaluation_context": {
+    "context_id": "ctx_001",
+    "scope": "input",
+    "subject": {"type": "user_message", "content": "hello"},
+    "attributes": {}
+  },
+  "expected_valid": true,
+  "expected_final_action": "allow",
+  "expected_decision_count": 1,
+  "expected_error_codes": []
+}

@@ -1,0 +1,34 @@
+{
+  "type": "dry_run",
+  "name": "dry_run_block_match",
+  "description": "match condition with block action should produce final_action=block.",
+  "policies": [
+    {
+      "id": "block_policy",
+      "name": "Block Policy",
+      "version": "1.0.0",
+      "scope": "input",
+      "rules": [
+        {
+          "id": "match_block",
+          "condition": {"type": "match", "match": {"field": "subject.content", "equals": "block_me"}},
+          "action": "block",
+          "severity": "high",
+          "message": "Blocked by policy"
+        }
+      ],
+      "default_action": "allow"
+    }
+  ],
+  "guardrails": [],
+  "evaluation_context": {
+    "context_id": "ctx_003",
+    "scope": "input",
+    "subject": {"type": "user_message", "content": "block_me"},
+    "attributes": {}
+  },
+  "expected_valid": true,
+  "expected_final_action": "block",
+  "expected_decision_count": 1,
+  "expected_error_codes": []
+}

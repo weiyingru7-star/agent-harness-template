@@ -824,7 +824,7 @@ V0.7.0–V0.7.4 构建了 Workflow Contract 系统，共 4 个模块：
 
 ## Current Scope 当前范围
 
-当前版本（V0.8.5）已完成：
+当前版本（V0.8.4）已完成（Backfill）：
 - **V0.2.x Agent Runtime**：Trace / Span、Checkpoint、Failure / Retry、Timeline API 与前端视图、Eval Trajectory runner
 - **V0.3.x Tool Runtime**：Tool Call Contract、Tool Args Schema、Tool Result Contract、Tool Timeout、Tool Retry、Tool Permission、Tool Sandbox Policy、文档收口
 - **V0.4.x RAG Runtime**：数据合同、切分策略、直接文本创建、检索评估、嵌入层、向量存储、检索模式、文档收口
@@ -837,16 +837,16 @@ V0.7.0–V0.7.4 构建了 Workflow Contract 系统，共 4 个模块：
 - **V0.8.1 Policy Validation Evals**：独立 policy validation eval runner（`scripts/run_policy_evals.py`），7 个 eval case，补齐稳定 error codes。只验证 contract，不执行 policy。详见 [Policy Guardrail Contract](docs/policy-guardrail-contract.md)。
 - **V0.8.2 Guardrail Decision Contract**：GuardrailDecision / DecisionResult 业务无关合同，描述 policy / guardrail 标准化决策结果。新增结构校验、JSON Schema、eval case 和测试。只做 contract，不执行 policy。详见 [Policy Guardrail Contract](docs/policy-guardrail-contract.md)。
 - **V0.8.3 Guardrail Evaluation Context Contract**：EvaluationContext / EvaluationSubject 业务无关合同，描述 policy / guardrail 评估上下文结构。新增结构校验、JSON Schema、eval case。只做 contract，不执行 policy。详见 [Policy Guardrail Contract](docs/policy-guardrail-contract.md)。
-- **V0.8.4 Policy Dry-Run Evaluator**：PolicyDryRunEvaluator——根据 Policy/Guardrail/EvaluationContext 生成 DecisionResult。支持 always/match/route condition types，expression 安全拒绝。不接 runtime，不拦截请求。详见 [Policy Guardrail Contract](docs/policy-guardrail-contract.md)。
+- **V0.8.4 Policy Dry-Run Evaluator**：PolicyDryRunEvaluator——根据 Policy/Guardrail/EvaluationContext 生成 DecisionResult。支持 always/match/route condition types，expression 安全拒绝（require_review + unsupported_expression）。6 个 dry_run eval case。不接 runtime，不拦截请求。详见 [Policy Guardrail Contract](docs/policy-guardrail-contract.md)。
 - **V0.8.5 Guardrail Runtime Integration Plan**：集成计划文档，设计 runtime 接入点（input/output/tool/rag/provider/workflow）、execution mode（disabled/validate_only/dry_run/enforce）、dry-run 与 enforcement 边界。不修改任何代码。详见 [Guardrail Runtime Integration Plan](docs/guardrail-runtime-integration-plan.md)。
 
 模板核心保持业务无关，具体业务逻辑应放在 `modules/{module_name}/` 内由使用者自行创建。详见 [Project Boundaries](PROJECT_BOUNDARIES.md)。
 
 下一阶段规划：V0.8.x Advanced Features / Agent Memory。
 
-> 当前阶段 V0.8.5 为 Guardrail Runtime Integration Plan。该阶段只产出一份集成计划
-> 文档，不修改任何代码。后续 V0.8.6–V0.8.9 可能添加 dry-run hook，
-> 但不会引入 enforcement 能力。
+> 当前阶段 V0.8.4（Backfill）为 Policy Dry-Run Evaluator。policy dry-run
+> evaluator 只在测试 / eval / dry-run 场景中使用，不拦截真实请求，不 enforcement。
+> 后续 V0.8.6 开始添加 input guardrail dry-run hook。
 
 ### Provider Layer 分层说明
 

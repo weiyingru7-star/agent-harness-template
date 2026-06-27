@@ -335,6 +335,58 @@ result = PolicyValidator.validate_evaluation_context(context_dict)
 
 **不执行**：不根据 context 执行 policy，不生成决策，不调用任何外部系统。
 
+## Policy Dry-Run Evaluator 策略 Dry-Run 评估器
+
+V0.8.4 新增业务无关的 PolicyDryRunEvaluator，根据 Policy / Guardrail /
+EvaluationContext 生成 DecisionResult。**不接 runtime，不拦截请求，不 enforcement。**
+
+### 支持的 Condition 类型
+
+| 类型 | 行为 | 说明 |
+|---|---|---|
+| `always` | 总是匹配 | 按 rule.action 生成 decision |
+| `match` | 结构字段匹配 | field dot-notation + equals/contains/exists 操作符 |
+| `route` | route_key 存在性匹配 | route_key 在 context.attributes 中存在即匹配 |
+| `expression` | **不执行** | 安全 fallback——返回 require_review + unsupported_expression |
+
+### Match 操作符
+
+```text
+equals:   context.subject.content == "hello"
+contains: "help" in context.subject.content
+exists:   "key" in context.attributes
+```
+
+### Final Action 合并规则
+
+优先级（从高到低）：`block > require_review > warn > allow`
+
+- 任一 decision 为 block → final_action = block
+- 任一 decision 为 require_review（无 block）→ final_action = require_review
+- 任一 decision 为 warn（无 block 或 require_review）→ final_action = warn
+- 全部为 allow（或无 decision）→ final_action = allow
+
+### Guardrail Policy Ref 解析
+
+| 场景 | 行为 |
+|---|---|
+| guardrail 有 policy_ref + policy 存在 | 只评估该 policy |
+| guardrail 有 policy_ref + policy 不存在 | 返回 require_review + error metadata |
+| guardrail 无 policy_ref | 评估所有 scope 匹配的 policy |
+
+### Evaluator 调用
+
+```python
+from app.policies.evaluator import PolicyDryRunEvaluator
+
+result = PolicyDryRunEvaluator.evaluate(
+    policies=policies,      # list[dict]
+    guardrails=guardrails,  # list[dict]
+    context=context,        # EvaluationContext dict
+)
+# result = DecisionResult dict
+```
+
 ## Eval Runner 评估运行器
 
 V0.8.1 新增独立的 policy validation eval runner：
@@ -345,7 +397,7 @@ python3 scripts/run_policy_evals.py
 
 ### Eval Cases
 
-16 个 eval case 位于 `evals/policy_cases/`：
+22 个 eval case 位于 `evals/policy_cases/`：
 
 | Case | Type | 预期 valid | Error / Warning Codes |
 |---|---|---|---|
@@ -365,10 +417,16 @@ python3 scripts/run_policy_evals.py
 | invalid_context_scope | context_contract | false | CONTEXT_SCOPE_INVALID |
 | invalid_context_missing_subject | context_contract | false | CONTEXT_SUBJECT_MISSING |
 | invalid_context_attributes_type | context_contract | false | CONTEXT_ATTRIBUTES_INVALID |
+| dry_run_allow_always | dry_run | true | — |
+| dry_run_warn_match | dry_run | true | — |
+| dry_run_block_match | dry_run | true | — |
+| dry_run_require_review_route | dry_run | true | — |
+| dry_run_unsupported_expression | dry_run | true | — |
+| dry_run_guardrail_policy_ref_missing | dry_run | true | — |
 
 run_policy_evals.py 遵循与其他 eval runner（run_workflow_evals.py）相同的模式：
-加载 JSON → 调用 PolicyValidator → 比较 expected_valid / expected_error_codes →
-输出 PASS / FAIL。
+加载 JSON → 调用 PolicyValidator / PolicyDryRunEvaluator → 比较 expected_valid /
+expected_error_codes / expected_final_action → 输出 PASS / FAIL。
 
 ## 示例
 

@@ -1,0 +1,33 @@
+{
+  "type": "dry_run",
+  "name": "dry_run_unsupported_expression",
+  "description": "expression condition should be safely handled without execution, returning require_review.",
+  "policies": [
+    {
+      "id": "expr_policy",
+      "name": "Expr Policy",
+      "version": "1.0.0",
+      "scope": "input",
+      "rules": [
+        {
+          "id": "expr_rule",
+          "condition": {"type": "expression", "expression": "len(input) > 100"},
+          "action": "block",
+          "severity": "high"
+        }
+      ],
+      "default_action": "allow"
+    }
+  ],
+  "guardrails": [],
+  "evaluation_context": {
+    "context_id": "ctx_005",
+    "scope": "input",
+    "subject": {"type": "user_message", "content": "some text"},
+    "attributes": {}
+  },
+  "expected_valid": true,
+  "expected_final_action": "require_review",
+  "expected_decision_count": 1,
+  "expected_error_codes": []
+}

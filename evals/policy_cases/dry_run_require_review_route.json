@@ -1,0 +1,34 @@
+{
+  "type": "dry_run",
+  "name": "dry_run_require_review_route",
+  "description": "route condition with require_review when route_key exists in attributes.",
+  "policies": [
+    {
+      "id": "review_policy",
+      "name": "Review Policy",
+      "version": "1.0.0",
+      "scope": "input",
+      "rules": [
+        {
+          "id": "route_review",
+          "condition": {"type": "route", "route_key": "sensitive"},
+          "action": "require_review",
+          "severity": "critical",
+          "message": "Requires human review"
+        }
+      ],
+      "default_action": "allow"
+    }
+  ],
+  "guardrails": [],
+  "evaluation_context": {
+    "context_id": "ctx_004",
+    "scope": "input",
+    "subject": {"type": "user_message", "content": "needs review"},
+    "attributes": {"sensitive": true}
+  },
+  "expected_valid": true,
+  "expected_final_action": "require_review",
+  "expected_decision_count": 1,
+  "expected_error_codes": []
+}

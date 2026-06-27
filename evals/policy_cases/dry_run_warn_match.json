@@ -1,0 +1,34 @@
+{
+  "type": "dry_run",
+  "name": "dry_run_warn_match",
+  "description": "match condition with warn action should produce final_action=warn.",
+  "policies": [
+    {
+      "id": "warn_policy",
+      "name": "Warn Policy",
+      "version": "1.0.0",
+      "scope": "input",
+      "rules": [
+        {
+          "id": "match_warn",
+          "condition": {"type": "match", "match": {"field": "subject.content", "contains": "hello"}},
+          "action": "warn",
+          "severity": "medium",
+          "message": "Content contains 'hello'"
+        }
+      ],
+      "default_action": "allow"
+    }
+  ],
+  "guardrails": [],
+  "evaluation_context": {
+    "context_id": "ctx_002",
+    "scope": "input",
+    "subject": {"type": "user_message", "content": "hello world"},
+    "attributes": {}
+  },
+  "expected_valid": true,
+  "expected_final_action": "warn",
+  "expected_decision_count": 1,
+  "expected_error_codes": []
+}

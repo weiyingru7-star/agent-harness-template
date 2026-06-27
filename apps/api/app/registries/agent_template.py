@@ -10,6 +10,7 @@ from pydantic import BaseModel, Field, ValidationError
 
 from app.registries.agent_config import AgentConfig
 from app.registries.workflow_validator import WorkflowValidator
+from app.policies import PolicyValidator
 
 
 class AgentTemplate(BaseModel):
@@ -128,11 +129,25 @@ class AgentTemplateRegistry:
                 errors=[f"Template not found: {template_id}"],
             )
         wf_result = WorkflowValidator.validate(config.workflow)
+
+        policy_result = PolicyValidator.validate_policies(config.policies)
+        if config.guardrails:
+            policy_ids = {p.get("id", "") for p in config.policies}
+            g_result = PolicyValidator.validate_guardrails(config.guardrails, policy_ids=policy_ids)
+            policy_result.errors.extend(g_result.errors)
+            policy_result.warnings.extend(g_result.warnings)
+            policy_result.error_items.extend(g_result.error_items)
+
+        combined_valid = wf_result.valid and policy_result.valid
         return ValidateResult(
             template_id=template_id,
-            valid=wf_result.valid,
-            errors=wf_result.errors,
-            warnings=wf_result.warnings,
+            valid=combined_valid,
+            errors=wf_result.errors + policy_result.errors,
+            warnings=wf_result.warnings + policy_result.warnings,
+            metadata={
+                "workflow_error_items": [i.model_dump() for i in wf_result.error_items],
+                "policy_error_items": [i.model_dump() for i in policy_result.error_items],
+            },
         )
 
     @staticmethod

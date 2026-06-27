@@ -16,8 +16,21 @@ class AgentConfig(BaseModel):
     rag: RagConfig
     workflow: WorkflowConfig
     eval: EvalConfig
+    policies: list[dict] = []     # V0.8.0 optional policy definitions
+    guardrails: list[dict] = []   # V0.8.0 optional guardrail definitions
     metadata: dict = {}
 ```
+
+## V0.8.0 Policies / Guardrails
+
+AgentConfig 新增两个可选字段：
+
+| 字段 | 类型 | 默认 | 说明 |
+|---|---|---|---|
+| `policies` | list[dict] | `[]` | Policy 定义列表，详见 [Policy Guardrail Contract](policy-guardrail-contract.md) |
+| `guardrails` | list[dict] | `[]` | Guardrail 定义列表，详见 [Policy Guardrail Contract](policy-guardrail-contract.md) |
+
+没有配置时这两个字段为空列表，validate 仍然返回 valid=true。
 
 ## 嵌套字段
 

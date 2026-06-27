@@ -18,7 +18,7 @@
 
 ## Current Stage 当前阶段
 
-当前阶段：V0.7.7 Provider Runtime Consolidation。
+当前阶段：V0.8.0 Policy / Guardrail Contract。
 
 已完成的通用底座能力：
 - Agent Runtime（V0.2.x）：模块注册、执行契约、Trace / Span、Checkpoint、Failure / Retry、Timeline、Eval Trajectory
@@ -29,6 +29,7 @@
 - Workflow Contract（V0.7.x）：WorkflowNode/Edge/Condition schema、WorkflowValidator、校验规则、built-in node contracts、validation error codes、eval runner、文档收口
 - Tool Pipeline Refactor（V0.7.6）：从 RunStore 抽取 Tool Execution Pipeline 到独立 tool_runtime 模块
 - Provider Consolidation（V0.7.7）：收口 provider_runtime（canonical）和 ai_runtime（legacy）的边界
+- Policy / Guardrail Contract（V0.8.0）：Policy / Guardrail / Rule / Condition 合同、JSON Schema、PolicyValidator、AgentTemplate 集成。只做 contract / schema / validator / docs / tests，不执行 policy
 
 下一阶段规划：V0.8.x Advanced Features / Agent Memory。
 

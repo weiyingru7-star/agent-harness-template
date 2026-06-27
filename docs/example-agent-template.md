@@ -40,6 +40,8 @@ V0.6.3 新增业务无关的 example agent template `generic_agent`。
     "cases_path": "evals/cases/",
     "required_checks": ["status", "events", "timeline"]
   },
+  "policies": [],
+  "guardrails": [],
   "metadata": {
     "author": "Agent Harness Template",
     "tags": ["business-neutral", "reference", "scaffold"],

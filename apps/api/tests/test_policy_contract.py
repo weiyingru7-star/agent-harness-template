@@ -1,0 +1,251 @@
+"""Tests for V0.8.0 Policy / Guardrail Contract.
+
+Validates structural constraints only — no policy execution.
+"""
+
+import pytest
+
+from app.policies import (
+    Condition,
+    Guardrail,
+    Policy,
+    PolicyValidationResult,
+    PolicyValidator,
+    Rule,
+)
+from app.policies.models import POLICY_ACTIONS, POLICY_SCOPES
+from app.policies.validator import ERROR_CODES
+
+
+# ── Valid policy structure ──────────────────────────────────────────
+
+def test_policy_valid_structure() -> None:
+    policy = Policy(
+        id="length_check",
+        name="Length Check",
+        version="1.0.0",
+        scope="input",
+        rules=[
+            Rule(
+                id="max_length",
+                condition=Condition(type="expression", expression="len(input) > 1000"),
+                action="warn",
+                severity="medium",
+                message="Input exceeds recommended length",
+            ),
+        ],
+        default_action="allow",
+    )
+    assert policy.id == "length_check"
+    assert policy.scope == "input"
+    assert len(policy.rules) == 1
+    assert policy.default_action == "allow"
+    assert policy.enabled is True
+
+
+def test_policy_valid_empty_rules() -> None:
+    result = PolicyValidator.validate_policies([
+        {"id": "empty_policy", "name": "Empty", "version": "1.0.0", "scope": "tool", "rules": []},
+    ])
+    assert result.valid is True
+
+
+# ── Invalid scope ────────────────────────────────────────────────────
+
+def test_policy_invalid_scope() -> None:
+    result = PolicyValidator.validate_policies([
+        {"id": "bad_scope", "name": "Bad", "version": "1.0.0", "scope": "database", "rules": []},
+    ])
+    assert result.valid is False
+    assert any("scope" in e.lower() for e in result.errors)
+    assert any(
+        item.code == ERROR_CODES["scope_invalid"]
+        for item in result.error_items
+    )
+
+
+# ── Invalid action ───────────────────────────────────────────────────
+
+def test_policy_invalid_default_action() -> None:
+    result = PolicyValidator.validate_policies([
+        {"id": "bad_action", "name": "Bad", "version": "1.0.0", "scope": "input", "default_action": "delete", "rules": []},
+    ])
+    assert result.valid is False
+    assert any("action" in e.lower() for e in result.errors)
+
+
+def test_policy_invalid_rule_action() -> None:
+    result = PolicyValidator.validate_policies([
+        {
+            "id": "p1", "name": "P1", "version": "1.0.0", "scope": "output",
+            "rules": [
+                {"id": "r1", "condition": {"type": "always"}, "action": "nuke"},
+            ],
+        },
+    ])
+    assert result.valid is False
+    assert any("action" in e.lower() for e in result.errors)
+
+
+# ── Invalid condition type ───────────────────────────────────────────
+
+def test_policy_invalid_condition_type() -> None:
+    result = PolicyValidator.validate_policies([
+        {
+            "id": "p1", "name": "P1", "version": "1.0.0", "scope": "input",
+            "rules": [
+                {"id": "r1", "condition": {"type": "regex"}},
+            ],
+        },
+    ])
+    assert result.valid is False
+    assert any("condition" in e.lower() for e in result.errors)
+    assert any(
+        item.code == ERROR_CODES["condition_type_invalid"]
+        for item in result.error_items
+    )
+
+
+# ── Missing rule fields ──────────────────────────────────────────────
+
+def test_policy_rule_missing_id() -> None:
+    result = PolicyValidator.validate_policies([
+        {
+            "id": "p1", "name": "P1", "version": "1.0.0", "scope": "tool",
+            "rules": [
+                {"condition": {"type": "always"}},
+            ],
+        },
+    ])
+    assert result.valid is False
+    assert any("rule id" in e.lower() for e in result.errors)
+
+
+def test_policy_rule_missing_condition() -> None:
+    result = PolicyValidator.validate_policies([
+        {
+            "id": "p1", "name": "P1", "version": "1.0.0", "scope": "rag",
+            "rules": [
+                {"id": "r1"},
+            ],
+        },
+    ])
+    assert result.valid is False
+    assert any("condition" in e.lower() for e in result.errors)
+
+
+# ── Invalid severity ─────────────────────────────────────────────────
+
+def test_policy_invalid_severity() -> None:
+    result = PolicyValidator.validate_policies([
+        {
+            "id": "p1", "name": "P1", "version": "1.0.0", "scope": "provider",
+            "rules": [
+                {"id": "r1", "condition": {"type": "always"}, "severity": "catastrophic"},
+            ],
+        },
+    ])
+    assert result.valid is False
+    assert any("severity" in e.lower() for e in result.errors)
+
+
+# ── Guardrail structure ──────────────────────────────────────────────
+
+def test_guardrail_valid_structure() -> None:
+    guardrail = Guardrail(
+        id="gr_input_length",
+        name="Input Length Guardrail",
+        type="input",
+        policy_ref="length_check",
+        action="warn",
+    )
+    assert guardrail.id == "gr_input_length"
+    assert guardrail.type == "input"
+    assert guardrail.policy_ref == "length_check"
+    assert guardrail.enabled is True
+
+
+def test_guardrail_invalid_type() -> None:
+    result = PolicyValidator.validate_guardrails([
+        {"id": "gr1", "name": "GR1", "type": "database"},
+    ])
+    assert result.valid is False
+    assert any("type" in e.lower() for e in result.errors)
+
+
+def test_guardrail_invalid_action() -> None:
+    result = PolicyValidator.validate_guardrails([
+        {"id": "gr1", "name": "GR1", "type": "input", "action": "halt"},
+    ])
+    assert result.valid is False
+
+
+# ── guardrail policy_ref not found (warning) ─────────────────────────
+
+def test_guardrail_policy_ref_not_found_warns() -> None:
+    result = PolicyValidator.validate_guardrails(
+        [{"id": "gr1", "name": "GR1", "type": "input", "policy_ref": "nonexistent"}],
+        policy_ids={"some_other_policy"},
+    )
+    assert result.valid is True  # warning only, not an error
+    assert len(result.warnings) >= 1
+    assert any("policy_ref" in w.lower() for w in result.warnings)
+
+
+def test_guardrail_policy_ref_found_no_warning() -> None:
+    result = PolicyValidator.validate_guardrails(
+        [{"id": "gr1", "name": "GR1", "type": "input", "policy_ref": "my_policy"}],
+        policy_ids={"my_policy"},
+    )
+    assert result.valid is True
+    assert len(result.warnings) == 0
+
+
+# ── Guardrail default action ─────────────────────────────────────────
+
+def test_guardrail_default_action_is_allow() -> None:
+    guardrail = Guardrail(id="gr1", name="GR1", type="output")
+    assert guardrail.action == "allow"
+
+
+# ── Guardrail type aligns with policy scope enum ─────────────────────
+
+def test_guardrail_types_match_policy_scopes() -> None:
+    from app.policies.models import GUARDRAIL_TYPES
+    assert GUARDRAIL_TYPES == POLICY_SCOPES
+
+
+# ── Agent template integration ───────────────────────────────────────
+
+def test_generic_agent_validate_passes_with_empty_policies() -> None:
+    from app.registries.agent_template import AgentTemplateRegistry
+    loader = AgentTemplateRegistry()
+    result = loader.validate_template("generic_agent")
+    assert result.valid is True
+
+
+def test_policy_with_valid_condition_types() -> None:
+    for ct in ("always", "expression", "match", "route"):
+        result = PolicyValidator.validate_policies([
+            {
+                "id": f"ct_{ct}", "name": ct, "version": "1.0.0", "scope": "input",
+                "rules": [{"id": "r1", "condition": {"type": ct}}],
+            },
+        ])
+        assert result.valid is True, f"condition type '{ct}' should be valid"
+
+
+# ── Task: no execution ───────────────────────────────────────────────
+
+def test_policy_validator_does_not_execute_conditions() -> None:
+    """PolicyValidator only checks structure, never evaluates expressions."""
+    result = PolicyValidator.validate_policies([
+        {
+            "id": "p1", "name": "P1", "version": "1.0.0", "scope": "input",
+            "rules": [
+                {"id": "r1", "condition": {"type": "expression", "expression": "__NO_EXECUTION__"}},
+            ],
+        },
+    ])
+    # Should pass — expression content is not evaluated
+    assert result.valid is True

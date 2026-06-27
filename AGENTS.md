@@ -18,7 +18,7 @@
 
 ## Current Stage 当前阶段
 
-当前阶段：V0.7.7 Provider Runtime Consolidation。
+当前阶段：V0.8.0 Policy / Guardrail Contract。
 
 已完成的通用底座能力：
 - Agent Runtime（V0.2.x）：Trace / Span、Checkpoint、Failure / Retry、Timeline、Eval Trajectory
@@ -26,7 +26,7 @@
 - RAG Runtime（V0.4.x）：Document/Chunk/Citation/RetrievalResult 合同、切分策略、直接文本创建、检索评估、嵌入层、向量存储、三种检索模式
 - Provider Runtime（V0.5.x）：ProviderRequest/Response/Error 合同、smoke 对齐、streaming、fallback、timeout/retry、配置管理、真实模型适配
 - Agent Template（V0.6.x）：AgentTemplate contract、嵌套配置、Registry API、TemplateSummary、ValidateResult、Example Agent Template
-- Workflow Contract（V0.7.x）：WorkflowNode/Edge/Condition schema、WorkflowValidator、校验规则、built-in node contracts、validation error codes、eval runner
+- Policy / Guardrail Contract（V0.8.0）：Policy / Guardrail / Rule / Condition 合同、JSON Schema、PolicyValidator、AgentTemplate 集成。只做 contract / schema / validator / docs / tests，不执行 policy
 
 ## Provider Layer Guidance Provider 层开发指引
 

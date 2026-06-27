@@ -37,6 +37,8 @@
     "cases_path": "evals/cases/",
     "required_checks": ["status", "events", "timeline"]
   },
+  "policies": [],
+  "guardrails": [],
   "metadata": {
     "author": "Agent Harness Template",
     "repository": "https://github.com/weiyingru7-star/agent-harness-template",

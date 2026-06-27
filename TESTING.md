@@ -782,6 +782,64 @@ git diff --check
 
 - [Provider Runtime Consolidation](docs/provider-runtime-consolidation.md)
 
+## V0.8.0 Policy / Guardrail Contract Acceptance V0.8.0 策略与护栏合同验收
+
+V0.8.0 定义业务无关的 Policy / Guardrail Contract。只做合同定义、
+结构校验、JSON Schema、文档和测试。**不执行 policy，不拦截真实请求**。
+
+### Contract 合同
+
+| 模型 | 说明 |
+|---|---|
+| `Policy` | 策略合同：id / name / version / scope / rules / default_action |
+| `Guardrail` | 护栏合同：id / name / type / policy_ref / action |
+| `Rule` | 规则合同：id / condition / action / severity / message |
+| `Condition` | 条件合同：type(always/expression/match/route) |
+
+scope 枚举：`input`, `output`, `tool`, `rag`, `provider`, `workflow`
+action 枚举：`allow`, `block`, `warn`, `require_review`
+
+### Unified Acceptance Commands 统一验收命令
+
+```bash
+# 全量后端测试（当前预期 289 passed）
+make test-api
+
+# Agent trajectory eval（预期 8 passed）
+python3 scripts/run_evals.py
+
+# RAG eval（预期 2 passed）
+python3 scripts/run_rag_evals.py
+
+# Workflow eval（预期 1 passed）
+python3 scripts/run_workflow_evals.py
+
+# 业务词污染检查
+python3 scripts/check_business_terms.py
+
+# 前端构建
+npm run build --prefix apps/web
+
+# Git diff whitespace 检查
+git diff --check
+```
+
+### 行为不变性检查
+
+所有以下行为与重构前完全一致：
+
+- PolicyValidator **只做结构校验，不执行 condition**
+- generic_agent 空 policies/guardrails 时 validate 仍为 valid=true
+- AgentTemplate validate API response 结构不变（新增 policy_error_items 在 metadata 中）
+- 所有已有 API 路径和响应不变
+- 所有已有 tests 不变
+- 所有已有 eval 不变
+- 没有新增 API endpoint
+
+### 文档参考
+
+- [Policy Guardrail Contract](docs/policy-guardrail-contract.md)
+
 ## Common Errors 常见错误排查
 
 ### `python: command not found`

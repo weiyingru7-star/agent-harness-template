@@ -1,9 +1,9 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "title": "Policy",
-  "description": "Minimal contract for a generic policy definition.",
+  "description": "Policy contract for Agent Harness. Defines governance rules across input/output/tool/rag/provider/workflow scopes.",
   "type": "object",
-  "required": ["id", "name", "scope", "rules"],
+  "required": ["id", "name", "version", "scope"],
   "properties": {
     "id": {
       "type": "string",
@@ -13,30 +13,84 @@
       "type": "string",
       "description": "Human-readable policy name."
     },
+    "version": {
+      "type": "string",
+      "description": "Policy schema version."
+    },
     "description": {
       "type": "string",
       "description": "Policy purpose and boundary."
     },
     "scope": {
       "type": "string",
-      "description": "Generic scope where the policy applies."
+      "enum": ["input", "output", "tool", "rag", "provider", "workflow"],
+      "description": "The scope this policy applies to."
     },
     "rules": {
       "type": "array",
-      "description": "Generic policy rules.",
+      "description": "List of rules that define policy behavior.",
       "items": {
-        "type": "object"
+        "type": "object",
+        "required": ["id", "condition"],
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Rule identifier."
+          },
+          "condition": {
+            "type": "object",
+            "required": ["type"],
+            "properties": {
+              "type": {
+                "type": "string",
+                "enum": ["always", "expression", "match", "route"],
+                "description": "Condition type."
+              },
+              "expression": {
+                "type": "string",
+                "description": "Optional expression string (not executed by validator)."
+              },
+              "match": {
+                "type": "object",
+                "description": "Optional match pattern (not executed by validator)."
+              },
+              "route_key": {
+                "type": "string",
+                "description": "Optional routing key for route-type conditions."
+              }
+            }
+          },
+          "action": {
+            "type": "string",
+            "enum": ["allow", "block", "warn", "require_review"],
+            "description": "Action when this rule matches."
+          },
+          "severity": {
+            "type": "string",
+            "enum": ["low", "medium", "high", "critical"],
+            "description": "Severity level."
+          },
+          "message": {
+            "type": "string",
+            "description": "Human-readable message when rule triggers."
+          }
+        }
       }
     },
-    "created_at": {
+    "default_action": {
       "type": "string",
-      "format": "date-time",
-      "description": "Policy creation timestamp."
+      "enum": ["allow", "block", "warn", "require_review"],
+      "description": "Default action when no rule matches.",
+      "default": "allow"
     },
-    "updated_at": {
-      "type": "string",
-      "format": "date-time",
-      "description": "Last policy update timestamp."
+    "enabled": {
+      "type": "boolean",
+      "description": "Whether this policy is active.",
+      "default": true
+    },
+    "metadata": {
+      "type": "object",
+      "description": "Arbitrary metadata."
     }
   },
   "additionalProperties": false

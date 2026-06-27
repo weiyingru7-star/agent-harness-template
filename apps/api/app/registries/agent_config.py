@@ -45,6 +45,8 @@ class AgentConfig(BaseModel):
     rag: RagConfig = Field(default_factory=lambda: RagConfig(enabled=False))
     workflow: WorkflowConfig = Field(default_factory=WorkflowConfig)
     eval: EvalConfig = Field(default_factory=EvalConfig)
+    policies: list[dict] = Field(default_factory=list)
+    guardrails: list[dict] = Field(default_factory=list)
     metadata: dict = Field(default_factory=dict)
 
     @staticmethod

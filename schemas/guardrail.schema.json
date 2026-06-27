@@ -1,0 +1,42 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Guardrail",
+  "description": "Guardrail contract for Agent Harness. A guardrail references a policy and defines when/how to enforce it.",
+  "type": "object",
+  "required": ["id", "name", "type"],
+  "properties": {
+    "id": {
+      "type": "string",
+      "description": "Unique guardrail identifier."
+    },
+    "name": {
+      "type": "string",
+      "description": "Human-readable guardrail name."
+    },
+    "type": {
+      "type": "string",
+      "enum": ["input", "output", "tool", "rag", "provider", "workflow"],
+      "description": "The execution point this guardrail applies to."
+    },
+    "enabled": {
+      "type": "boolean",
+      "description": "Whether this guardrail is active.",
+      "default": true
+    },
+    "policy_ref": {
+      "type": "string",
+      "description": "Optional reference to a policy id."
+    },
+    "action": {
+      "type": "string",
+      "enum": ["allow", "block", "warn", "require_review"],
+      "description": "Default action when guardrail triggers.",
+      "default": "allow"
+    },
+    "metadata": {
+      "type": "object",
+      "description": "Arbitrary metadata."
+    }
+  },
+  "additionalProperties": false
+}

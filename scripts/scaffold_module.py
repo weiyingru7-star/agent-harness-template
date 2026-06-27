@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 import argparse
-import re
 import shutil
 import sys
 from pathlib import Path
@@ -12,94 +11,16 @@ ROOT = Path(__file__).resolve().parents[1]
 TEMPLATE_DIR = ROOT / "templates" / "module-template"
 MODULES_DIR = ROOT / "modules"
 
-# ── Validation constants ────────────────────────────────────────────
+# ── Shared validation ──────────────────────────────────────────────
 
-MODULE_NAME_PATTERN = re.compile(r"^[a-z][a-z0-9_]*$")
-MAX_NAME_LENGTH = 64
+_script_dir = Path(__file__).resolve().parent
+if str(_script_dir) not in sys.path:
+    sys.path.insert(0, str(_script_dir))
 
-# Business term denylist (subset of scripts/check_business_terms.py).
-# Will be unified with the hygiene checker in V0.9.5.
-BUSINESS_TERMS: set[str] = {
-    "ecommerce", "e_commerce", "电商", "客服", "cs",
-    "服装", "clothing", "fashion",
-    "订单", "order", "售后", "refund", "return",
-    "cad", "灯具", "lighting",
-    "报价", "quote", "pricing",
-    "自媒体", "social_media", "influencer",
-}
-
-SENSITIVE_NAMES: set[str] = {
-    "env", ".env", "secret", "secrets",
-    "key", "keys", "token", "tokens",
-    "credential", "credentials", "password",
-    "config", ".config",
-}
-
-
-# ── Helpers ─────────────────────────────────────────────────────────
-
-
-def validate_name(name: str) -> list[str]:
-    """Validate module name, returning a list of error messages."""
-    errors: list[str] = []
-
-    if not name:
-        errors.append("Module name is required.")
-        return errors
-
-    if len(name) > MAX_NAME_LENGTH:
-        errors.append(f"Module name too long ({len(name)} > {MAX_NAME_LENGTH} chars).")
-
-    if ".." in name or "/" in name or "\\" in name:
-        errors.append(f"Path traversal detected in module name: '{name}'")
-
-    if not MODULE_NAME_PATTERN.fullmatch(name):
-        errors.append(
-            f"Module name must use snake_case (lowercase letters, digits, underscores), "
-            f"starting with a letter. Got: '{name}'"
-        )
-
-    if name.startswith("."):
-        errors.append(f"Module name cannot start with '.': '{name}'")
-
-    lower = name.lower()
-    if lower in SENSITIVE_NAMES:
-        errors.append(f"Module name '{name}' is reserved and cannot be used.")
-
-    if lower in BUSINESS_TERMS:
-        errors.append(
-            f"Module name '{name}' contains a business term. "
-            f"Module names must be business-neutral."
-        )
-
-    return errors
-
-
-def resolve_target_path(name: str) -> Path:
-    """Resolve and validate the target directory path.
-
-    Ensures the resolved path is under MODULES_DIR to prevent
-    path traversal outside the scaffold target area.
-    """
-    # Resolve symlinks and normalize
-    try:
-        target = (MODULES_DIR / name).resolve()
-        modules_dir_resolved = MODULES_DIR.resolve()
-    except (OSError, RuntimeError):
-        # If resolution fails, use absolute path and verify
-        target = MODULES_DIR.absolute() / name
-        modules_dir_resolved = MODULES_DIR.absolute()
-
-    # Safety check: target must be under MODULES_DIR
-    try:
-        target.relative_to(modules_dir_resolved)
-    except ValueError:
-        raise RuntimeError(
-            f"Target path '{target}' is outside modules directory "
-            f"'{modules_dir_resolved}'. Refusing to proceed."
-        )
-
-    return target
+from scaffold_validation import (  # noqa: E402
+    validate_scaffold_name,
+    resolve_safe_target,
+)
 
 
 def collect_files(template_dir: Path, name: str) -> list[tuple[Path, Path]]:
@@ -210,7 +131,7 @@ def main(argv: list[str] | None = None) -> int:
     dry_run = args.dry_run or args.preview
 
     # 1. Validate name
-    errors = validate_name(name)
+    errors = validate_scaffold_name(name, kind="module")
     if errors:
         for err in errors:
             print(f"Error: {err}", file=sys.stderr)
@@ -218,7 +139,7 @@ def main(argv: list[str] | None = None) -> int:
 
     # 2. Resolve target
     try:
-        target_dir = resolve_target_path(name)
+        target_dir = resolve_safe_target(MODULES_DIR, name)
     except RuntimeError as exc:
         print(f"Error: {exc}", file=sys.stderr)
         return 2

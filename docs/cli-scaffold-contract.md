@@ -141,7 +141,7 @@ MAX_LENGTH = 64                   # 最大长度
 | **V0.9.2** | **scripts/scaffold_agent.py — 从 templates/agent-template/agent.json 读取源模板，生成 templates/<name>/ 下 agent.json + README.md** | ✅ 已完成 |
 | **V0.9.3** | **scripts/scaffold_eval.py — 生成 evals/cases/<name>.json，匹配 run_evals.py 的 13 REQUIRED_FIELDS 和 eval-case.schema.json** | ✅ 已完成 |
 | **V0.9.4** | **scripts/scaffold_docs.py — 生成 docs/scaffolds/<kind>-<name>.md，支持 --kind (module/agent/eval/generic)** | ✅ 已完成 |
-| V0.9.5 | CLI validation and hygiene | ✅ 改 cli/ |
+| **V0.9.5** | **scripts/scaffold_validation.py — 抽取 scaffold 系列重复 validation 逻辑到共享模块，4 个 scaffold 脚本统一引用** | ✅ 已完成 |
 | V0.9.6 | CLI docs consolidation | ❌ 仅文档 |
 
 ## 10. Anti-Goals 明确不做的

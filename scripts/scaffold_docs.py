@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 import argparse
-import re
 import sys
 from pathlib import Path
 
@@ -12,69 +11,16 @@ DOCS_SCAFFOLDS_DIR = ROOT / "docs" / "scaffolds"
 
 ALLOWED_KINDS = {"module", "agent", "eval", "generic"}
 
-NAME_PATTERN = re.compile(r"^[a-z][a-z0-9_]*$")
-MAX_NAME_LENGTH = 64
+# ── Shared validation ──────────────────────────────────────────────
 
-BUSINESS_TERMS: set[str] = {
-    "ecommerce", "e_commerce", "电商", "客服", "cs",
-    "服装", "clothing", "fashion",
-    "订单", "order", "售后", "refund", "return",
-    "cad", "灯具", "lighting",
-    "报价", "quote", "pricing",
-    "自媒体", "social_media", "influencer",
-}
+_script_dir = Path(__file__).resolve().parent
+if str(_script_dir) not in sys.path:
+    sys.path.insert(0, str(_script_dir))
 
-SENSITIVE_NAMES: set[str] = {
-    "env", ".env", "secret", "secrets",
-    "key", "keys", "token", "tokens",
-    "credential", "credentials", "password",
-    "config", ".config",
-}
-
-
-def validate_name(name: str) -> list[str]:
-    errors: list[str] = []
-    if not name:
-        errors.append("Name is required.")
-        return errors
-    if len(name) > MAX_NAME_LENGTH:
-        errors.append(f"Name too long ({len(name)} > {MAX_NAME_LENGTH} chars).")
-    if ".." in name or "/" in name or "\\" in name:
-        errors.append(f"Path traversal detected in name: '{name}'")
-    if not NAME_PATTERN.fullmatch(name):
-        errors.append(
-            f"Name must use snake_case (lowercase letters, digits, underscores), "
-            f"starting with a letter. Got: '{name}'"
-        )
-    if name.startswith("."):
-        errors.append(f"Name cannot start with '.': '{name}'")
-    lower = name.lower()
-    if lower in SENSITIVE_NAMES:
-        errors.append(f"Name '{name}' is reserved and cannot be used.")
-    if lower in BUSINESS_TERMS:
-        errors.append(
-            f"Name '{name}' contains a business term. "
-            f"Names must be business-neutral."
-        )
-    return errors
-
-
-def resolve_target_path(name: str, kind: str) -> Path:
-    filename = f"{kind}-{name}.md"
-    try:
-        target = (DOCS_SCAFFOLDS_DIR / filename).resolve()
-        resolved_base = DOCS_SCAFFOLDS_DIR.resolve()
-    except (OSError, RuntimeError):
-        target = (DOCS_SCAFFOLDS_DIR.absolute() / filename)
-        resolved_base = DOCS_SCAFFOLDS_DIR.absolute()
-    try:
-        target.relative_to(resolved_base)
-    except ValueError:
-        raise RuntimeError(
-            f"Target path '{target}' is outside docs/scaffolds directory "
-            f"'{resolved_base}'. Refusing to proceed."
-        )
-    return target
+from scaffold_validation import (  # noqa: E402
+    validate_scaffold_name,
+    resolve_safe_target,
+)
 
 
 def render_doc(name: str, kind: str) -> str:
@@ -201,14 +147,14 @@ def main(argv: list[str] | None = None) -> int:
     kind = args.kind
     dry_run = args.dry_run or args.preview
 
-    errors = validate_name(name)
+    errors = validate_scaffold_name(name, kind="docs")
     if errors:
         for err in errors:
             print(f"Error: {err}", file=sys.stderr)
         return 2
 
     try:
-        target_path = resolve_target_path(name, kind)
+        target_path = resolve_safe_target(DOCS_SCAFFOLDS_DIR, f"{kind}-{name}.md")
     except RuntimeError as exc:
         print(f"Error: {exc}", file=sys.stderr)
         return 2

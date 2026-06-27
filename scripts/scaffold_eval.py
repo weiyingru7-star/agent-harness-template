@@ -3,7 +3,6 @@ from __future__ import annotations
 
 import argparse
 import json
-import re
 import sys
 from pathlib import Path
 
@@ -28,68 +27,16 @@ REQUIRED_EVAL_FIELDS = [
     "metadata",
 ]
 
-NAME_PATTERN = re.compile(r"^[a-z][a-z0-9_]*$")
-MAX_NAME_LENGTH = 64
+# ── Shared validation ──────────────────────────────────────────────
 
-BUSINESS_TERMS: set[str] = {
-    "ecommerce", "e_commerce", "电商", "客服", "cs",
-    "服装", "clothing", "fashion",
-    "订单", "order", "售后", "refund", "return",
-    "cad", "灯具", "lighting",
-    "报价", "quote", "pricing",
-    "自媒体", "social_media", "influencer",
-}
+_script_dir = Path(__file__).resolve().parent
+if str(_script_dir) not in sys.path:
+    sys.path.insert(0, str(_script_dir))
 
-SENSITIVE_NAMES: set[str] = {
-    "env", ".env", "secret", "secrets",
-    "key", "keys", "token", "tokens",
-    "credential", "credentials", "password",
-    "config", ".config",
-}
-
-
-def validate_name(name: str) -> list[str]:
-    errors: list[str] = []
-    if not name:
-        errors.append("Eval case name is required.")
-        return errors
-    if len(name) > MAX_NAME_LENGTH:
-        errors.append(f"Eval case name too long ({len(name)} > {MAX_NAME_LENGTH} chars).")
-    if ".." in name or "/" in name or "\\" in name:
-        errors.append(f"Path traversal detected in eval case name: '{name}'")
-    if not NAME_PATTERN.fullmatch(name):
-        errors.append(
-            f"Eval case name must use snake_case (lowercase letters, digits, underscores), "
-            f"starting with a letter. Got: '{name}'"
-        )
-    if name.startswith("."):
-        errors.append(f"Eval case name cannot start with '.': '{name}'")
-    lower = name.lower()
-    if lower in SENSITIVE_NAMES:
-        errors.append(f"Eval case name '{name}' is reserved and cannot be used.")
-    if lower in BUSINESS_TERMS:
-        errors.append(
-            f"Eval case name '{name}' contains a business term. "
-            f"Eval case names must be business-neutral."
-        )
-    return errors
-
-
-def resolve_target_path(name: str) -> Path:
-    try:
-        target = (EVAL_CASES_DIR / f"{name}.json").resolve()
-        resolved_base = EVAL_CASES_DIR.resolve()
-    except (OSError, RuntimeError):
-        target = (EVAL_CASES_DIR.absolute() / f"{name}.json")
-        resolved_base = EVAL_CASES_DIR.absolute()
-    try:
-        target.relative_to(resolved_base)
-    except ValueError:
-        raise RuntimeError(
-            f"Target path '{target}' is outside evals/cases directory "
-            f"'{resolved_base}'. Refusing to proceed."
-        )
-    return target
+from scaffold_validation import (  # noqa: E402
+    validate_scaffold_name,
+    resolve_safe_target,
+)
 
 
 def render_eval_case(name: str) -> dict:
@@ -159,14 +106,14 @@ def main(argv: list[str] | None = None) -> int:
     name = args.name.strip()
     dry_run = args.dry_run or args.preview
 
-    errors = validate_name(name)
+    errors = validate_scaffold_name(name, kind="eval case")
     if errors:
         for err in errors:
             print(f"Error: {err}", file=sys.stderr)
         return 2
 
     try:
-        target_path = resolve_target_path(name)
+        target_path = resolve_safe_target(EVAL_CASES_DIR, f"{name}.json")
     except RuntimeError as exc:
         print(f"Error: {exc}", file=sys.stderr)
         return 2

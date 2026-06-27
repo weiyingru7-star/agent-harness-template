@@ -824,7 +824,7 @@ V0.7.0–V0.7.4 构建了 Workflow Contract 系统，共 4 个模块：
 
 ## Current Scope 当前范围
 
-当前版本（V0.9.4）已完成：
+当前版本（V0.9.5）已完成：
 - **V0.2.x Agent Runtime**：Trace / Span、Checkpoint、Failure / Retry、Timeline API 与前端视图、Eval Trajectory runner
 - **V0.3.x Tool Runtime**：Tool Call Contract、Tool Args Schema、Tool Result Contract、Tool Timeout、Tool Retry、Tool Permission、Tool Sandbox Policy、文档收口
 - **V0.4.x RAG Runtime**：数据合同、切分策略、直接文本创建、检索评估、嵌入层、向量存储、检索模式、文档收口
@@ -848,10 +848,11 @@ V0.7.0–V0.7.4 构建了 Workflow Contract 系统，共 4 个模块：
 - **V0.9.2 Scaffold Agent Template**：新增 `scripts/scaffold_agent.py`，从 `templates/agent-template/agent.json` 读取源模板，替换 id/name/description/metadata 生成 `templates/<name>/` 下的 agent.json + README.md。生成的 agent.json 可直接被 AgentConfig 和 AgentTemplateRegistry 解析。复用命名校验。10 条测试。
 - **V0.9.3 Scaffold Eval Cases**：新增 `scripts/scaffold_eval.py`，生成 `evals/cases/<name>.json`。字段精确匹配 `run_evals.py` 的 13 个 REQUIRED_FIELDS 和 `schemas/eval-case.schema.json`。使用 `demo_agent` 作为中性 module_id。复用命名校验。25 条测试。
 - **V0.9.4 Scaffold Docs Generator**：新增 `scripts/scaffold_docs.py`，生成 `docs/scaffolds/<kind>-<name>.md`。支持 `--kind`（module/agent/eval/generic），每个 kind 生成不同的中性文档骨架（用途、生成文件、验证步骤、安全说明）。复用命名校验。27 条测试。
+- **V0.9.5 CLI Validation and Hygiene**：抽取 scaffold 系列脚本中重复的命名校验、安全校验、路径校验逻辑到 `scripts/scaffold_validation.py`。提供 `validate_scaffold_name()`、`resolve_safe_target()`、`format_errors()` 统一入口。4 个 scaffold 脚本全部引用共享模块。59 条共享校验测试。
 
 模板核心保持业务无关，具体业务逻辑应放在 `modules/{module_name}/` 内由使用者自行创建。详见 [Project Boundaries](PROJECT_BOUNDARIES.md)。
 
-下一阶段规划：V0.9.5 CLI Validation and Hygiene。
+下一阶段规划：V0.9.6 CLI Docs Consolidation。
 
 ### V0.8 能力总结
 
@@ -871,9 +872,9 @@ V0.7.0–V0.7.4 构建了 Workflow Contract 系统，共 4 个模块：
 - **Modifying output** — 不修改 tool / provider / RAG result
 - **Changing run status** — dry-run hook 不改变 run.status
 
-> 当前阶段 V0.9.4 为 Scaffold Docs Generator。docs scaffold 通过
-> `python3 scripts/scaffold_docs.py --name <name> --kind <kind>` 使用。
-> 生成中性文档骨架到 docs/scaffolds/ 目录。
+> 当前阶段 V0.9.5 为 CLI Validation and Hygiene。所有 scaffold 系列的
+> 命名校验、安全校验、路径校验统一收口到 `scripts/scaffold_validation.py`。
+> CLI 参数、exit code、成功/失败语义不变。
 
 ### Provider Layer 分层说明
 

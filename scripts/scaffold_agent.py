@@ -13,73 +13,16 @@ ROOT = Path(__file__).resolve().parents[1]
 SOURCE_TEMPLATE_DIR = ROOT / "templates" / "agent-template"
 TARGET_TEMPLATES_DIR = ROOT / "templates"
 
-# ── Validation constants (same as scaffold_module.py) ──────────────
+# ── Shared validation ──────────────────────────────────────────────
 
-NAME_PATTERN = re.compile(r"^[a-z][a-z0-9_]*$")
-MAX_NAME_LENGTH = 64
+_script_dir = Path(__file__).resolve().parent
+if str(_script_dir) not in sys.path:
+    sys.path.insert(0, str(_script_dir))
 
-BUSINESS_TERMS: set[str] = {
-    "ecommerce", "e_commerce", "电商", "客服", "cs",
-    "服装", "clothing", "fashion",
-    "订单", "order", "售后", "refund", "return",
-    "cad", "灯具", "lighting",
-    "报价", "quote", "pricing",
-    "自媒体", "social_media", "influencer",
-}
-
-SENSITIVE_NAMES: set[str] = {
-    "env", ".env", "secret", "secrets",
-    "key", "keys", "token", "tokens",
-    "credential", "credentials", "password",
-    "config", ".config",
-}
-
-
-# ── Helpers ─────────────────────────────────────────────────────────
-
-
-def validate_name(name: str) -> list[str]:
-    errors: list[str] = []
-    if not name:
-        errors.append("Agent name is required.")
-        return errors
-    if len(name) > MAX_NAME_LENGTH:
-        errors.append(f"Agent name too long ({len(name)} > {MAX_NAME_LENGTH} chars).")
-    if ".." in name or "/" in name or "\\" in name:
-        errors.append(f"Path traversal detected in agent name: '{name}'")
-    if not NAME_PATTERN.fullmatch(name):
-        errors.append(
-            f"Agent name must use snake_case (lowercase letters, digits, underscores), "
-            f"starting with a letter. Got: '{name}'"
-        )
-    if name.startswith("."):
-        errors.append(f"Agent name cannot start with '.': '{name}'")
-    lower = name.lower()
-    if lower in SENSITIVE_NAMES:
-        errors.append(f"Agent name '{name}' is reserved and cannot be used.")
-    if lower in BUSINESS_TERMS:
-        errors.append(
-            f"Agent name '{name}' contains a business term. "
-            f"Agent names must be business-neutral."
-        )
-    return errors
-
-
-def resolve_target_path(name: str) -> Path:
-    try:
-        target = (TARGET_TEMPLATES_DIR / name).resolve()
-        resolved_base = TARGET_TEMPLATES_DIR.resolve()
-    except (OSError, RuntimeError):
-        target = TARGET_TEMPLATES_DIR.absolute() / name
-        resolved_base = TARGET_TEMPLATES_DIR.absolute()
-    try:
-        target.relative_to(resolved_base)
-    except ValueError:
-        raise RuntimeError(
-            f"Target path '{target}' is outside templates directory "
-            f"'{resolved_base}'. Refusing to proceed."
-        )
-    return target
+from scaffold_validation import (  # noqa: E402
+    validate_scaffold_name,
+    resolve_safe_target,
+)
 
 
 def load_source_agent_json() -> dict:
@@ -176,14 +119,14 @@ def main(argv: list[str] | None = None) -> int:
     name = args.name.strip()
     dry_run = args.dry_run or args.preview
 
-    errors = validate_name(name)
+    errors = validate_scaffold_name(name, kind="agent")
     if errors:
         for err in errors:
             print(f"Error: {err}", file=sys.stderr)
         return 2
 
     try:
-        target_dir = resolve_target_path(name)
+        target_dir = resolve_safe_target(TARGET_TEMPLATES_DIR, name)
     except RuntimeError as exc:
         print(f"Error: {exc}", file=sys.stderr)
         return 2

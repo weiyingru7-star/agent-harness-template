@@ -1476,6 +1476,59 @@ git diff --check
 - [CLI Scaffold Contract](docs/cli-scaffold-contract.md)
 - [scripts/scaffold_docs.py](scripts/scaffold_docs.py)
 
+## V0.9.5 CLI Validation and Hygiene Acceptance V0.9.5 CLI 校验与工程卫生验收
+
+V0.9.5 抽取 scaffold 系列脚本中重复的 validation 逻辑到共享模块
+`scripts/scaffold_validation.py`。4 个 scaffold 脚本统一引用。
+
+### 共享 API
+
+| 函数 | 用途 |
+|---|---|
+| `validate_scaffold_name(name, kind="scaffold") -> list[str]` | 统一命名校验 |
+| `resolve_safe_target(base_dir, target_name) -> Path` | 安全路径解析 |
+| `format_errors(errors) -> str` | 错误格式化 |
+
+### 抽取的重复逻辑
+
+| 组件 | 之前 | 之后 |
+|---|---|---|
+| BUSINESS_TERMS | 4 份副本 | 1 份 |
+| SENSITIVE_NAMES | 4 份副本 | 1 份 |
+| NAME_PATTERN | 4 份副本 | 1 份 |
+| validate_name() | 4 个独立实现 | 1 个统一实现 |
+| resolve_target_path() | 4 个独立实现 | 1 个统一实现 |
+
+### 行为不变性确认
+
+- ✅ CLI 参数不变
+- ✅ exit code 不变（0/1/2）
+- ✅ 成功/失败语义不变
+- ✅ 输出格式兼容
+- ✅ 所有 481 已有测试通过
+
+### Unified Acceptance Commands 统一验收命令
+
+```bash
+# 全量后端测试（当前预期 481 passed）
+make test-api
+
+# 所有 eval runner
+python3 scripts/run_evals.py
+python3 scripts/run_rag_evals.py
+python3 scripts/run_workflow_evals.py
+python3 scripts/run_policy_evals.py
+
+# 业务词污染检查
+python3 scripts/check_business_terms.py
+npm run build --prefix apps/web
+git diff --check
+```
+
+### 文档参考
+
+- [CLI Scaffold Contract](docs/cli-scaffold-contract.md)
+
 ## Common Errors 常见错误排查
 
 ### `python: command not found`

@@ -64,6 +64,7 @@ ALLOWED_FILES = {
     Path("scripts/scaffold_agent.py"),
     Path("scripts/scaffold_eval.py"),
     Path("scripts/scaffold_docs.py"),
+    Path("scripts/scaffold_validation.py"),
     Path("apps/api/tests/test_schema_contracts.py"),
     Path("apps/api/tests/test_agent_template.py"),
     Path("apps/api/tests/test_example_agent_template.py"),

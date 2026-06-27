@@ -138,7 +138,7 @@ MAX_LENGTH = 64                   # 最大长度
 |---|---|---|
 | **V0.9.0** | CLI / Scaffold Contract 文档 | ❌ 无代码改动 |
 | **V0.9.1** | **scripts/scaffold_module.py — 新增 argparse 脚本、dry-run/force/preview、命名校验、sensitive/business term 拒绝** | ✅ 已完成 |
-| V0.9.2 | Scaffold agent template — generate agent.json | ✅ 改 scripts/ |
+| **V0.9.2** | **scripts/scaffold_agent.py — 从 templates/agent-template/agent.json 读取源模板，生成 templates/<name>/ 下 agent.json + README.md** | ✅ 已完成 |
 | V0.9.3 | Scaffold eval cases — generate eval stubs | ✅ 改 scripts/ |
 | V0.9.4 | Scaffold docs / README generator | ✅ 改 scripts/ |
 | V0.9.5 | CLI validation and hygiene | ✅ 改 cli/ |

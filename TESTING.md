@@ -1344,6 +1344,54 @@ git diff --check
 - [CLI Scaffold Contract](docs/cli-scaffold-contract.md)
 - [scripts/scaffold_module.py](scripts/scaffold_module.py)
 
+## V0.9.2 Scaffold Agent Template Acceptance V0.9.2 Agent 模板脚手架验收
+
+V0.9.2 新增 `scripts/scaffold_agent.py`，从 `templates/agent-template/agent.json`
+读取源模板，生成业务无关的 agent 骨架。
+
+### CLI 参数
+
+| 参数 | 说明 |
+|---|---|
+| `--name NAME, -n NAME` | Agent name in snake_case（必填） |
+| `--dry-run` | 打印将创建的文件，不写入 |
+| `--preview` | `--dry-run` 的别名 |
+| `--force` | 覆盖已存在的目标目录 |
+
+### 生成文件
+
+`templates/<name>/` 下生成 2 个文件：
+- `agent.json` — 符合 AgentConfig contract，可被 AgentTemplateRegistry 识别
+- `README.md` — 使用说明
+
+### 源模板复用
+
+`scripts/scaffold_agent.py` 读取 `templates/agent-template/agent.json`，
+只替换 id / name / description / metadata，保持现有 contract 一致。
+
+### Unified Acceptance Commands 统一验收命令
+
+```bash
+# 全量后端测试（当前预期 370 passed）
+make test-api
+
+# 所有 eval runner
+python3 scripts/run_evals.py
+python3 scripts/run_rag_evals.py
+python3 scripts/run_workflow_evals.py
+python3 scripts/run_policy_evals.py
+
+# 业务词污染检查
+python3 scripts/check_business_terms.py
+npm run build --prefix apps/web
+git diff --check
+```
+
+### 文档参考
+
+- [CLI Scaffold Contract](docs/cli-scaffold-contract.md)
+- [scripts/scaffold_agent.py](scripts/scaffold_agent.py)
+
 ## Common Errors 常见错误排查
 
 ### `python: command not found`

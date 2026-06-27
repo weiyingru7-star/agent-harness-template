@@ -25,8 +25,24 @@ from app.tool_runtime import ToolExecutionPipeline
 
 
 class RunStore:
-    def create_run(self, task_input: str, module_id: str | None = None) -> Run:
-        return self._create_run(task_input=task_input, module_id=module_id)
+    def create_run(
+        self,
+        task_input: str,
+        module_id: str | None = None,
+        user_id: str | None = None,
+        tenant_id: str | None = None,
+        conversation_id: str | None = None,
+        message_id: str | None = None,
+    ) -> Run:
+        return self._create_run(
+            task_input=task_input,
+            module_id=module_id,
+            attempt=1,
+            user_id=user_id,
+            tenant_id=tenant_id,
+            conversation_id=conversation_id,
+            message_id=message_id,
+        )
 
     def retry_run(self, run_id: str) -> Run | None:
         original_run = self.get_run(run_id)
@@ -34,11 +50,16 @@ class RunStore:
             return None
         if original_run.status != "failed":
             raise ValueError("Only failed runs can be retried")
+        orig_meta = original_run.metadata or {}
         return self._create_run(
             task_input=original_run.task.input,
-            module_id=original_run.metadata.get("module_id") if original_run.metadata else None,
-            attempt=original_run.metadata.get("attempt", 1) + 1 if original_run.metadata else 2,
+            module_id=orig_meta.get("module_id"),
+            attempt=orig_meta.get("attempt", 1) + 1 if orig_meta else 2,
             retry_of_run_id=run_id,
+            user_id=orig_meta.get("user_id"),
+            tenant_id=orig_meta.get("tenant_id"),
+            conversation_id=orig_meta.get("conversation_id"),
+            message_id=orig_meta.get("message_id"),
         )
 
     def _create_run(
@@ -47,13 +68,25 @@ class RunStore:
         module_id: str | None = None,
         attempt: int = 1,
         retry_of_run_id: str | None = None,
+        user_id: str | None = None,
+        tenant_id: str | None = None,
+        conversation_id: str | None = None,
+        message_id: str | None = None,
     ) -> Run:
         selected_module_id = module_id or "demo_agent"
         task = Task(id=self._new_id("task"), input=task_input)
         trace_id = self._new_id("trace")
-        run_metadata = {"module_id": selected_module_id, "attempt": attempt}
+        run_metadata: dict = {"module_id": selected_module_id, "attempt": attempt}
         if retry_of_run_id is not None:
             run_metadata["retry_of_run_id"] = retry_of_run_id
+        if user_id is not None:
+            run_metadata["user_id"] = user_id
+        if tenant_id is not None:
+            run_metadata["tenant_id"] = tenant_id
+        if conversation_id is not None:
+            run_metadata["conversation_id"] = conversation_id
+        if message_id is not None:
+            run_metadata["message_id"] = message_id
         run = Run(
             id=self._new_id("run"),
             trace_id=trace_id,

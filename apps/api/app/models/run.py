@@ -76,6 +76,10 @@ class RunEvent(BaseModel):
 class CreateRunRequest(BaseModel):
     input: str = Field(min_length=1)
     module_id: str | None = None
+    user_id: str | None = None
+    tenant_id: str | None = None
+    conversation_id: str | None = None
+    message_id: str | None = None
 
 
 class TraceSpan(BaseModel):

@@ -11,7 +11,14 @@ router = APIRouter(prefix="/api/runs", tags=["runs"])
 @router.post("", response_model=Run, status_code=status.HTTP_201_CREATED)
 def create_run(request: CreateRunRequest) -> Run:
     try:
-        return run_store.create_run(request.input, module_id=request.module_id)
+        return run_store.create_run(
+            request.input,
+            module_id=request.module_id,
+            user_id=request.user_id,
+            tenant_id=request.tenant_id,
+            conversation_id=request.conversation_id,
+            message_id=request.message_id,
+        )
     except ValueError as exc:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc)) from exc
 

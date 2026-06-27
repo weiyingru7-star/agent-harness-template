@@ -1643,6 +1643,43 @@ python3 scripts/scaffold_docs.py --name sample_docs --kind generic --dry-run
 - [TEMPLATE_USAGE.md](TEMPLATE_USAGE.md)
 - [QUICKSTART.md](QUICKSTART.md)
 
+## V1.1 Multi-user Runtime Contract Acceptance V1.1 多用户运行时合同验收
+
+V1.1 定义 UserContext / Conversation / Message / RunBinding 数据合同。
+CreateRunRequest 新增可选 user context 字段。**不做 auth / RBAC / enforcement。**
+
+### Contract Models
+
+| Model | 必填字段 | 可选字段 |
+|---|---|---|
+| UserContext | user_id, tenant_id | roles |
+| Conversation | conversation_id, tenant_id, user_id | agent_template_id, metadata |
+| Message | message_id, conversation_id, tenant_id, user_id, role | content, request_id, idempotency_key, sequence_index |
+| RunBinding | run_id, tenant_id, user_id | conversation_id, message_id |
+
+### Unified Acceptance Commands 统一验收命令
+
+```bash
+# 全量后端测试（当前预期 507 passed）
+make test-api
+
+# 所有 eval runner
+python3 scripts/run_evals.py
+python3 scripts/run_rag_evals.py
+python3 scripts/run_workflow_evals.py
+python3 scripts/run_policy_evals.py
+
+# 模板健康检查
+python3 scripts/check_business_terms.py
+python3 scripts/check_template_health.py
+npm run build --prefix apps/web
+git diff --check
+```
+
+### 文档参考
+
+- [Multi-user Runtime Contract](docs/multi-user-runtime-contract.md)
+
 ## Common Errors 常见错误排查
 
 ### `python: command not found`

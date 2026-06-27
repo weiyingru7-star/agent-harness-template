@@ -1,7 +1,7 @@
 # CLI / Scaffold Contract CLI 与脚手架合同
 
 V0.9.0 设计 CLI / Scaffold 方案，让用户可以快速创建新的 agent / module 模板。
-**本阶段只做 contract / plan / docs，不实现复杂 CLI。**
+V0.9.1 实现了 `scripts/scaffold_module.py`。
 
 ## 1. Motivation 动机
 
@@ -32,15 +32,32 @@ V0.9.0 设计 CLI / Scaffold 方案，让用户可以快速创建新的 agent / 
 **当前不足**：没有 dry-run mode、没有 `--force`、没有 agent template scaffold、
 没有 eval case scaffold。
 
+### scripts/scaffold_module.py (V0.9.1)
+
+新增统一 scaffold 脚本：
+
+- **文件**: `scripts/scaffold_module.py`
+- **命令**: `python3 scripts/scaffold_module.py --name <module_name> [--dry-run] [--force] [--preview]`
+- **功能**: 从 `templates/module-template/` 生成 module 骨架
+- **新增校验**:
+  - snake_case 正则 `^[a-z][a-z0-9_]*$`，长度 ≤ 64
+  - Path traversal 拒绝（`..`、`/`、`\`）
+  - Sensitive name 拒绝（`.env`、`secret`、`key` 等 10 个）
+  - Business term 拒绝（`ecommerce`、`order`、`refund` 等）
+- **新增模式**: `--dry-run` / `--preview` 不写文件、`--force` 覆盖已有
+- **安全**: 目标路径必须在 `modules/` 下，`shutil.rmtree` 不会超出此范围
+- **测试**: `apps/api/tests/test_scaffold_script.py`（22 条测试）
+
 ## 3. Command Design 命令设计
 
-### Level 1 — Current（V0.5c）
+### Level 1 — Current（V0.5c / V0.9.1）
 
 ```bash
-python3 cli/scaffold_module.py <module_name>
+python3 cli/scaffold_module.py <module_name>            # original (V0.5c)
+python3 scripts/scaffold_module.py --name <module_name>  # new (V0.9.1)
 ```
 
-### Level 2 — Proposed（V0.9.1–V0.9.3）
+### Level 2 — Proposed（V0.9.2–V0.9.3）
 
 ```bash
 python3 scripts/scaffold.py --help
@@ -120,7 +137,7 @@ MAX_LENGTH = 64                   # 最大长度
 | Version | Scope | 代码改动 |
 |---|---|---|
 | **V0.9.0** | CLI / Scaffold Contract 文档 | ❌ 无代码改动 |
-| V0.9.1 | Enhance scaffold_module.py — dry-run, force, preview | ✅ 改 cli/scaffold_module.py |
+| **V0.9.1** | **scripts/scaffold_module.py — 新增 argparse 脚本、dry-run/force/preview、命名校验、sensitive/business term 拒绝** | ✅ 已完成 |
 | V0.9.2 | Scaffold agent template — generate agent.json | ✅ 改 scripts/ |
 | V0.9.3 | Scaffold eval cases — generate eval stubs | ✅ 改 scripts/ |
 | V0.9.4 | Scaffold docs / README generator | ✅ 改 scripts/ |

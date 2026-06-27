@@ -18,7 +18,7 @@
 
 ## Current Stage 当前阶段
 
-当前阶段：V0.9.0 CLI / Scaffold Contract。
+当前阶段：V0.9.1 Scaffold Module Script。
 
 已完成的通用底座能力：
 - Agent Runtime（V0.2.x）：Trace / Span、Checkpoint、Failure / Retry、Timeline、Eval Trajectory
@@ -37,6 +37,7 @@
 - Provider / RAG Guardrail Dry-Run Helpers（V0.8.8）：run_provider_guardrail() / run_rag_guardrail() dry-run helpers。返回 DecisionResult dict。当前不做 runtime wiring。纯 helper，不接入运行链路
 - Policy / Guardrail Runtime Docs Consolidation（V0.8.9）：V0.8 全阶段文档收口。不修改代码
 - CLI / Scaffold Contract（V0.9.0）：设计 CLI / Scaffold 方案，新增 docs/cli-scaffold-contract.md。只做 contract 文档
+- Scaffold Module Script（V0.9.1）：scripts/scaffold_module.py，支持 --name/--dry-run/--force/--preview。命名校验、sensitive name 拒绝、path traversal 拒绝、business term 检查。复用 templates/module-template/。22 条测试
 
 ## Provider Layer Guidance Provider 层开发指引
 

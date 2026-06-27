@@ -1293,6 +1293,57 @@ git diff --check
 
 - [CLI Scaffold Contract](docs/cli-scaffold-contract.md)
 
+## V0.9.1 Scaffold Module Script Acceptance V0.9.1 Module 脚手架验收
+
+V0.9.1 新增 `scripts/scaffold_module.py`，支持 argparse 参数：
+`--name`、`--dry-run`、`--preview`、`--force`。
+
+### CLI 参数
+
+| 参数 | 说明 |
+|---|---|
+| `--name NAME, -n NAME` | Module name in snake_case（必填） |
+| `--dry-run` | 打印将创建的文件，不写入 |
+| `--preview` | `--dry-run` 的别名 |
+| `--force` | 覆盖已存在的目标目录 |
+
+### 命名校验
+
+- snake_case: `^[a-z][a-z0-9_]*$`
+- 长度 ≤ 64
+- 拒绝 path traversal（`..`、`/`、`\`）
+- 拒绝 sensitive name（`.env`、`secret`、`key` 等）
+- 拒绝 business term（`ecommerce`、`order`、`refund` 等）
+- 拒绝以 `.` 开头
+
+### 生成文件
+
+`modules/<name>/` 下生成 7 个文件：
+module.yaml、agent.yaml、README.md、services/<name>_service.py、prompts/system.md、skills/.gitkeep、evals/.gitkeep
+
+### Unified Acceptance Commands 统一验收命令
+
+```bash
+# 全量后端测试（当前预期 346 passed）
+make test-api
+
+# 所有 eval runner
+python3 scripts/run_evals.py
+python3 scripts/run_rag_evals.py
+python3 scripts/run_workflow_evals.py
+python3 scripts/run_policy_evals.py
+
+# 业务词污染检查
+python3 scripts/check_business_terms.py
+npm run build --prefix apps/web
+git diff --check
+```
+
+### 文档参考
+
+- [CLI Scaffold Contract](docs/cli-scaffold-contract.md)
+- [scripts/scaffold_module.py](scripts/scaffold_module.py)
+
 ## Common Errors 常见错误排查
 
 ### `python: command not found`

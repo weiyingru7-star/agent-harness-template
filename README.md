@@ -824,7 +824,7 @@ V0.7.0–V0.7.4 构建了 Workflow Contract 系统，共 4 个模块：
 
 ## Current Scope 当前范围
 
-当前版本（V0.8.7）已完成：
+当前版本（V0.8.8）已完成：
 - **V0.2.x Agent Runtime**：Trace / Span、Checkpoint、Failure / Retry、Timeline API 与前端视图、Eval Trajectory runner
 - **V0.3.x Tool Runtime**：Tool Call Contract、Tool Args Schema、Tool Result Contract、Tool Timeout、Tool Retry、Tool Permission、Tool Sandbox Policy、文档收口
 - **V0.4.x RAG Runtime**：数据合同、切分策略、直接文本创建、检索评估、嵌入层、向量存储、检索模式、文档收口
@@ -841,14 +841,16 @@ V0.7.0–V0.7.4 构建了 Workflow Contract 系统，共 4 个模块：
 - **V0.8.5 Guardrail Runtime Integration Plan**：集成计划文档，设计 runtime 接入点（input/output/tool/rag/provider/workflow）、execution mode（disabled/validate_only/dry_run/enforce）、dry-run 与 enforcement 边界。不修改任何代码。详见 [Guardrail Runtime Integration Plan](docs/guardrail-runtime-integration-plan.md)。
 - **V0.8.6 Input Guardrail Dry-Run Hook**：新增 `run_input_guardrail()` 在 `RunStore._create_run` 中插入 input dry-run hook。构造 input-scope EvaluationContext，调用 PolicyDryRunEvaluator，记录 `guardrail.dry_run.completed` event。纯 dry-run，不拦截请求，不改变 API response。详见 [Policy Guardrail Contract](docs/policy-guardrail-contract.md)。
 - **V0.8.7 Tool Guardrail Dry-Run Hook**：`run_tool_guardrail()` 在 `ToolExecutionPipeline._execute_tool` 中插入 tool dry-run hook。构造 tool-scope EvaluationContext，记录 `guardrail.dry_run.completed` event。纯 dry-run，不阻止 tool 执行，不改变 ToolCall contract。详见 [Policy Guardrail Contract](docs/policy-guardrail-contract.md)。
+- **V0.8.8 Provider / RAG Guardrail Dry-Run Helpers**：`run_provider_guardrail()` / `run_rag_guardrail()` dry-run helper 已实现。返回 DecisionResult dict。当前不做 runtime wiring——provider_runtime / rag runtime 没有 run_id / trace_id / event_repository 上下文。纯 helper，不接入运行链路。详见 [Policy Guardrail Contract](docs/policy-guardrail-contract.md)。
 
 模板核心保持业务无关，具体业务逻辑应放在 `modules/{module_name}/` 内由使用者自行创建。详见 [Project Boundaries](PROJECT_BOUNDARIES.md)。
 
-下一阶段规划：V0.8.x Guardrail Runtime Integration — Tool Guardrail Dry-Run Hook 已完成（V0.8.7），后续为 V0.8.8 Provider / RAG Guardrail Dry-Run Hooks。
+下一阶段规划：V0.8.9 Guardrail Runtime Docs Consolidation。
 
-> 当前阶段 V0.8.7 为 Tool Guardrail Dry-Run Hook。hook 在 ToolExecutionPipeline
-> 中构造 tool-scope EvaluationContext，调用 PolicyDryRunEvaluator，
-> 记录 guardrail.dry_run.completed event。纯 dry-run，不阻止 tool 执行。
+> 当前阶段 V0.8.8 为 Provider / RAG Guardrail Dry-Run Helpers。provider/rag
+> runtime 当前没有 run_id / trace_id / event_repository 上下文，因此只做
+> helper-level 实现和测试。未来 runtime 调用链携带 run context 时再接入
+> event recording。
 
 ### Provider Layer 分层说明
 

@@ -445,6 +445,33 @@ config-driven policies / guardrails。
 | API response | 不改变 `/api/runs` 响应结构 |
 | Run status | 不改变 run.status |
 
+### Provider / RAG Guardrail Helpers（V0.8.8）
+
+`run_provider_guardrail()` 和 `run_rag_guardrail()` 是 dry-run helper，
+返回 DecisionResult dict。
+
+**当前不做 runtime wiring。** provider_runtime / rag runtime 没有
+run_id / trace_id / event_repository 上下文，因此 helper 只返回 dict，
+不在运行链路中记录 event。未来 runtime 调用链携带 run context 时再接入。
+
+```python
+from app.policies.dry_run_hooks import run_provider_guardrail, run_rag_guardrail
+
+# Provider helper — returns DecisionResult dict
+result = run_provider_guardrail(
+    provider_name="mock", model="mock", prompt="hello",
+    policies=[...], guardrails=[],
+)
+# result["final_action"] == "allow"
+
+# RAG helper — returns DecisionResult dict
+result = run_rag_guardrail(
+    query="test", collection="default", retrieval_mode="keyword",
+    policies=[...], guardrails=[],
+)
+# result["final_action"] == "allow"
+```
+
 ## Eval Runner 评估运行器
 
 V0.8.1 新增独立的 policy validation eval runner：

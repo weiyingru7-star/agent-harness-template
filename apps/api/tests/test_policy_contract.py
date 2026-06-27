@@ -754,3 +754,95 @@ def test_tool_hook_noop_in_pipeline() -> None:
     # Tool events still present
     assert "tool.call.started" in event_types
     assert "tool.call.completed" in event_types
+
+
+# ── Provider / RAG Guardrail Helper Tests (V0.8.8) ────────────────
+
+def test_provider_hook_noop() -> None:
+    """No policies returns _noop marker."""
+    from app.policies.dry_run_hooks import run_provider_guardrail
+
+    result = run_provider_guardrail(
+        provider_name="mock", model="mock", prompt="hello",
+        policies=None, guardrails=None,
+    )
+    assert result == {"_noop": True}
+
+
+def test_provider_hook_always_allow() -> None:
+    """With policies, returns DecisionResult dict."""
+    from app.policies.dry_run_hooks import run_provider_guardrail
+
+    result = run_provider_guardrail(
+        provider_name="mock", model="mock", prompt="hello",
+        policies=[{
+            "id": "p1", "name": "P1", "version": "1.0", "scope": "provider",
+            "rules": [{"id": "r1", "condition": {"type": "always"}, "action": "allow"}],
+            "default_action": "allow",
+        }],
+        guardrails=[],
+    )
+    assert result.get("final_action") == "allow"
+    assert len(result.get("decisions", [])) == 1
+
+
+def test_provider_hook_block_does_not_block() -> None:
+    """Block decision returns safely — no side effects."""
+    from app.policies.dry_run_hooks import run_provider_guardrail
+
+    result = run_provider_guardrail(
+        provider_name="mock", model="mock", prompt="block_test",
+        policies=[{
+            "id": "p1", "name": "P1", "version": "1.0", "scope": "provider",
+            "rules": [{"id": "r1", "condition": {"type": "always"}, "action": "block"}],
+            "default_action": "allow",
+        }],
+        guardrails=[],
+    )
+    assert result.get("final_action") == "block"
+    assert len(result.get("decisions", [])) == 1
+
+
+def test_rag_hook_noop() -> None:
+    """No policies returns _noop marker."""
+    from app.policies.dry_run_hooks import run_rag_guardrail
+
+    result = run_rag_guardrail(
+        query="test query", collection="default", retrieval_mode="keyword",
+        policies=None, guardrails=None,
+    )
+    assert result == {"_noop": True}
+
+
+def test_rag_hook_always_allow() -> None:
+    """With policies, returns DecisionResult dict."""
+    from app.policies.dry_run_hooks import run_rag_guardrail
+
+    result = run_rag_guardrail(
+        query="test query", collection="default", retrieval_mode="keyword",
+        policies=[{
+            "id": "p1", "name": "P1", "version": "1.0", "scope": "rag",
+            "rules": [{"id": "r1", "condition": {"type": "always"}, "action": "allow"}],
+            "default_action": "allow",
+        }],
+        guardrails=[],
+    )
+    assert result.get("final_action") == "allow"
+    assert len(result.get("decisions", [])) == 1
+
+
+def test_rag_hook_block_does_not_block() -> None:
+    """Block decision returns safely — no side effects."""
+    from app.policies.dry_run_hooks import run_rag_guardrail
+
+    result = run_rag_guardrail(
+        query="block query", collection="default", retrieval_mode="keyword",
+        policies=[{
+            "id": "p1", "name": "P1", "version": "1.0", "scope": "rag",
+            "rules": [{"id": "r1", "condition": {"type": "always"}, "action": "block"}],
+            "default_action": "allow",
+        }],
+        guardrails=[],
+    )
+    assert result.get("final_action") == "block"
+    assert len(result.get("decisions", [])) == 1

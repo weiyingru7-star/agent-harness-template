@@ -1169,6 +1169,53 @@ git diff --check
 
 - [Policy Guardrail Contract](docs/policy-guardrail-contract.md)
 
+## V0.8.8 Provider / RAG Guardrail Dry-Run Helpers Acceptance V0.8.8 Provider / RAG 护栏 Helper 验收
+
+V0.8.8 复用已有 `run_provider_guardrail()` / `run_rag_guardrail()` helper
+（均在 `dry_run_hooks.py` 中），新增 6 条测试。当前不做 runtime wiring——
+provider_runtime / rag runtime 没有 run_id / trace_id / event_repository 上下文。
+纯 helper，不接入运行链路。
+
+### 已实现能力
+
+- ✅ `run_provider_guardrail()` — 构造 provider-scope EvaluationContext，返回 DecisionResult dict
+- ✅ `run_rag_guardrail()` — 构造 rag-scope EvaluationContext，返回 DecisionResult dict
+- ✅ 没有 policies/guardrails 时返回 `{"_noop": True}`
+- ✅ final_action=block 时只返回 DecisionResult，不阻断
+
+### 为什么不接入 runtime
+
+| Runtime | Has event_repository? | Has run_id? | 当前方式 |
+|---|---|---|---|
+| RunStore (input hook) | ✅ Yes | ✅ Yes | 记录 event（V0.8.6） |
+| ToolExecutionPipeline (tool hook) | ✅ Yes | ✅ Yes | 记录 event（V0.8.7） |
+| provider_runtime/router.py | ❌ No | ❌ No | helper → 返回 dict |
+| harness/rag/store.py | ❌ No | ❌ No | helper → 返回 dict |
+
+未来 runtime 调用链携带 run context 时再接入 event recording。
+
+### Unified Acceptance Commands 统一验收命令
+
+```bash
+# 全量后端测试（当前预期 324 passed）
+make test-api
+
+# 所有 eval runner
+python3 scripts/run_evals.py
+python3 scripts/run_rag_evals.py
+python3 scripts/run_workflow_evals.py
+python3 scripts/run_policy_evals.py
+
+# 业务词污染检查和前端构建
+python3 scripts/check_business_terms.py
+npm run build --prefix apps/web
+git diff --check
+```
+
+### 文档参考
+
+- [Policy Guardrail Contract](docs/policy-guardrail-contract.md)
+
 ## Common Errors 常见错误排查
 
 ### `python: command not found`
